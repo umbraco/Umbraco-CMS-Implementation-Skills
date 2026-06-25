@@ -91,14 +91,14 @@ Execute this task:
 
 **Baseline run prompt:** identical, but no skill path. For improving an existing skill, snapshot the previous version first (`cp -r <skill-path> <workspace>/skill-snapshot/`) and point the baseline subagent at the snapshot; save to `old_skill/outputs/` instead of `without_skill/outputs/`.
 
-For each eval, also write `eval_metadata.json` (assertions can be empty until Step 3):
+For each eval, also write `eval_metadata.json` (expectations can be empty until Step 3):
 
 ```json
 {
   "eval_id": 0,
   "eval_name": "extract-liability-sections",
   "prompt": "...the full prompt...",
-  "assertions": []
+  "expectations": []
 }
 ```
 
@@ -139,7 +139,7 @@ Process notifications as they arrive; don't try to batch.
 
 ## Step 5 — Grade with Haiku subagents
 
-Once a run's outputs and transcript are on disk, spawn a **Haiku grader subagent** for it. Read `agents/grader.md` and pass it as the subagent's instructions. Use Haiku (`claude-haiku-4-5-20251001`) — grading is structured evidence-checking, Haiku does it well, and it keeps the eval loop cheap.
+Once a run's outputs and transcript are on disk, spawn a **Haiku grader subagent** for it. Read `agents/grader.md` and pass it as the subagent's instructions. Use Haiku (`model: "haiku"`) — grading is structured evidence-checking, Haiku does it well, and it keeps the eval loop cheap.
 
 For deterministic assertions ("file X exists with mime type Y", "transcript contains string Z"), prefer writing a tiny Python script over having the grader eyeball it — scripts are faster, free, and reusable across iterations. The grader can call the script and record the result.
 
@@ -155,7 +155,7 @@ Once every run has a `grading.json`:
 python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <skill-name>
 ```
 
-(Run from the skill-evaluator directory so `scripts/` is on the path.) This produces `benchmark.json` and `benchmark.md` — pass rate, time, tokens per configuration with mean ± stddev and the delta. **Order each `with_skill` run before its `without_skill` (or `old_skill`) counterpart** in the runs list — the viewer reads order to pair them.
+(Run from the skill-evaluator directory so `scripts/` is on the path.) This produces `benchmark.json` and `benchmark.md` — pass rate, time, tokens per configuration with mean ± stddev and the delta. With one run per config per iteration (the default), the ± is **eval-to-eval spread across the eval set, not run-to-run variance** — read it as "how consistent is the skill across different tasks", not "how noisy is a single task". **Order each `with_skill` run before its `without_skill` (or `old_skill`) counterpart** in the runs list — the viewer reads order to pair them.
 
 Do a quick analyst pass on `benchmark.json`:
 - Assertions that pass 100% in *both* configurations — non-discriminating, flag for replacement.

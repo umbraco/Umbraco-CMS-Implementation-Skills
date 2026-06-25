@@ -7,7 +7,9 @@ a tiny HTTP server. Feedback auto-saves to feedback.json in the workspace.
 
 Usage:
     python generate_review.py <workspace-path> [--port PORT] [--skill-name NAME]
-    python generate_review.py <workspace-path> --previous-feedback /path/to/old/feedback.json
+        [--benchmark /path/to/benchmark.json]
+        [--previous-workspace /path/to/iteration-<N-1>]
+        [--static /path/to/output.html]
 
 No dependencies beyond the Python stdlib are required.
 """
@@ -28,7 +30,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 
 # Files to exclude from output listings
-METADATA_FILES = {"transcript.md", "user_notes.md", "metrics.json"}
+METADATA_FILES = {"transcript.md", "grading.json"}
 
 # Extensions we render as inline text
 TEXT_EXTENSIONS = {

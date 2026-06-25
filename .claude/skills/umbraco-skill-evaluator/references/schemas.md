@@ -36,6 +36,30 @@ Defines the eval set for a skill. Located at `evals/evals.json` within the skill
 
 ---
 
+## eval_metadata.json
+
+Written per eval into the eval directory (`<iteration>/<eval-name>/eval_metadata.json`).
+Read by both `aggregate_benchmark.py` (for `eval_id` / `eval_name`) and the viewer
+(for `prompt` / `eval_id`).
+
+```json
+{
+  "eval_id": 0,
+  "eval_name": "extract-liability-sections",
+  "prompt": "...the full prompt...",
+  "expectations": []
+}
+```
+
+**Fields:**
+- `eval_id`: Identifier for the eval. Matches `runs[].eval_id` in `benchmark.json`.
+- `eval_name`: Descriptive name, same as the eval directory name. Surfaced by the viewer.
+- `prompt`: The task prompt for this eval.
+- `expectations`: The objectively verifiable assertions (same term as everywhere else;
+  may be empty until drafted in Step 3).
+
+---
+
 ## grading.json
 
 Output from the grader agent. One per run, located at `<run-dir>/grading.json`.

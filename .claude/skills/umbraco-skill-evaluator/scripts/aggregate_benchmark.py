@@ -4,34 +4,32 @@ Aggregate individual run results into benchmark summary statistics.
 
 Reads grading.json files from run directories and produces:
 - run_summary with mean, stddev, min, max for each metric
-- delta between with_skill and without_skill configurations
+- delta between the primary configuration and its baseline
 
 Usage:
-    python aggregate_benchmark.py <benchmark_dir>
+    python aggregate_benchmark.py <iteration_dir> --skill-name <name>
 
 Example:
-    python aggregate_benchmark.py benchmarks/2026-01-15T10-30-00/
+    python -m scripts.aggregate_benchmark <workspace>/iteration-1 --skill-name pdf
 
-The script supports two directory layouts:
+Primary layout (what SKILL.md tells the agent to build):
 
-    Workspace layout (from skill-creator iterations):
-    <benchmark_dir>/
-    └── eval-N/
+    <iteration_dir>/
+    └── <eval-name>/                 # descriptive, e.g. extract-tables
+        ├── eval_metadata.json
         ├── with_skill/
-        │   ├── run-1/grading.json
-        │   └── run-2/grading.json
-        └── without_skill/
-            ├── run-1/grading.json
-            └── run-2/grading.json
+        │   ├── outputs/
+        │   └── grading.json         # sibling of outputs/
+        └── without_skill/           # or old_skill/ when iterating
+            ├── outputs/
+            └── grading.json
 
-    Legacy layout (with runs/ subdirectory):
-    <benchmark_dir>/
-    └── runs/
-        └── eval-N/
-            ├── with_skill/
-            │   └── run-1/grading.json
-            └── without_skill/
-                └── run-1/grading.json
+`without_skill` is replaced by `old_skill` when iterating on an existing
+skill. Discovery matches the viewer (generate_review.py): each config
+directory holds grading.json directly, alongside outputs/.
+
+Legacy layout (older runs that nested replicate runs under run-*/) is also
+accepted — grading.json is then read from <config>/run-N/grading.json.
 """
 
 import argparse
@@ -64,123 +62,150 @@ def calculate_stats(values: list[float]) -> dict:
     }
 
 
-def load_run_results(benchmark_dir: Path) -> dict:
+# Directories under an iteration that are never eval directories.
+NON_EVAL_DIRS = {"runs", "skill-snapshot", "__pycache__", ".git"}
+
+
+def _load_grading(config_dir: Path) -> tuple[dict | None, int]:
     """
-    Load all run results from a benchmark directory.
+    Load grading.json for one configuration.
+
+    Returns (grading, run_number). In the primary layout grading.json sits
+    directly under the config dir (run_number 1). In the legacy layout it
+    lives under run-N/, in which case the lowest-numbered run is used.
+    """
+    direct = config_dir / "grading.json"
+    if direct.exists():
+        try:
+            return json.loads(direct.read_text()), 1
+        except json.JSONDecodeError as e:
+            print(f"Warning: Invalid JSON in {direct}: {e}")
+            return None, 1
+    for run_dir in sorted(config_dir.glob("run-*")):
+        grading_file = run_dir / "grading.json"
+        if not grading_file.exists():
+            continue
+        try:
+            run_number = int(run_dir.name.split("-")[1])
+        except (IndexError, ValueError):
+            run_number = 1
+        try:
+            return json.loads(grading_file.read_text()), run_number
+        except json.JSONDecodeError as e:
+            print(f"Warning: Invalid JSON in {grading_file}: {e}")
+            return None, run_number
+    return None, 1
+
+
+def _read_time_and_tokens(config_dir: Path, grading: dict) -> tuple[float, int]:
+    """
+    Resolve wall-clock time and token count for a run.
+
+    Tokens live only in timing.json, so always read it for tokens. Time may
+    already be copied into grading.json by the grader; timing.json is only a
+    fallback for time.
+    """
+    time_seconds = grading.get("timing", {}).get("total_duration_seconds", 0.0)
+    tokens = 0
+    timing_files = [config_dir / "timing.json"] + sorted(config_dir.glob("run-*/timing.json"))
+    for timing_file in timing_files:
+        if not timing_file.exists():
+            continue
+        try:
+            timing_data = json.loads(timing_file.read_text())
+        except json.JSONDecodeError:
+            continue
+        tokens = timing_data.get("total_tokens", tokens)
+        if time_seconds == 0.0:
+            time_seconds = timing_data.get("total_duration_seconds", 0.0)
+        break
+    return time_seconds, tokens
+
+
+def load_run_results(iteration_dir: Path) -> dict:
+    """
+    Load all run results from an iteration directory.
 
     Returns dict keyed by config name (e.g. "with_skill"/"without_skill",
-    or "new_skill"/"old_skill"), each containing a list of run results.
+    or "with_skill"/"old_skill"), each containing a list of run results.
     """
-    # Support both layouts: eval dirs directly under benchmark_dir, or under runs/
-    runs_dir = benchmark_dir / "runs"
-    if runs_dir.exists():
-        search_dir = runs_dir
-    elif list(benchmark_dir.glob("eval-*")):
-        search_dir = benchmark_dir
-    else:
-        print(f"No eval directories found in {benchmark_dir} or {benchmark_dir / 'runs'}")
+    eval_dirs = [
+        p for p in sorted(iteration_dir.iterdir())
+        if p.is_dir() and p.name not in NON_EVAL_DIRS
+    ]
+    if not eval_dirs:
+        print(f"No eval directories found in {iteration_dir}")
         return {}
 
     results: dict[str, list] = {}
 
-    for eval_idx, eval_dir in enumerate(sorted(search_dir.glob("eval-*"))):
+    for eval_dir in eval_dirs:
+        eval_id = eval_dir.name
+        eval_name = eval_dir.name
         metadata_path = eval_dir / "eval_metadata.json"
         if metadata_path.exists():
             try:
-                with open(metadata_path) as mf:
-                    eval_id = json.load(mf).get("eval_id", eval_idx)
+                metadata = json.loads(metadata_path.read_text())
+                eval_id = metadata.get("eval_id", eval_id)
+                eval_name = metadata.get("eval_name", eval_name)
             except (json.JSONDecodeError, OSError):
-                eval_id = eval_idx
-        else:
-            try:
-                eval_id = int(eval_dir.name.split("-")[1])
-            except ValueError:
-                eval_id = eval_idx
+                pass
 
-        # Discover config directories dynamically rather than hardcoding names
-        for config_dir in sorted(eval_dir.iterdir()):
-            if not config_dir.is_dir():
+        for config_dir in sorted(p for p in eval_dir.iterdir() if p.is_dir()):
+            grading, run_number = _load_grading(config_dir)
+            if grading is None:
                 continue
-            # Skip non-config directories (inputs, outputs, etc.)
-            if not list(config_dir.glob("run-*")):
-                continue
-            config = config_dir.name
-            if config not in results:
-                results[config] = []
 
-            for run_dir in sorted(config_dir.glob("run-*")):
-                run_number = int(run_dir.name.split("-")[1])
-                grading_file = run_dir / "grading.json"
+            time_seconds, tokens = _read_time_and_tokens(config_dir, grading)
+            summary = grading.get("summary", {})
 
-                if not grading_file.exists():
-                    print(f"Warning: grading.json not found in {run_dir}")
-                    continue
+            # viewer requires expectation fields: text, passed, evidence
+            raw_expectations = grading.get("expectations", [])
+            for exp in raw_expectations:
+                if "text" not in exp or "passed" not in exp:
+                    print(f"Warning: expectation in {config_dir} missing required fields (text, passed, evidence): {exp}")
 
-                try:
-                    with open(grading_file) as f:
-                        grading = json.load(f)
-                except json.JSONDecodeError as e:
-                    print(f"Warning: Invalid JSON in {grading_file}: {e}")
-                    continue
-
-                # Extract metrics
-                result = {
-                    "eval_id": eval_id,
-                    "run_number": run_number,
-                    "pass_rate": grading.get("summary", {}).get("pass_rate", 0.0),
-                    "passed": grading.get("summary", {}).get("passed", 0),
-                    "failed": grading.get("summary", {}).get("failed", 0),
-                    "total": grading.get("summary", {}).get("total", 0),
-                }
-
-                # Extract timing — check grading.json first, then sibling timing.json
-                timing = grading.get("timing", {})
-                result["time_seconds"] = timing.get("total_duration_seconds", 0.0)
-                timing_file = run_dir / "timing.json"
-                if result["time_seconds"] == 0.0 and timing_file.exists():
-                    try:
-                        with open(timing_file) as tf:
-                            timing_data = json.load(tf)
-                        result["time_seconds"] = timing_data.get("total_duration_seconds", 0.0)
-                        result["tokens"] = timing_data.get("total_tokens", 0)
-                    except json.JSONDecodeError:
-                        pass
-
-                # Extract metrics if available
-                metrics = grading.get("execution_metrics", {})
-                result["tool_calls"] = metrics.get("total_tool_calls", 0)
-                if not result.get("tokens"):
-                    result["tokens"] = metrics.get("output_chars", 0)
-                result["errors"] = metrics.get("errors_encountered", 0)
-
-                # Extract expectations — viewer requires fields: text, passed, evidence
-                raw_expectations = grading.get("expectations", [])
-                for exp in raw_expectations:
-                    if "text" not in exp or "passed" not in exp:
-                        print(f"Warning: expectation in {grading_file} missing required fields (text, passed, evidence): {exp}")
-                result["expectations"] = raw_expectations
-
-                # Extract notes from user_notes_summary
-                notes_summary = grading.get("user_notes_summary", {})
-                notes = []
-                notes.extend(notes_summary.get("uncertainties", []))
-                notes.extend(notes_summary.get("needs_review", []))
-                notes.extend(notes_summary.get("workarounds", []))
-                result["notes"] = notes
-
-                results[config].append(result)
+            results.setdefault(config_dir.name, []).append({
+                "eval_id": eval_id,
+                "eval_name": eval_name,
+                "run_number": run_number,
+                "pass_rate": summary.get("pass_rate", 0.0),
+                "passed": summary.get("passed", 0),
+                "failed": summary.get("failed", 0),
+                "total": summary.get("total", 0),
+                "time_seconds": time_seconds,
+                "tokens": tokens,
+                "expectations": raw_expectations,
+            })
 
     return results
+
+
+# The configuration the skill is meant to win on, and the baseline it's
+# compared against. Delta is always primary - baseline, regardless of the
+# order config directories happen to sort in.
+PRIMARY_CONFIGS = ("with_skill", "new_skill")
+BASELINE_CONFIGS = ("without_skill", "old_skill")
+
+
+def order_configs(configs: list[str]) -> list[str]:
+    """Return configs with the primary first and its baseline second."""
+    primary = next((c for c in PRIMARY_CONFIGS if c in configs), None)
+    baseline = next((c for c in BASELINE_CONFIGS if c in configs), None)
+    ordered = [c for c in (primary, baseline) if c]
+    ordered += [c for c in configs if c not in ordered]
+    return ordered
 
 
 def aggregate_results(results: dict) -> dict:
     """
     Aggregate run results into summary statistics.
 
-    Returns run_summary with stats for each configuration and delta.
+    Returns run_summary with stats for each configuration and delta, ordered
+    so the primary configuration comes first.
     """
     run_summary = {}
-    configs = list(results.keys())
+    configs = order_configs(list(results.keys()))
 
     for config in configs:
         runs = results.get(config, [])
@@ -203,7 +228,7 @@ def aggregate_results(results: dict) -> dict:
             "tokens": calculate_stats(tokens)
         }
 
-    # Calculate delta between the first two configs (if two exist)
+    # Delta is primary - baseline (configs are already ordered primary-first).
     if len(configs) >= 2:
         primary = run_summary.get(configs[0], {})
         baseline = run_summary.get(configs[1], {})
@@ -231,12 +256,13 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
     results = load_run_results(benchmark_dir)
     run_summary = aggregate_results(results)
 
-    # Build runs array for benchmark.json
+    # Build runs array, primary configuration first so the viewer pairs runs.
     runs = []
-    for config in results:
+    for config in order_configs(list(results.keys())):
         for result in results[config]:
             runs.append({
                 "eval_id": result["eval_id"],
+                "eval_name": result["eval_name"],
                 "configuration": config,
                 "run_number": result["run_number"],
                 "result": {
@@ -245,20 +271,20 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
                     "failed": result["failed"],
                     "total": result["total"],
                     "time_seconds": result["time_seconds"],
-                    "tokens": result.get("tokens", 0),
-                    "tool_calls": result.get("tool_calls", 0),
-                    "errors": result.get("errors", 0)
+                    "tokens": result.get("tokens", 0)
                 },
-                "expectations": result["expectations"],
-                "notes": result["notes"]
+                "expectations": result["expectations"]
             })
 
-    # Determine eval IDs from results
-    eval_ids = sorted(set(
+    # Determine eval IDs from results (ids may be strings, so sort as strings)
+    eval_ids = sorted({
         r["eval_id"]
         for config in results.values()
         for r in config
-    ))
+    }, key=str)
+
+    # Derive runs-per-configuration from the data rather than assuming a count.
+    runs_per_config = max((len(v) for v in results.values()), default=0)
 
     benchmark = {
         "metadata": {
@@ -268,7 +294,7 @@ def generate_benchmark(benchmark_dir: Path, skill_name: str = "", skill_path: st
             "analyzer_model": "<model-name>",
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "evals_run": eval_ids,
-            "runs_per_configuration": 3
+            "runs_per_configuration": runs_per_config
         },
         "runs": runs,
         "run_summary": run_summary,

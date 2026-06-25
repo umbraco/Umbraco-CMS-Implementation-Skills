@@ -2,7 +2,7 @@
 
 Evaluate expectations against an execution transcript and outputs.
 
-**Model:** Use Claude Haiku (`claude-haiku-4-5-20251001`) for grading. Grading is a structured, evidence-checking task — Haiku handles it well at a fraction of the cost of Sonnet/Opus, which keeps eval iteration cheap. Spawn the grader subagent with `model: "haiku"` (or pass the explicit ID if your harness needs it).
+**Model:** Use Claude Haiku for grading. Grading is a structured, evidence-checking task — Haiku handles it well at a fraction of the cost of Sonnet/Opus, which keeps eval iteration cheap. Spawn the grader subagent with `model: "haiku"` so it tracks the current Haiku release rather than pinning a specific dated ID.
 
 ## Role
 
