@@ -1,0 +1,66 @@
+{
+  "skill_name": "umbraco-sitemap",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I've got a fresh Umbraco 17 site (traditional, Razor templates, ModelsBuilder on). I need an XML sitemap for SEO so Google can index us. It has to actually build and serve — I don't want to touch the backoffice by hand if I can avoid it, and pages behind member login must not show up. There's also a 'Landing Page' doc type where editors sometimes want to hide a specific page from the sitemap. Wire it all up and tell me the URL to hit.",
+      "expected_output": "The agent picks the cached-controller approach (Approach A) because no backoffice work is possible without the MCP, scaffolds the controller/composer/invalidator with the project's real namespace, excludes member-protected pages, wires a boolean hide property, the project builds, and /sitemap.xml returns valid urlset XML.",
+      "files": [],
+      "expectations": [
+        "The agent uses Approach A (cached controller), either as the default or by explicitly justifying it because the task rules out manual backoffice changes",
+        "SitemapController.cs, SitemapComposer.cs, and SitemapCacheInvalidator.cs are created with the project's actual root namespace substituted for the <Namespace> placeholder (no literal '<Namespace>' left in any file)",
+        "The controller route resolves to /sitemap.xml (a [Route(\"sitemap.xml\")] attribute or equivalent is present)",
+        "Member-protected pages are excluded using IPublicAccessService (a call to IsProtected appears in the controller)",
+        "A boolean hide-from-sitemap filter is applied for the requested property (a .Where(...) filtering on the boolean alias is present), and the <filterAlias> placeholder is replaced or removed",
+        "The composer registers notification handlers for content published, unpublished, and deleted so the cache is invalidated on content changes",
+        "If a real buildable project is available, dotnet build succeeds with no compilation errors; if not, the agent does not falsely claim to have verified a build, but does explicitly state whether it expects the code to compile against the documented APIs it used",
+        "A request to /sitemap.xml returns XML whose root element is <urlset> in the http://www.sitemaps.org/schemas/sitemap/0.9 namespace"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We're running Umbraco 17 headless — the backoffice is on cms.internal.acme.com but the public Nuxt front-end is served from https://www.acme.com. I need a sitemap at /sitemap.xml whose <loc> URLs point at the public domain, NOT the internal CMS host. Set it up and tell me exactly what config I need to add.",
+      "expected_output": "The agent recognises the headless scenario, uses Approach A plus the SitemapSettings BaseUrl override, and instructs the user to add the Sitemap:BaseUrl setting to appsettings.json so <loc> entries use the public domain.",
+      "files": [],
+      "expectations": [
+        "The agent identifies this as a headless setup and chooses Approach A (cached controller)",
+        "A SitemapSettings class (POCO) is created with a BaseUrl string property and a SectionName constant equal to \"Sitemap\"",
+        "The composer registers the settings via builder.Services.Configure<SitemapSettings>(...) bound to the Sitemap configuration section",
+        "The controller injects IOptions<SitemapSettings> and uses BaseUrl to rewrite the host on each <loc> URL",
+        "The agent instructs the user to add a \"Sitemap\": { \"BaseUrl\": \"https://www.acme.com\" } block to appsettings.json",
+        "If a real buildable project is available, dotnet build succeeds with no compilation errors; if not, the agent does not falsely claim to have verified a build, but does explicitly state whether it expects the code to compile against the documented APIs it used",
+        "The agent does NOT rely solely on Url(mode: UrlMode.Absolute) for <loc>, since that would emit the internal CMS host"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our editors want full control over the sitemap from the Umbraco backoffice — per-page change frequency and priority, and a toggle to hide individual pages — on our traditional Razor Umbraco 17 site. We have the Umbraco Developer MCP connected. Follow the official Umbraco way of doing this, not some bespoke thing, and reference the docs.",
+      "expected_output": "The agent picks Approach B (official Razor tutorial), uses the MCP to create the XmlSiteMap document type, the XmlSiteMapSettings composition, and the content node, builds the XmlSiteMap.cshtml template from the tutorial, and cites the official docs.",
+      "files": [],
+      "expectations": [
+        "The agent chooses Approach B (official Razor-template + Document Type approach) and cites the official tutorial URL docs.umbraco.com/.../creating-an-xml-site-map",
+        "The agent uses the Umbraco Developer MCP (or clearly states the backoffice steps require it) to create the XmlSiteMap Document Type and the XmlSiteMapSettings composition",
+        "The XmlSiteMapSettings composition includes searchEngineRelativePriority, searchEngineChangeFrequency, and hideFromXmlSiteMap properties",
+        "An XmlSiteMap.cshtml template is created with Layout = null and Context.Response.ContentType set to an XML content type",
+        "The template output root element is <urlset> in the http://www.sitemaps.org/schemas/sitemap/0.9 namespace and renders <loc>/<lastmod>/<changefreq>/<priority> entries",
+        "The template filters out pages where hideFromXmlSiteMap is true and pages whose content type alias is in the excluded document types list",
+        "The agent does NOT implement the bespoke /sitemap.xml controller for this request (it follows the official approach as asked)"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "We're on a traditional Razor Umbraco 17 site and editors want full control over the sitemap from the backoffice — per-page priority, change frequency, and a hide toggle — following the official Umbraco approach. We do NOT have the Umbraco Developer MCP connected, and I'm not a developer, but I can click around the backoffice myself if you tell me exactly what to do, one step at a time.",
+      "expected_output": "The agent still picks Approach B (the user explicitly wants the official approach and per-page control), notices the MCP isn't available, and walks the user through the backoffice steps manually instead of defaulting to Approach A. It fetches the tutorial for the exact clicks/code rather than inventing them from memory.",
+      "files": [],
+      "expectations": [
+        "The agent chooses Approach B (official Razor-template + Document Type approach), not Approach A, despite the MCP being unavailable",
+        "The agent explicitly notes the Umbraco Developer MCP is not available and offers to guide the user through the backoffice steps manually, rather than dropping to Approach A solely because the MCP is missing",
+        "The agent's steps follow the tutorial's shape: create the XmlSiteMap Document Type (with template) and excludedDocumentTypes property, create the XmlSiteMapSettings composition, apply it to content Document Types, then build the XmlSiteMap.cshtml template",
+        "The XmlSiteMapSettings composition properties mentioned include searchEngineRelativePriority, searchEngineChangeFrequency, and hideFromXmlSiteMap",
+        "The provided/described XmlSiteMap.cshtml sets Layout to null, sets the response content type to XML, and outputs a <urlset> root element in the http://www.sitemaps.org/schemas/sitemap/0.9 namespace",
+        "The template logic filters out pages where hideFromXmlSiteMap is true and pages whose content type alias is in the excluded document types list",
+        "The agent does not claim Approach B is impossible without the MCP, and does not silently substitute Approach A without explaining why"
+      ]
+    }
+  ]
+}
