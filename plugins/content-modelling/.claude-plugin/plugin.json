@@ -1,0 +1,21 @@
+{
+  "name": "umbraco-cms-content-modelling-skills",
+  "version": "1.0.0",
+  "description": "Skill set for Umbraco content modelling - document types, element types, data types, compositions, and content structure",
+  "author": {
+    "name": "Phil W",
+    "email": "pjw@umbraco.com",
+    "url": "https://github.com/hifi-phil"
+  },
+  "homepage": "https://github.com/hifi-phil/Umbraco-CMS-Implementation-Skills",
+  "license": "MIT",
+  "keywords": [
+    "umbraco",
+    "content-modelling",
+    "document-types",
+    "element-types",
+    "data-types",
+    "compositions"
+  ],
+  "skills": "./skills/"
+}

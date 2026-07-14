@@ -1,0 +1,56 @@
+{
+  "name": "umbraco-cms-implementation-marketplace",
+  "owner": {
+    "name": "Phil Whittaker",
+    "email": "pjw@umbraco.com"
+  },
+  "metadata": {
+    "description": "Umbraco CMS content modelling and implementation skills for Claude Code",
+    "version": "1.0.0",
+    "homepage": "https://github.com/hifi-phil/Umbraco-CMS-Implementation-Skills"
+  },
+  "plugins": [
+    {
+      "name": "umbraco-cms-content-modelling-skills",
+      "source": "./plugins/content-modelling",
+      "description": "Umbraco content modelling skills covering document types, element types, data types, compositions, and content structure",
+      "version": "1.0.0",
+      "category": "development",
+      "author": {
+        "name": "Phil Whittaker",
+        "email": "pjw@umbraco.com",
+        "url": "https://github.com/umbraco"
+      },
+      "keywords": [
+        "umbraco",
+        "content-modelling",
+        "cms",
+        "document-types",
+        "data-types",
+        "dotnet"
+      ],
+      "skills": "./skills/"
+    },
+    {
+      "name": "umbraco-cms-implementation-skills",
+      "source": "./plugins/implementation",
+      "description": "Umbraco implementation skills covering site build-out, templates, views, controllers, and delivery",
+      "version": "1.0.0",
+      "category": "development",
+      "author": {
+        "name": "Phil Whittaker",
+        "email": "pjw@umbraco.com",
+        "url": "https://github.com/umbraco"
+      },
+      "keywords": [
+        "umbraco",
+        "implementation",
+        "cms",
+        "templates",
+        "razor",
+        "dotnet"
+      ],
+      "skills": "./skills/"
+    }
+  ]
+}
