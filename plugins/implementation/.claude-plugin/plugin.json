@@ -1,0 +1,21 @@
+{
+  "name": "umbraco-cms-implementation-skills",
+  "version": "1.0.0",
+  "description": "Skill set for Umbraco implementation - site build-out, templates, views, controllers, and delivery",
+  "author": {
+    "name": "Phil W",
+    "email": "pjw@umbraco.com",
+    "url": "https://github.com/hifi-phil"
+  },
+  "homepage": "https://github.com/hifi-phil/Umbraco-CMS-Implementation-Skills",
+  "license": "MIT",
+  "keywords": [
+    "umbraco",
+    "implementation",
+    "templates",
+    "razor",
+    "views",
+    "controllers"
+  ],
+  "skills": "./skills/"
+}
