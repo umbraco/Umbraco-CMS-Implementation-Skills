@@ -1,0 +1,79 @@
+{
+  "skill_name": "umbraco-custom-error-pages",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We run three brands off one Umbraco 17 install — three root nodes with domains configured in Culture & Hostnames. Each site needs its own branded 404 page, and we also want a custom 500 page. Everything must live in source control; we don't want per-environment GUIDs in appsettings. The Umbraco Developer MCP is connected. Set it all up.",
+      "expected_output": "The agent picks Approach A (content finder) because of per-domain multi-site + no-GUID-config requirements, uses the MCP for the Document Type/content node steps, writes the finder and the 500 controller with placeholders replaced, adds ReservedPaths and UseExceptionHandler before UseUmbraco, and warns that the 500 page always comes from the first root on multi-site.",
+      "files": [],
+      "expectations": [
+        "The agent chooses Approach A (IContentLastChanceFinder) and justifies it via per-domain multi-site support and/or avoiding per-environment GUID config",
+        "The agent uses the Umbraco Developer MCP (or clearly simulates/states doing so) for the Document Type and content node creation rather than telling the user to click through manually",
+        "PageNotFoundContentFinder.cs is produced with <Namespace> and <ErrorPageAlias> placeholders replaced (no literal placeholders remain) and resolves the site root via request.Domain",
+        "ErrorController.cs is produced for the 500 page, detecting real exceptions via IExceptionHandlerPathFeature rather than Response.StatusCode",
+        "The agent adds ~/error/ to Umbraco ReservedPaths in appsettings.json and registers app.UseExceptionHandler(\"/error\") before app.UseUmbraco()",
+        "The agent explicitly warns that the 500 page is served from the first root node on multi-site (domain context unavailable after an unhandled exception)",
+        "If no buildable project is available, the agent does not falsely claim a verified build but explicitly states whether it expects the code to compile against the documented APIs used"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We have a simple single-language Umbraco 17 brochure site. Our in-house team are editors, not developers — we can't maintain custom C#. What's the official way to get a custom, branded 404 page? Walk us through it.",
+      "expected_output": "The agent picks Approach B (config-based Error404Collection), fetches the official tutorial live for the exact steps and JSON, guides backoffice creation of the Page Not Found Document Type + published node, and adds the Error404Collection config with the node's GUID — producing no custom C# files.",
+      "files": [],
+      "expectations": [
+        "The agent chooses Approach B (config-based Error404Collection) because the team wants zero custom C#, and cites the official tutorial URL docs.umbraco.com/.../custom-error-page",
+        "The agent fetches or clearly relies on the live official tutorial for the exact steps/snippets rather than inventing them from memory",
+        "The agent guides creation of a Page Not Found Document Type with Template and a published content node in the backoffice (via MCP if available, else manual steps)",
+        "The agent instructs adding an Umbraco:CMS:Content:Error404Collection block to appsettings.json referencing the published node's GUID",
+        "No custom C# files (content finder or controller) are produced for the 404 requirement",
+        "The agent notes the Umbraco 16.1+ requirement (16.0 regression) or otherwise verifies version compatibility"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Our Umbraco 17 site already has a working custom 404 — leave that alone. We just need a proper custom 500 error page so users don't see the default error screen when something blows up server-side. Set it up.",
+      "expected_output": "The agent goes straight to the shared 500 controller: backoffice Document Type + published node, ErrorController.cs with placeholders replaced, ReservedPaths update, UseExceptionHandler before UseUmbraco — without touching or re-implementing the existing 404 setup, and without attempting a config-only 500 (which doesn't exist).",
+      "files": [],
+      "expectations": [
+        "The agent implements only the 500 handling and does not modify, re-implement, or bundle in 404 work",
+        "The agent does not attempt a config-only 500 solution (e.g. an Error500Collection analog), correctly stating that 500s bypass Umbraco's routing pipeline and require a controller",
+        "ErrorController.cs is produced with <Namespace> and <ErrorPageAlias> placeholders replaced, using IExceptionHandlerPathFeature to detect real exceptions",
+        "The agent adds ~/error/ to ReservedPaths in appsettings.json and registers app.UseExceptionHandler(\"/error\") before app.UseUmbraco()",
+        "A backoffice Document Type + published content node for the 500 page is created or clearly instructed (via MCP if available, else manual steps)",
+        "The controller falls back gracefully (logs a warning when the node is missing; plain-text response when the Umbraco context is unavailable)",
+        "The agent proactively offers or mentions the Boot Failed page (static wwwroot/config/errors/BootFailed.html with Umbraco:CMS:Hosting:Debug false) as related coverage for startup failures",
+        "If no buildable project is available, the agent does not falsely claim a verified build but explicitly states whether it expects the code to compile against the documented APIs used"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our Umbraco 17 site runs two cultures, en-US and da-DK, as language variants on one root. Marketing wants a differently branded 404 page per language, and our team doesn't want custom C# if it can be avoided. Set it up the official way.",
+      "expected_output": "The agent picks Approach B (config-based Error404Collection) because of the zero-code preference and per-culture support, fetches the official tutorial live, guides backoffice creation of the per-culture 404 pages, and adds per-culture Error404Collection entries mapping each culture to its own content GUID — with no custom C#.",
+      "files": [],
+      "expectations": [
+        "The agent chooses the config-based Error404Collection approach, citing per-culture support and the zero-code preference",
+        "The agent fetches or clearly relies on the live official tutorial (docs.umbraco.com/.../custom-error-page) rather than inventing steps from memory",
+        "The Error404Collection config contains separate entries for en-US and da-DK, each mapping a Culture to its own ContentKey GUID",
+        "Backoffice creation and publishing of the 404 page content (per culture or per variant) is guided (via MCP if available, else manual steps)",
+        "No custom C# files (content finder or controller) are produced",
+        "The agent notes the Umbraco 16.1+ requirement (16.0 regression) or otherwise verifies version compatibility"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "After some deployments our Umbraco 17 site fails to start entirely — users just get a blank screen or a 502.5 until we roll back. And separately, when the site IS running, unhandled exceptions show the ugly default error screen. Give us proper branded pages for both situations.",
+      "expected_output": "The agent distinguishes the two failure modes: runtime unhandled exceptions get the 500 ErrorController (with ReservedPaths + UseExceptionHandler wiring), while failed startups get the static BootFailed.html (with Debug false) plus a note that crashes before the ASP.NET Core pipeline initializes can only be covered by a web-server-level static page.",
+      "files": [],
+      "expectations": [
+        "The agent explicitly distinguishes runtime 500s from boot/startup failures and explains they require different mechanisms",
+        "ErrorController.cs is produced with placeholders replaced, using IExceptionHandlerPathFeature to detect real exceptions",
+        "The agent adds ~/error/ to ReservedPaths in appsettings.json and registers app.UseExceptionHandler(\"/error\") before app.UseUmbraco()",
+        "A static wwwroot/config/errors/BootFailed.html is created (or clearly instructed), and the agent notes it only displays when Umbraco:CMS:Hosting:Debug is false",
+        "The agent notes that if the app crashes before the ASP.NET Core pipeline initializes, only the web server (IIS/NGINX/Apache) can serve a fallback page, and recommends configuring one for full coverage",
+        "A backoffice Document Type + published content node for the 500 page is created or clearly instructed (via MCP if available, else manual steps)",
+        "If no buildable project is available, the agent does not falsely claim a verified build but explicitly states whether it expects the code to compile against the documented APIs used"
+      ]
+    }
+  ]
+}
