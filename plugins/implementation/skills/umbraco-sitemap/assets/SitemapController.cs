@@ -10,6 +10,17 @@ using Umbraco.Extensions;
 
 namespace <Namespace>.Controllers;
 
+// SINGLE-FILE sitemap for sites UNDER the 50,000 URL / 50 MB limit.
+// If the site has (or will grow past) 50,000 URLs, use SitemapIndexController.cs instead — it
+// splits URLs across paged <urlset> files behind a <sitemapindex>. Register only ONE of the two.
+//
+// Sitemap output follows the sitemaps.org protocol and Google Search Central guidance:
+//   - <loc> URLs are ABSOLUTE (Url(mode: UrlMode.Absolute)); relative paths are not allowed.
+//   - Served as application/xml; charset=utf-8.
+//   - Only <loc> + <lastmod> are emitted. Google ignores <priority> and <changefreq>, so we
+//     don't produce them; <lastmod> is derived automatically from the node's UpdateDate.
+//   Refs: https://www.sitemaps.org/protocol.html
+//         https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap
 [Route("sitemap.xml")]
 public class SitemapController : ControllerBase
 {
@@ -36,6 +47,7 @@ public class SitemapController : ControllerBase
         const string cacheKey = "SitemapXml";
         if (_cache.TryGetValue(cacheKey, out string? cachedXml))
         {
+            // application/xml; charset=utf-8 — required content type/encoding for sitemaps.
             return Content(cachedXml!, "application/xml", Encoding.UTF8);
         }
 
@@ -70,6 +82,7 @@ public class SitemapController : ControllerBase
             .Where(x => !_publicAccessService.IsProtected(x.Path))
             // FILTER: remove this .Where() entirely if no filter property is needed
             .Where(x => !x.HasProperty("<filterAlias>") || !x.Value<bool>("<filterAlias>"))
+            // Only <loc> (absolute) and <lastmod> — Google ignores <priority>/<changefreq>.
             .Select(x => new XElement(ns + "url",
                 new XElement(ns + "loc", x.Url(mode: UrlMode.Absolute)),
                 new XElement(ns + "lastmod", x.UpdateDate.ToString("yyyy-MM-dd"))))

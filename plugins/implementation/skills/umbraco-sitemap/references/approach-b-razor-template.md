@@ -1,7 +1,6 @@
 # Approach B — Razor template + Document Type (official docs)
 
-Follows the official tutorial, [Creating an XML Sitemap](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/tutorials/creating-an-xml-site-map)
-([Markdown version](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/tutorials/creating-an-xml-site-map.md)).
+Follows the official tutorial, [Creating an XML Sitemap](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/tutorials/creating-an-xml-site-map.md).
 That's the source of truth for the code, this file has no local copy, so **fetch it before
 implementing**. Don't choose this approach for a headless / Delivery-API-only site — use
 [Approach A](approach-a-cached-controller.md) instead.
@@ -37,3 +36,7 @@ Most of this is backoffice configuration (Document Types, a composition, a conte
   `/sitemap.xml` route. Reference it in `wwwroot/robots.txt`: `Sitemap: https://www.yoursite.com/xmlsitemap`.
 - No caching — rendered per request (Approach A caches). Per-page editor control is this
   approach's strength (Approach A has none).
+- Apply the same sitemaps.org / Google rules the tutorial follows: absolute `<loc>` URLs,
+  `application/xml; charset=utf-8`, and stay under the **50,000 URL / 50 MB per-file limit**
+  (split into a `<sitemapindex>` beyond that). Google ignores `<priority>`/`<changefreq>`, so the
+  tutorial's per-page priority/change-frequency are editor conveniences, not required output.

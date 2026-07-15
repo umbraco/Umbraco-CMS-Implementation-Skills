@@ -11,13 +11,12 @@ description: >
 
 # Sitemap
 
-Two supported ways to add an XML sitemap. Default to **Approach A**; use **B** when the team
-wants the official-docs approach and/or editor-managed per-page settings.
+Two supported ways to add an XML sitemap:
 
 | | **A — Cached controller** (default) | **B — Razor template** |
 |---|---|---|
 | Reference | [approach-a-cached-controller.md](references/approach-a-cached-controller.md) | [approach-b-razor-template.md](references/approach-b-razor-template.md) |
-| Source | Custom code from documented building blocks | Official [tutorial](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/tutorials/creating-an-xml-site-map), fetched live (no local copy) |
+| Source | Custom code from documented building blocks | Official [tutorial](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/tutorials/creating-an-xml-site-map.md), fetched live (no local copy) |
 | Backoffice work | None — file-based only | Required: Document Types, composition, content node |
 | Sitemap URL | Fixed `/sitemap.xml` | The XmlSiteMap content node (e.g. `/xmlsitemap`) |
 | Caching | In-memory, auto-invalidated | None — rendered per request |
@@ -38,16 +37,6 @@ If ambiguous, briefly offer both and recommend A.
 
 Both target **Umbraco 17+**. Approach A uses `IDocumentNavigationQueryService` (Umbraco 15+).
 
-## Documentation references
-
-- Approach A building blocks: [Composing](https://docs.umbraco.com/umbraco-cms/model-your-content/content-types-and-structure/composing),
-  [Notifications](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/application-code/backend-and-custom-logic/subscribing-to-notifications),
-  [IPublicAccessService](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/application-code/backend-and-custom-logic/umbraco-services),
-  [IDocumentNavigationQueryService](https://docs.umbraco.com/umbraco-cms/extend-your-project/server-side-extensions/services),
-  [Custom Routes](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/application-code/backend-and-custom-logic/routing/custom-routes)
-- Approach B tutorial: [Creating an XML Sitemap](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/tutorials/creating-an-xml-site-map)
-- [Umbraco Developer MCP](https://docs.umbraco.com/umbraco-in-ai/mcp/cms-developer-mcp)
-
 ## Validation
 
-Objective, repeatable assertions for both approaches live in [`evals/evals.json`](evals/evals.json). Run them with the repo's `umbraco-skill-evaluator` authoring skill (with-skill vs. baseline) to reproduce the in-situ validation results.
+Assertions for both approaches live in [`evals/evals.json`](evals/evals.json); run them with the `umbraco-skill-evaluator` skill.

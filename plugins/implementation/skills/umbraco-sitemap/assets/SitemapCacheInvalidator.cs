@@ -13,7 +13,15 @@ public class SitemapCacheInvalidator :
 
     public SitemapCacheInvalidator(IMemoryCache cache) => _cache = cache;
 
-    public void Handle(ContentPublishedNotification notification) => _cache.Remove("SitemapXml");
-    public void Handle(ContentUnpublishedNotification notification) => _cache.Remove("SitemapXml");
-    public void Handle(ContentDeletedNotification notification) => _cache.Remove("SitemapXml");
+    // Clears both cache keys so this works whether SitemapController ("SitemapXml") or
+    // SitemapIndexController ("SitemapUrls") is registered — removing an absent key is a no-op.
+    private void Invalidate()
+    {
+        _cache.Remove("SitemapXml");
+        _cache.Remove("SitemapUrls");
+    }
+
+    public void Handle(ContentPublishedNotification notification) => Invalidate();
+    public void Handle(ContentUnpublishedNotification notification) => Invalidate();
+    public void Handle(ContentDeletedNotification notification) => Invalidate();
 }
