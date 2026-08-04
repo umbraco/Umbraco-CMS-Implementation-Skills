@@ -33,7 +33,13 @@ Install the plugins:
 
 These skills use the open [SKILL.md](https://agentskills.io/home) format, supported natively by multiple AI coding tools. Install them into any supported editor using the [Vercel Skills CLI](https://github.com/vercel-labs/skills).
 
-> **Important:** Always use the `-a` flag to target your editor, otherwise skills will be symlinked into every supported agent directory.
+Most supported editors read skills from a **shared `.agents/skills/` directory** rather
+than an editor-specific one, so one install typically covers your whole team — see
+[Where skills get installed](#where-skills-get-installed).
+
+> **Note:** The `-a` flag targets a specific editor. Without it, the CLI installs once
+> into the shared `.agents/skills/` directory and symlinks `.claude/skills/` to it — it
+> does *not* copy the skills into every agent's directory.
 
 Install all skills for your editor:
 ```bash
@@ -47,17 +53,55 @@ npx skills add umbraco/Umbraco-CMS-Implementation-Skills --skill '*' -a github-c
 npx skills add umbraco/Umbraco-CMS-Implementation-Skills --skill '*' -a windsurf
 ```
 
-### Editor Requirements
+### Where skills get installed
 
-| Editor | Minimum Version | Skills Path |
+`.agents/skills/` is the portable, cross-editor convention — Cursor, GitHub Copilot,
+Codex, Gemini CLI, OpenCode and many others read it directly. The CLI installs there by
+default, so you generally don't need a per-editor copy:
+
+```
+your-project/
+└── .agents/
+    └── skills/
+        ├── umbraco-sitemap/SKILL.md
+        └── umbraco-custom-error-pages/SKILL.md
+```
+
+| Editor | Minimum Version | Installs to |
 |--------|----------------|-------------|
-| **Cursor** | 2.4+ (January 2026) | `.cursor/skills/` |
-| **GitHub Copilot** (VS Code) | VS Code 1.109+ (January 2026) | `.github/skills/` |
-| **GitHub Copilot** (Coding Agent) | Supported | `.github/skills/` |
-| **Windsurf** | Current | `.windsurf/skills/` |
+| **Cursor** | 2.4+ (January 2026) | `.agents/skills/` |
+| **GitHub Copilot** (VS Code) | VS Code 1.109+ (January 2026) | `.agents/skills/` |
+| **GitHub Copilot** (Coding Agent) | Supported | `.agents/skills/` |
+| **Codex / Gemini CLI / OpenCode** | Current | `.agents/skills/` |
 | **Claude Code** | Current (use Quick Start above) | `.claude/skills/` |
+| **Windsurf** | Current | `.windsurf/skills/` |
 
-All of these editors load skills **on-demand** — only the skill relevant to your current task is loaded into context.
+**Two exceptions.** `-a windsurf` and `-a claude-code` write their own copies to
+`.windsurf/skills/` and `.claude/skills/` respectively, and do not create `.agents/`.
+Everything else in the table shares the one directory.
+
+If you omit `-a` entirely, the CLI installs once into `.agents/skills/` and symlinks
+`.claude/skills/<skill>` to it, so Claude Code and the shared editors stay in step from
+a single copy.
+
+Cursor additionally reads `.cursor/skills/`, `.claude/skills/` and `.codex/skills/`, so
+skills already installed for another agent are usually picked up without reinstalling.
+
+Editors load skills **on-demand** — they read only each skill's `name` and `description`
+up front, then load the full `SKILL.md` when it matches what you're working on. That is
+why a skill's `description` matters: it is the only text the agent sees when deciding
+whether the skill is relevant.
+
+Skills are installed as **copies**, pinned in a `skills-lock.json`. To pick up changes
+after this repo is updated:
+
+```bash
+npx skills update
+```
+
+VS Code users who would rather track this repo live than hold copies can clone it once
+and point [`chat.agentSkillsLocations`](https://code.visualstudio.com/docs/agent-customization/agent-skills)
+at the checkout instead.
 
 ---
 
