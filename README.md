@@ -214,8 +214,19 @@ Umbraco-CMS-Implementation-Skills/
 ## Contributing
 
 Skills are added under the relevant plugin's `skills/` folder, each as a directory
-containing a `SKILL.md`. The `skill-creator` skill (in `.claude/skills/`) is used to
-scaffold and maintain them — see [.claude/skills/README.md](.claude/skills/README.md).
+containing a `SKILL.md`.
+
+[AGENTS.md](AGENTS.md) is the entry point for anyone working on this repo — human or
+agent, whichever editor you use. It covers the skill-authoring rules, what keeps a
+skill portable across agents, and the validation gates. `CLAUDE.md` imports it and adds
+only the Claude Code-specific parts.
+
+Two authoring skills (in `.claude/skills/`, not published) help maintain the
+marketplace:
+[`umbraco-skill-author`](.claude/skills/umbraco-skill-author/SKILL.md) scaffolds and
+writes a skill, and
+[`umbraco-skill-evaluator`](.claude/skills/umbraco-skill-evaluator/SKILL.md) runs the
+eval loop over it.
 
 Changes land via branch → pull request → squash-merge into `main`.
 
