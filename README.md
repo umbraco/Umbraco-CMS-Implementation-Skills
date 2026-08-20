@@ -77,13 +77,12 @@ your-project/
 | **Devin CLI** | Current | `.agents/skills/` |
 | **Devin Desktop (formerly Windsurf)** | Current | `.agents/skills/` |
 
-**Two exceptions.** `-a windsurf` and `-a claude-code` write their own copies to
-`.windsurf/skills/` and `.claude/skills/` respectively, and do not create `.agents/`.
-Everything else in the table shares the one directory.
+**Claude Code exception.** `-a claude-code` writes to `.claude/skills/`; Devin,
+Devin Desktop (formerly Windsurf), and the other agents in the table use the
+shared `.agents/skills/` location.
 
-If you omit `-a` entirely, the CLI installs once into `.agents/skills/` and symlinks
-`.claude/skills/<skill>` to it, so Claude Code and the shared editors stay in step from
-a single copy.
+If you omit `-a`, the CLI uses its detected agents or prompts for selection; the
+shared location is `.agents/skills/`.
 
 Cursor additionally reads `.cursor/skills/`, `.claude/skills/` and `.codex/skills/`, so
 skills already installed for another agent are usually picked up without reinstalling.
