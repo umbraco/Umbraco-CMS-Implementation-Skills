@@ -74,7 +74,8 @@ your-project/
 | **GitHub Copilot** (Coding Agent) | Supported | `.agents/skills/` |
 | **Codex / Gemini CLI / OpenCode** | Current | `.agents/skills/` |
 | **Claude Code** | Current (use Quick Start above) | `.claude/skills/` |
-| **Windsurf** | Current | `.windsurf/skills/` |
+| **Devin CLI** | Current | `.agents/skills/` |
+| **Devin Desktop (formerly Windsurf)** | Current | `.agents/skills/` |
 
 **Two exceptions.** `-a windsurf` and `-a claude-code` write their own copies to
 `.windsurf/skills/` and `.claude/skills/` respectively, and do not create `.agents/`.
