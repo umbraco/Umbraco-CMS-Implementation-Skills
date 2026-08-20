@@ -55,9 +55,9 @@ npx skills add umbraco/Umbraco-CMS-Implementation-Skills --skill '*' -a windsurf
 
 ### Where skills get installed
 
-`.agents/skills/` is the portable, cross-editor convention — Cursor, GitHub Copilot,
-Codex, Gemini CLI, OpenCode and many others read it directly. The CLI installs there by
-default, so you generally don't need a per-editor copy:
+`.agents/skills/` is the **recommended** portable, cross-agent location. Devin,
+Devin Desktop/Windsurf, Cursor, GitHub Copilot, Codex, Gemini CLI, OpenCode and
+many others can discover skills there. You generally don't need a per-agent copy:
 
 ```
 your-project/
