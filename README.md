@@ -47,11 +47,19 @@ Install all skills for your editor:
 npx skills add umbraco/Umbraco-CMS-Implementation-Skills --skill '*' -a cursor
 
 # For GitHub Copilot
+Install all skills for your editor:
+```bash
+# For Cursor
+npx skills add umbraco/Umbraco-CMS-Implementation-Skills --skill '*' -a cursor
+ 
+# For GitHub Copilot
 npx skills add umbraco/Umbraco-CMS-Implementation-Skills --skill '*' -a github-copilot
-
-# For Windsurf
+ 
+# For Devin CLI
+npx skills add umbraco/Umbraco-CMS-Implementation-Skills --skill '*' -a devin
+ 
+# For Devin Desktop (formerly Windsurf)
 npx skills add umbraco/Umbraco-CMS-Implementation-Skills --skill '*' -a windsurf
-```
 
 ### Where skills get installed
 
