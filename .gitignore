@@ -17,6 +17,7 @@ bld/
 
 # Visual Studio cache/options
 .vs/
+.vscode/
 *.suo
 *.user
 *.userosscache

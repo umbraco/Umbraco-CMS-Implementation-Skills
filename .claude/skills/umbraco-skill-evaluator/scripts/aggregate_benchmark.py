@@ -32,6 +32,8 @@ Legacy layout (older runs that nested replicate runs under run-*/) is also
 accepted — grading.json is then read from <config>/run-N/grading.json.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import math
