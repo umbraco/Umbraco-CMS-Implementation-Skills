@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<language alias="en-US" intName="English (United States)" localName="English (United States)" culture="en-US">
+  <area alias="healthcheck">
+    <key alias="seoRobotsCheckSuccess">The robots.txt file exists.</key>
+    <key alias="seoRobotsCheckFailed">The robots.txt file does not exist.</key>
+    <key alias="seoRobotsRectifyButtonName">Create robots.txt</key>
+    <key alias="seoRobotsRectifyDescription">Create a default robots.txt file in the root of the site.</key>
+    <key alias="seoRobotsRectifyFailed">The robots.txt file could not be created.</key>
+    <key alias="seoRobotsDeleteButtonName">Delete managed robots.txt</key>
+    <key alias="seoRobotsDeleteDescription">Delete the default robots.txt file created by this health check.</key>
+    <key alias="seoRobotsDeleteFailed">The robots.txt file was not deleted because it is not the managed default file or could not be removed.</key>
+  </area>
+</language>

@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Umbraco-CMS.Skills\Umbraco-CMS.Skills.csproj" />
+    <ProjectReference Include="..\plugins\implementation\skills\umbraco-health-check\examples\robots-txt\Umbraco-HealthCheck.Example.csproj" />
   </ItemGroup>
 
   <ItemGroup>

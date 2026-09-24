@@ -43,8 +43,7 @@
       rather than into the Clean assembly: a directory can't express host membership, since both
       hosts' examples sit under plugins/**/examples/.
     -->
-    <Compile Include="..\plugins\**\examples\*\*BlankTests.cs"
-             Exclude="..\plugins\**\bin\**;..\plugins\**\obj\**" />
+    <Compile Include="..\plugins\**\examples\*\*BlankTests.cs" Exclude="..\plugins\**\bin\**;..\plugins\**\obj\**" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,4 @@
 using System.Net;
-using Umbraco.Skills.Examples.CustomErrorPagesApproachB;
 
 namespace Umbraco_CMS.Skills.TestHost.Blank;
 
@@ -24,6 +23,7 @@ public class ErrorPagesApproachBBlankTests
 
     /// <summary>A URL that matches no content, which is the only way to reach the 404 finder.</summary>
     private const string MissingUrl = "/no-such-page-exists-here/";
+    private const string PageTitle = "Page not found (Approach B)";
 
     [Test]
     public async Task Unknown_url_returns_404()
@@ -45,7 +45,7 @@ public class ErrorPagesApproachBBlankTests
         HttpResponseMessage response = await Client.GetAsync(MissingUrl);
         string body = await response.Content.ReadAsStringAsync();
 
-        Assert.That(body, Does.Contain(ErrorPageFixture.PageTitle),
+        Assert.That(body, Does.Contain(PageTitle),
             "expected the ErrorPage404 node's own content, proving Error404Collection resolved the node "
             + $"by GUID and its template rendered. Got: {body[..Math.Min(300, body.Length)]}");
     }
@@ -76,7 +76,7 @@ public class ErrorPagesApproachBBlankTests
 
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
         Assert.That(await response.Content.ReadAsStringAsync(),
-            Does.Not.Contain(ErrorPageFixture.PageTitle),
+            Does.Not.Contain(PageTitle),
             "the 404 finder must only run when nothing else matched");
     }
 }

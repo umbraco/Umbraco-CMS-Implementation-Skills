@@ -1,0 +1,71 @@
+{
+  "skill_name": "umbraco-health-check",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I have an Umbraco 17 site. Create a custom dashboard Health Check that verifies Umbraco:CMS:Global:UseHttps is true in production, places it in the Security group, and gives editors a useful official documentation link. Tell me how to verify it in Settings > Health Check.",
+      "expected_output": "The agent chooses the backend C# surface, fetches the official Health Check documentation, implements the appropriate configuration-check API for Umbraco 17, and explains dashboard verification.",
+      "files": [],
+      "expectations": [
+        "The response distinguishes a backoffice Health Check from a health probe endpoint",
+        "The implementation uses a stable HealthCheck attribute with a unique GUID, concise name, description, and Security group",
+        "The check reads Umbraco:CMS:Global:UseHttps and treats true as the recommended accepted value",
+        "The response links to the official .md Health Check documentation and gives Settings > Health Check verification steps",
+        "If a buildable project exists, the agent reports a successful build only after running it; otherwise it explicitly says build verification was unavailable"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Add a custom Umbraco 17 Health Check that checks whether robots.txt exists and offers a safe action to create it when missing. Use localized messages and explain how the check can be scheduled and notified.",
+      "expected_output": "The agent uses the general backend C# surface, separates status checking from remediation and notification configuration, and handles failures explicitly.",
+      "files": [],
+      "expectations": [
+        "The implementation derives from the current Umbraco HealthCheck API and returns an explicit success or error status",
+        "A remediation action is offered only when the file is missing, has a stable alias, and is validated in ExecuteAction",
+        "Write failures are surfaced as an error and logged rather than swallowed or reported as success",
+        "User-facing messages use the project localization mechanism, and the response links to official Health Check and health-check configuration documentation",
+        "The response explains that scheduled execution/notifications are separate from dashboard loading",
+        "Build verification is reported honestly"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "On our Umbraco 17 Razor site, show a localized health-check warning to visitors. We support English, Danish, and German, use Dictionary items, and need a safe fallback if the translation is missing.",
+      "expected_output": "The agent chooses the Razor surface, keeps health status computation in backend code, organises stable Dictionary aliases by feature/message, renders the selected culture safely, and defines an explicit fallback chain.",
+      "files": [],
+      "expectations": [
+        "The response explicitly chooses Razor only because frontend presentation was requested and keeps the check logic out of the view",
+        "Dictionary aliases are stable and organised by feature and message purpose rather than translated names",
+        "English, Danish, and German values are treated as deliberate supported cultures",
+        "The fallback order is explicit and ends in a safe non-sensitive invariant message or failure state",
+        "Razor output is encoded and does not expose configuration secrets",
+        "Build verification is reported honestly",
+        "The response does NOT recommend using Html.Raw for localized strings and explicitly warns that Html.Raw can introduce XSS; when HTML rendering is required the agent recommends a sanitization/whitelisting approach and shows a safe alternative"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "I need a Kubernetes readiness endpoint for an Umbraco 17 deployment, not a Settings dashboard check.",
+      "expected_output": "The agent skips this skill and directs the user to the official Health Probes documentation.",
+      "files": [],
+      "expectations": [
+        "The response does not create a custom HealthCheck class or Dictionary setup",
+        "The response identifies readiness/liveness probes as outside this skill’s scope",
+        "The response links to the official .md Health Probes documentation"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "A designer put HTML (bold, links) into a Dictionary item to format a health-check message. In a Razor view they propose rendering it with Html.Raw(dictionaryValue). Is that safe? Show the correct, safe alternatives.",
+      "expected_output": "The agent refuses to recommend raw Html.Raw for untrusted localized content, explains XSS risk, and provides safe alternatives (encoded rendering, sanitization with a whitelist, or storing pre-approved HTML with explicit verification).",
+      "files": [],
+      "expectations": [
+        "The agent warns that Html.Raw with untrusted input creates XSS risk and should not be used by default",
+        "The agent recommends default encoded rendering (e.g., @translation) and only suggests Html.Raw when the HTML is verified/sanitized with a whitelisting sanitizer",
+        "The agent provides a short, safe example or pseudocode showing encoded rendering and one sanitization pattern (or a link to a known sanitizer) rather than an unsafe Html.Raw snippet",
+        "The agent does not output an example that uses Html.Raw on an unchecked Dictionary value without sanitization",
+        "Build or runtime verification is reported honestly when a buildable project exists"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.9.12112.369 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco-CMS.Skills", "Umbraco-CMS.Skills\Umbraco-CMS.Skills.csproj", "{6F94C5EF-FC00-4367-8C1B-A7E8E35BDCC3}"
 EndProject
@@ -26,6 +26,19 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco-CMS.Skills.TestHost.Blank", "Umbraco-CMS.Skills.TestHost.Blank\Umbraco-CMS.Skills.TestHost.Blank.csproj", "{1BA64423-9D39-4263-8376-808FEBF752C9}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleFixtures.Shared", "ExampleFixtures.Shared\ExampleFixtures.Shared.csproj", "{E63E8E38-3D83-4230-869D-FF0C6FBB85B9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "umbraco-health-check", "umbraco-health-check", "{C0388796-F19A-D70E-64A9-86F2DF0A3CAF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{5D4B4661-7188-A874-1DDC-8A8D659F2A4F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "robots-txt", "robots-txt", "{DE9AF4B6-D0E2-4700-805A-04535FC1E3CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco-HealthCheck.Example", "plugins\implementation\skills\umbraco-health-check\examples\robots-txt\Umbraco-HealthCheck.Example.csproj", "{423FFEA8-C860-4CDD-ACCE-603961EECC63}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{C6032B00-5642-4C45-965E-763B1053C913}"
+	ProjectSection(SolutionItems) = preProject
+		plugins\implementation\skills\umbraco-health-check\assets\RobotsTxtHealthCheck.cs = plugins\implementation\skills\umbraco-health-check\assets\RobotsTxtHealthCheck.cs
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -109,6 +122,18 @@ Global
 		{E63E8E38-3D83-4230-869D-FF0C6FBB85B9}.Release|x64.Build.0 = Release|Any CPU
 		{E63E8E38-3D83-4230-869D-FF0C6FBB85B9}.Release|x86.ActiveCfg = Release|Any CPU
 		{E63E8E38-3D83-4230-869D-FF0C6FBB85B9}.Release|x86.Build.0 = Release|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Debug|x64.Build.0 = Debug|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Debug|x86.Build.0 = Debug|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|Any CPU.Build.0 = Release|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|x64.ActiveCfg = Release|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|x64.Build.0 = Release|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|x86.ActiveCfg = Release|Any CPU
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -120,5 +145,13 @@ Global
 		{433CF349-05A5-91CA-929C-30B6D696B345} = {44D02914-A48E-8ECE-DCC5-18A5EAA9998C}
 		{FA0AB323-CF5E-A345-7640-6FA5B3BDF858} = {433CF349-05A5-91CA-929C-30B6D696B345}
 		{3C6E9224-B04D-4ABA-BD58-4657D7344E36} = {FA0AB323-CF5E-A345-7640-6FA5B3BDF858}
+		{C0388796-F19A-D70E-64A9-86F2DF0A3CAF} = {2DE2A6A9-4D32-DEEF-535B-925581132E3E}
+		{5D4B4661-7188-A874-1DDC-8A8D659F2A4F} = {C0388796-F19A-D70E-64A9-86F2DF0A3CAF}
+		{DE9AF4B6-D0E2-4700-805A-04535FC1E3CE} = {5D4B4661-7188-A874-1DDC-8A8D659F2A4F}
+		{423FFEA8-C860-4CDD-ACCE-603961EECC63} = {DE9AF4B6-D0E2-4700-805A-04535FC1E3CE}
+		{C6032B00-5642-4C45-965E-763B1053C913} = {C0388796-F19A-D70E-64A9-86F2DF0A3CAF}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0F562F54-0937-4FA6-BF33-FEDD994916CA}
 	EndGlobalSection
 EndGlobal
