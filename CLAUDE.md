@@ -20,7 +20,7 @@ It is a sibling to the Umbraco Backoffice Skills marketplace and follows the sam
 plugins/<plugin>/
   .claude-plugin/plugin.json       # Per-plugin manifest
   skills/<skill-name>/SKILL.md      # Published skills (one folder per skill)
-.claude/skills/                    # Repo-authoring skills (NOT published) — e.g. skill-creator
+.claude/skills/                    # Repo-authoring skills (NOT published) — e.g. umbraco-skill-author
 Umbraco-CMS.Skills/                # Reference Umbraco 17 instance (validation target)
 Umbraco-CMS.Skills.sln
 ```
@@ -29,7 +29,7 @@ Umbraco-CMS.Skills.sln
 
 - **Published skills** ship to users and live in `plugins/*/skills/`.
 - **Authoring skills** (tooling to create/validate/maintain skills, such as
-  `skill-creator`) live in `.claude/skills/` and are not part of any plugin.
+  `umbraco-skill-author`) live in `.claude/skills/` and are not part of any plugin.
 
 Don't put authoring tooling in a plugin's `skills/` folder, and don't put
 user-facing skills in `.claude/skills/`.
@@ -41,6 +41,46 @@ user-facing skills in `.claude/skills/`.
 - **Versions** are kept in sync between `marketplace.json` and each plugin's `plugin.json`.
   When bumping a plugin version, update both.
 - **Marketplace name:** `umbraco-cms-implementation-marketplace`.
+
+## Skill development & contribution
+
+### Read these first
+
+The authoring tooling lives in `.claude/skills/` and ships in no plugin. Each skill answers a
+different question — read them in this order:
+
+- **`umbraco-skill-author`** — the house shape (a thin SKILL.md that routes, detail in
+  `references/`, code templates in `assets/`, deterministic work in `scripts/`, assertions in
+  `evals/evals.json`), the authoring steps, and the conformance checklist. Start here.
+- **`umbraco-reference-instance`** — the `dotnet test` gate: proof the skill's code **compiles
+  and serves** in a real Umbraco.
+- **`umbraco-skill-evaluator`** — the eval loop: proof Claude **writes** that code when the
+  skill is loaded, versus baseline.
+
+The gate and the evals answer different questions and neither covers for the other — a skill can
+pass one and fail the other. `plugins/implementation/skills/umbraco-sitemap` is the
+golden-standard skill; when in doubt, open it and copy its shape.
+
+### The bar a new skill must meet
+
+- **Right place.** Content modelling → `plugins/content-modelling/skills/`; build-out and
+  delivery → `plugins/implementation/skills/`; authoring tooling → `.claude/skills/`.
+- **Thin SKILL.md.** It routes. Per-approach steps and `if/else` branching belong in
+  `references/`, code in `assets/`. Don't state a fact in two places — the copy the agent reads
+  then becomes a coin toss.
+- **Docs are the source of truth.** Link the Umbraco `.md` doc page and have the agent fetch it
+  rather than reproducing API code from memory; ship verbatim code in `assets/` only when it
+  genuinely isn't in the docs, and say so.
+- **At most two approaches**, each declaring its host as `"host": "clean" | "blank"` in
+  `.generate.json`. This is what keeps the reference-host count at two.
+- **If it ships `assets/`, it ships runtime proof** — an `examples/<approach>/` project plus a
+  fixture named `*Tests.cs` (Clean host) or `*BlankTests.cs` (no starter kit).
+- **The gate is green** — `python3 scripts/generate-examples.py --lint`, then both `dotnet test`
+  projects.
+- **Self-audited** against
+  `.claude/skills/umbraco-skill-author/references/conformance-checklist.md`.
+- **Evals run** with-skill versus baseline, so the skill demonstrably earns its keep.
+- **Build honesty.** Never claim a build, a gate, or an eval run you didn't actually perform.
 
 ## Workflow
 
