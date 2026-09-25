@@ -1,5 +1,5 @@
 {
-  "_comment": "How scripts/generate-examples.sh builds this example from the skill's assets/. namespace = the fixed namespace the <Namespace> placeholder is substituted for; placeholders = the skill's other placeholders, resolved to values that exist in the reference instance; assets = the chosen-approach files to include (Approach A: single-file sitemap — excludes SitemapIndexController.cs to avoid a duplicate /sitemap.xml route).",
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. namespace = the fixed namespace the <Namespace> placeholder is substituted for; placeholders = the skill's other placeholders, resolved to values that exist in the reference instance; assets = the chosen-approach files to include (Approach A: single-file sitemap — excludes SitemapIndexController.cs to avoid a duplicate /sitemap.xml route).",
   "namespace": "Umbraco.Skills.Examples.Sitemap",
   "placeholders": {
     "<filterAlias>": "hideFromXMLSitemap"

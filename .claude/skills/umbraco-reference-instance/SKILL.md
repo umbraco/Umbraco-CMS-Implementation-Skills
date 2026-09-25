@@ -133,8 +133,13 @@ is process-wide static state.
 dotnet build Umbraco-CMS.Skills.sln
 dotnet test Umbraco-CMS.Skills.TestHost/Umbraco-CMS.Skills.TestHost.csproj --no-build
 dotnet test Umbraco-CMS.Skills.TestHost.Blank/Umbraco-CMS.Skills.TestHost.Blank.csproj --no-build
-python3 scripts/generate-examples.py --lint  # every placeholder an asset carries is declared
+node scripts/generate-examples.mjs --lint  # every placeholder an asset carries is declared
 ```
+
+Run the two `dotnet test` commands **separately, exactly as above** — not
+`dotnet test Umbraco-CMS.Skills.sln`. `UmbracoHostSentinel` fails loudly if both hosts ever land in
+one process, and invoking per project keeps that isolation from resting on a VSTest implementation
+detail. CI (`.github/workflows/validate-skills.yml`) invokes them the same way.
 
 **Adding a skill to the gate is an authoring task**, so it's documented where authors work:
 [`umbraco-skill-author`'s runtime-validation reference](../umbraco-skill-author/references/runtime-validation.md)
@@ -163,7 +168,7 @@ appear. If a line you're sure is wrong reports nothing, you have an earlier erro
 don't conclude the call is fine.
 
 **Check API shape against the version you're compiling, not the source you have open.** The
-`Umbraco-CMS` working directory (see CLAUDE.md) is on whatever branch it happens to be on, which
+`Umbraco-CMS` working directory (see AGENTS.md) is on whatever branch it happens to be on, which
 may be a different major than `Directory.Packages.props` pins — confirm with
 `git -C <umbraco-src> rev-parse --abbrev-ref HEAD`. Then let the compiler answer rather than
 grep: add a temporary probe file that calls the API with deliberately wrong arguments, and read

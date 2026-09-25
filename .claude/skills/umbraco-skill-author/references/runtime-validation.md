@@ -91,7 +91,7 @@ Three things about this layout are load-bearing:
 
 ## How `.generate.json` works
 
-The generator (`scripts/generate-examples.py`) copies your `assets/` files into the example,
+The generator (`scripts/generate-examples.mjs`) copies your `assets/` files into the example,
 substituting placeholders. `assets/` stays the single source of truth; the committed example is a
 mechanical projection of it, which is what lets the gate prove that *the code users are told to copy*
 is the code that was tested.
@@ -116,7 +116,7 @@ is the code that was tested.
 - **`placeholders`** — every *other* `<Token>` your assets carry, mapped to a value that exists in
   the instance. **Miss one and it silently survives into the generated code** as a literal string:
   it still compiles, so nothing complains, and the code can simply never find what it's looking for.
-  You no longer have to catch this by eye — `scripts/generate-examples.py` fails the build on any
+  You no longer have to catch this by eye — `scripts/generate-examples.mjs` fails the build on any
   `<Token>` in a string literal or `namespace` declaration that the manifest doesn't declare, and on
   any declared placeholder no asset uses. It found exactly this bug in the sitemap skill, where an
   unmapped `<filterAlias>` had made the hide-from-sitemap filter a permanent no-op.
@@ -126,7 +126,7 @@ is the code that was tested.
   entirely if the skill needs no particular node.
 
 Generation happens automatically during the build. To check a manifest without building, run
-`python3 scripts/generate-examples.py --lint`. Skills whose `assets/` aren't on the current branch are
+`node scripts/generate-examples.mjs --lint`. Skills whose `assets/` aren't on the current branch are
 skipped, so both are safe before your skill PR merges.
 
 Two behaviours worth knowing: an asset listed in `assets` but missing from disk is an error, while

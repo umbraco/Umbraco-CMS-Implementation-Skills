@@ -18,7 +18,10 @@
 
   <PropertyGroup>
     <RepoRoot>$(MSBuildThisFileDirectory)../</RepoRoot>
-    <PythonExe Condition="'$(PythonExe)' == ''">python3</PythonExe>
+    <!-- Override with -p:NodeExe=... if node is not on PATH. Node rather than a scripting
+         runtime that ships with the OS because it is the one interpreter this repo already
+         requires: the skill spec validator and the cross-agent install check both need it. -->
+    <NodeExe Condition="'$(NodeExe)' == ''">node</NodeExe>
   </PropertyGroup>
 
   <!--
@@ -47,7 +50,7 @@
     <PropertyGroup>
       <SkillAssetsDir>$(IntermediateOutputPath)skill-assets/</SkillAssetsDir>
     </PropertyGroup>
-    <Exec Command="&quot;$(PythonExe)&quot; &quot;$(RepoRoot)scripts/generate-examples.py&quot; --manifest &quot;$(MSBuildProjectDirectory)/.generate.json&quot; --out &quot;$(MSBuildProjectDirectory)/$(SkillAssetsDir)&quot;" />
+    <Exec Command="&quot;$(NodeExe)&quot; &quot;$(RepoRoot)scripts/generate-examples.mjs&quot; --manifest &quot;$(MSBuildProjectDirectory)/.generate.json&quot; --out &quot;$(MSBuildProjectDirectory)/$(SkillAssetsDir)&quot;" />
     <ItemGroup>
       <Compile Include="$(SkillAssetsDir)*.cs" />
       <!--

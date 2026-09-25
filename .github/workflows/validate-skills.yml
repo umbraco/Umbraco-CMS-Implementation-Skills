@@ -20,13 +20,20 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      # Pinned explicitly rather than relying on the runner image's default, because the BUILD
+      # depends on it: plugins/Directory.Build.props shells out to node to project each skill's
+      # assets/ into obj/. No install step — the scripts use nothing beyond Node's stdlib.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       # Examples are generated from assets/ at build time, so they cannot drift and there is
       # nothing to diff. What CAN still go wrong is a placeholder an asset carries but its
       # manifest doesn't declare: it survives substitution as a literal string, still compiles,
       # and silently never matches. This catches that before the build. Skills whose assets/
       # aren't present on this branch are skipped, so it's safe pre-merge.
       - name: Placeholders declared for every asset
-        run: python3 scripts/generate-examples.py --lint
+        run: node scripts/generate-examples.mjs --lint
 
       - name: Restore
         run: dotnet restore Umbraco-CMS.Skills.sln
