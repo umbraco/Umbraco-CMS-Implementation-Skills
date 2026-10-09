@@ -61,6 +61,7 @@
     <ProjectReference Include="../plugins/implementation/skills/umbraco-sitemap/examples/approach-b-razor-template/Umbraco-Sitemap.ApproachB.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-custom-error-pages/examples/approach-b-config-based/Umbraco-CustomErrorPages.ApproachB.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-custom-maintenance-page/examples/approach-a-upgrading-viewpath/Umbraco-CustomMaintenancePage.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-templating/examples/render-pipeline/Umbraco-Templating.Example.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

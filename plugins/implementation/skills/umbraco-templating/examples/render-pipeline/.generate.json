@@ -1,0 +1,18 @@
+{
+  "_comment": "How scripts/generate-examples.py builds this example from the skill's assets/. host = 'blank' because the skill's output is a Document Type's template plus the C# that renders it, and the blank host gives the example its own productPage type with no starter-kit templates competing for the route; it also compiles Razor at runtime, which is how the installed .cshtml files are served. namespace = what <Namespace> becomes. assets = every file the skill ships — the building blocks don't conflict, so one example covers them all. requires = the content this example seeds and needs in order to prove anything.",
+  "host": "blank",
+  "namespace": "Umbraco.Skills.Examples.Templating",
+  "assets": [
+    "ProductPageController.cs",
+    "ProductPageViewModel.cs",
+    "RelatedPagesViewComponent.cs",
+    "ContactFormController.cs",
+    "ContactFormModel.cs",
+    "productPage.cshtml",
+    "RelatedPages.Default.cshtml",
+    "contactForm.cshtml"
+  ],
+  "requires": {
+    "documentTypeAliasAtRoot": ["productPage"]
+  }
+}

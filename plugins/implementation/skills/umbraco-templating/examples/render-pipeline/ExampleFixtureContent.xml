@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  EXAMPLE-ONLY scaffolding for the umbraco-templating skill — not shipped to users.
+
+  Declares the productPage Document Type that the skill's ProductPageController hijacks, and the
+  productPage Template record. The Template's <Design> is empty here on purpose: the harness splices in
+  the skill's assets/productPage.cshtml, so the markup installed is the markup the skill ships.
+
+  Content is seeded in code (ExampleHostWiring.cs), beneath site 2's single shared root.
+-->
+<umbPackage>
+  <info>
+    <package>
+      <name>Umbraco Templating — example fixture content</name>
+    </package>
+  </info>
+  <DocumentTypes>
+    <DocumentType>
+      <Info>
+        <Name>Product Page</Name>
+        <Alias>productPage</Alias>
+        <Key>5f2b8c1e-3a47-4d96-b0e8-9c7a1d2e4f60</Key>
+        <Icon>icon-box</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only page type hijacked by the skill's ProductPageController.</Description>
+        <AllowAtRoot>True</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Nothing</Variations>
+        <Compositions />
+        <AllowedTemplates>
+          <Template>productPage</Template>
+        </AllowedTemplates>
+        <DefaultTemplate>productPage</DefaultTemplate>
+      </Info>
+      <Structure>
+        <DocumentType>productPage</DocumentType>
+      </Structure>
+      <GenericProperties>
+        <GenericProperty>
+          <Name>Tagline</Name>
+          <Alias>tagline</Alias>
+          <Key>8d3e6f20-1b5c-4a79-9e42-c07f5a3b8d11</Key>
+          <Type>Umbraco.TextBox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Tab Alias="content">Content</Tab>
+          <SortOrder>0</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs>
+        <Tab>
+          <Key>2a9c4e71-6d08-4f35-8b1a-e5f3c7d90b42</Key>
+          <Caption>Content</Caption>
+          <Alias>content</Alias>
+          <Type>Group</Type>
+          <SortOrder>0</SortOrder>
+        </Tab>
+      </Tabs>
+    </DocumentType>
+  </DocumentTypes>
+  <Templates>
+    <Template>
+      <Name>Product Page</Name>
+      <Alias>productPage</Alias>
+      <Key>b74e2d19-8c3f-4a60-9e15-3d8f0a6c2b97</Key>
+      <Design></Design>
+    </Template>
+  </Templates>
+  <Documents />
+  <MediaTypes />
+  <Stylesheets />
+  <Scripts />
+  <PartialViews />
+  <DictionaryItems />
+  <Languages />
+  <DataTypes />
+  <MediaItems />
+</umbPackage>

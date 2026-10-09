@@ -5,3 +5,7 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @* No `@using Umbraco.Cms.Web.Common.PublishedModels` (unlike the Clean host): this site runs
    ModelsBuilder in Nothing mode, so that namespace is never generated. *@
+@* A non-generic base page here is common in real projects, and it makes a partial typed with
+   `@model X` fail to compile (CS1061). Keeping it means skill views must type themselves with
+   `@inherits UmbracoViewPage<T>`, which compiles either way. *@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage

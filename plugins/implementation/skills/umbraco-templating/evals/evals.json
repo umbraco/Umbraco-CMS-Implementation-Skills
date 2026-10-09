@@ -1,0 +1,53 @@
+{
+  "skill_name": "umbraco-templating",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our Umbraco 17.5 site (root namespace Acme.Web, ModelsBuilder in SourceCodeAuto so we have generated models like ArticleList and Article) has an 'Article List' page — Document Type alias articleList, template Views/articleList.cshtml — that renders all ~600 child articles at once and it's painfully slow. I want server-side paging driven by ?page=N, 12 articles per page, newest first by the articles' publishDate property. The page also needs a 'Trending' sidebar fed by our existing IArticleStatsClient.GetTrendingAsync(CancellationToken) (already registered in DI, returns IReadOnlyList<string> of titles) — that's async, so the action must be async too. Heads-up: our master layout Views/master.cshtml does @inherits UmbracoViewPage and reads Model.Value(\"siteName\", fallback: Fallback.ToAncestors), so whatever model the page gets has to keep working there. Write the C# and the updated template.",
+      "expected_output": "A route-hijacking ArticleListController (RenderController) with an async Index that hides the base sync Index via [NonAction], binds ?page from the query string, builds a view model that still IS the page's IPublishedContent (PublishedContentWrapped or derived from the generated ArticleList) using an injected IPublishedValueFallback, awaits the stats client with the request's cancellation token, and returns CurrentTemplate(model); the template's @inherits is updated to the view model and keeps the master layout.",
+      "files": [],
+      "expectations": [
+        "The controller class is named ArticleListController (matching the articleList alias) and inherits Umbraco.Cms.Web.Common.Controllers.RenderController, with no [Route] attribute or manual route registration",
+        "The action is async (returns Task<IActionResult>) and cannot collide with the inherited synchronous Index(): either the base Index() is overridden with [NonAction], or the async action is named after the template alias (ArticleList) so Umbraco selects it instead of Index — an async Index overload left next to the inherited Index() fails with AmbiguousMatchException",
+        "The page number is bound from the query string as an action parameter (e.g. int page / [FromQuery]) with a safe default/clamp for missing or invalid values, and paging uses Skip/Take of 12 ordered by publishDate descending",
+        "The view model derives from PublishedContentWrapped or from the generated ArticleList model, and its IPublishedValueFallback comes from constructor injection — not from `new PublishedValueFallback(...)`",
+        "The controller constructor chains to base(logger, compositeViewEngine, umbracoContextAccessor) and also injects IArticleStatsClient, which is awaited with a CancellationToken",
+        "The action returns CurrentTemplate(viewModel) (or CurrentTemplate with the view model), not View(...) with a hard-coded path",
+        "The template's @inherits is changed to UmbracoViewPage<TheViewModel> and it still sets Layout to the master template",
+        "If a real buildable project is available, dotnet build succeeds; if not, the agent does not falsely claim to have verified a build, but states whether it expects the code to compile"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Add a newsletter signup form to the footer of our Umbraco 17 site. The footer is Views/Partials/footer.cshtml, rendered from the master layout on every page; root namespace is Acme.Web. Fields: email (required, must be a valid address) and first name (optional). On submit, call our existing IMailingListClient.SubscribeAsync(string email, string? firstName, CancellationToken ct). If validation fails the visitor should see the errors next to the fields without losing what they typed; on success show 'Thanks for subscribing!' and make sure a browser refresh can't resubmit. Our team convention is that async methods end in Async, so please call the controller action SubscribeAsync. Also, we don't want bots posting straight to the controller's URL. Give me all the files.",
+      "expected_output": "A SurfaceController with a model, a form partial using Html.BeginUmbracoForm, CurrentUmbracoPage() on invalid ModelState, TempData + RedirectToCurrentUmbracoPage() on success, [ValidateUmbracoFormRouteString] with the correct using, and explicit handling of the Async-suffix routing trap.",
+      "files": [],
+      "expectations": [
+        "The controller inherits Umbraco.Cms.Web.Website.Controllers.SurfaceController, is public, sits in a namespace, and its constructor chains to the SurfaceController base constructor",
+        "The agent handles the Async-suffix trap: either the action is not named with an Async suffix, or SuppressAsyncSuffixInActionNames = false is configured — and the agent tells the user why the requested name would otherwise fail",
+        "When ModelState is invalid the action returns CurrentUmbracoPage() (re-render in place), not a redirect",
+        "On success the action sets a TempData value and returns RedirectToCurrentUmbracoPage() (Post/Redirect/Get), and the view shows 'Thanks for subscribing!' from that TempData value",
+        "The action has [ValidateUmbracoFormRouteString] and the file includes `using Umbraco.Cms.Web.Common.Filters;` so it compiles",
+        "The form is rendered with Html.BeginUmbracoForm<TheController>(...) inside a partial that is included from footer.cshtml with <partial> or await Html.PartialAsync (not Html.Partial), with per-field validation messages (asp-validation-for or equivalent)",
+        "IMailingListClient is injected and awaited with a CancellationToken; submissions are not stored with IContentService",
+        "If a real buildable project is available, dotnet build succeeds; if not, the agent does not falsely claim to have verified a build, but states whether it expects the code to compile"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We added an 'Event' Document Type on our Umbraco 17 site (alias eventPage; properties title, startDate, description (rich text), venue). ModelsBuilder is set to Nothing, so there are no generated models. A colleague hand-wrote Views/eventPage.cshtml from the Umbraco docs, but (a) it won't compile — `@Model.Value<IHtmlString>(\"description\")` errors — and (b) new event pages 404 on the front end even though they're published. We also need an 'Upcoming events' widget: the next 3 events after today ordered by startDate, never including the page it's shown on. It goes on the event template now and will be reused inside a Block List item view later. Finally, the footer is rendered with @Html.Partial(\"footer\") and our analyzer complains about it. We don't have the Umbraco MCP connected — I can click around the backoffice myself if you tell me what to do. Sort it all out.",
+      "expected_output": "The template fixed to IHtmlEncodedString with a non-generic UmbracoViewPage; the 404 explained as an unregistered/unassigned Template with manual backoffice steps; an UpcomingEvents view component that takes the content as a parameter, filters/orders/takes 3; and the footer switched to async partial rendering.",
+      "files": [],
+      "expectations": [
+        "The rich-text description is rendered via Value<IHtmlEncodedString>(\"description\") (with the Umbraco.Cms.Core.Strings namespace) or rendered directly from Value(\"description\") — IHtmlString is removed",
+        "The agent explains the 404 as the Template not existing in Umbraco's database and/or not being allowed + set as default on the eventPage Document Type (a .cshtml file alone is not picked up), and gives manual backoffice steps since the MCP is not connected",
+        "The Upcoming events widget is a ViewComponent class with its view at Views/Shared/Components/<Name>/Default.cshtml (not a partial view with logic, not a surface controller child action)",
+        "The view component receives the current content (IPublishedContent) as an Invoke/InvokeAsync parameter rather than resolving it from IUmbracoContextAccessor/UmbracoContext, so it works inside a Block List item view",
+        "The widget excludes past events and the current page, orders by startDate read as a typed date value (e.g. Value<DateTime>, or a helper that also handles Umbraco 17's DateOnly / date-with-time-zone editors), and takes 3",
+        "Views use the non-generic UmbracoViewPage (or UmbracoViewPage<IPublishedContent>) with Value<T>(\"alias\") access — no generated ModelsBuilder types are referenced",
+        "The footer is rendered with <partial name=\"footer\" /> or await Html.PartialAsync(\"footer\"), not Html.Partial",
+        "If a real buildable project is available, dotnet build succeeds; if not, the agent does not falsely claim to have verified a build, but states whether it expects the code to compile"
+      ]
+    }
+  ]
+}
