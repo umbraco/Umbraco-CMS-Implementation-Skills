@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    VALIDATION-ONLY example project for umbraco-configuration.
+
+    Loaded by SITE 1 (Umbraco-CMS.Skills, Clean) because the one piece of C# this skill ships — the
+    server-role composer — registers into DI. The JSON profiles are not loaded by the host at all:
+    they are embedded here and the fixture binds them into Umbraco's real options classes, which
+    needs no running site (and a load-balanced or Azure profile could not boot in CI anyway).
+
+    The composer is inert unless Deployment:ServerRole is set, so referencing it from the shared
+    host does not change how any other example behaves.
+
+    The skill's assets are generated into obj/ at build time by plugins/Directory.Build.props and
+    embedded/compiled from there, so what is tested IS what the skill ships.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.Configuration</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+</Project>

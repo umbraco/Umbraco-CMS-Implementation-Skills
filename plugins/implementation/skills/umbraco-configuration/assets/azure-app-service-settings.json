@@ -1,0 +1,27 @@
+[
+  {
+    "name": "ASPNETCORE_ENVIRONMENT",
+    "value": "Production",
+    "slotSetting": false
+  },
+  {
+    "name": "ConnectionStrings__umbracoDbDSN",
+    "value": "@Microsoft.KeyVault(SecretUri=<KeyVaultSqlSecretUri>)",
+    "slotSetting": true
+  },
+  {
+    "name": "ConnectionStrings__umbracoDbDSN_ProviderName",
+    "value": "Microsoft.Data.SqlClient",
+    "slotSetting": false
+  },
+  {
+    "name": "Umbraco__Storage__AzureBlob__Media__ConnectionString",
+    "value": "@Microsoft.KeyVault(SecretUri=<KeyVaultBlobSecretUri>)",
+    "slotSetting": true
+  },
+  {
+    "name": "Umbraco__CMS__WebRouting__UmbracoApplicationUrl",
+    "value": "<UmbracoApplicationUrl>",
+    "slotSetting": true
+  }
+]

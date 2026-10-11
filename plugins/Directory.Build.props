@@ -60,7 +60,7 @@
         inherits the same LogicalName, and the build fails with a duplicate resource identifier that
         names an innocent file.
       -->
-      <SkillAssetResource Include="$(SkillAssetsDir)*.cshtml;$(SkillAssetsDir)*.xml" />
+      <SkillAssetResource Include="$(SkillAssetsDir)*.cshtml;$(SkillAssetsDir)*.xml;$(SkillAssetsDir)*.json" />
       <EmbeddedResource Include="@(SkillAssetResource)"
                         LogicalName="%(SkillAssetResource.Filename)%(SkillAssetResource.Extension)" />
     </ItemGroup>

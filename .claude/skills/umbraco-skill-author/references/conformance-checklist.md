@@ -40,14 +40,19 @@ fix anything that fails. A skill is ready only when every applicable item passes
 **Approaches (count is NOT the constraint — coverage is)**
 - [ ] **At most two approaches per skill.** This is load-bearing, not editorial: one host exists per
   approach *kind* (below), so two approaches keep the gate at exactly two hosts however many skills
-  are added. A third approach means a third host.
+  are added. A third approach means a third host. An *approach* is a competing implementation of
+  the same feature. Deployment scenarios that share one `examples/` project (umbraco-configuration's
+  profiles) are not approaches and are not capped, because they add no host.
 - [ ] Each approach declares a coverage tier, and the tier is true:
   | Tier | Requires | What you may then claim |
   |---|---|---|
   | **Asserted** | `examples/<approach>/` + a `<ProjectReference>` from a host + a fixture on rendered output | "this runs on the pinned Umbraco" |
+  | **Bound** | `examples/<approach>/` + a fixture that strictly binds the shipped config into the pinned Umbraco's own options classes and runs Umbraco's own validators over it | "accepted by the pinned Umbraco's configuration model" — never "runs" or "tested on <platform>" |
   | **Compiled** | `examples/<approach>/` in the .sln, referenced by no host | "this builds against the pinned Umbraco" |
   | **Documented** | no example; ships no code anywhere in the repo | "an eval graded the guidance; nothing ran" |
-- [ ] At least one approach is **Asserted**. A skill where nothing runs isn't gated.
+- [ ] At least one approach is **Asserted** — or **Bound**, only for a skill whose deliverable is
+  configuration the reference hosts cannot boot (Production mode, load balancing, a cloud platform).
+  A skill where nothing runs isn't gated.
 - [ ] **Documented** is only legal when the approach ships no code at all. "Committed but ungated" is
   not a tier.
 - [ ] Variants *inside* an approach carry their own tier. The two-host split does not fix
@@ -62,6 +67,9 @@ fix anything that fails. A skill is ready only when every applicable item passes
     Clean must be absent, because Clean is itself a competing implementation of these features
     (`xMLSitemap` type + view, `error` type + view). Asserting on the Clean host would prove Clean
     works, not that the skill's guidance works.
+  - A **Bound** example boots neither host; its fixture only needs an assembly to compile into. Any
+    C# it ships still follows the rule above, and on a shared host must be inert unless configured
+    (and a test must prove that).
 - [ ] Declared as `"host": "clean" | "blank"` in `.generate.json` (absent means `clean`).
 - [ ] Before assuming two approaches can share a host, check for **registration conflicts**: the same
   route template, or any `AddUnique`/`Set*` builder extension. `SetContentLastChanceFinder` REPLACES
@@ -75,7 +83,7 @@ fix anything that fails. A skill is ready only when every applicable item passes
 - [ ] Nothing generated is committed — examples are projected from `assets/` into `obj/` at build
   time, so there is no second copy that can drift.
 - [ ] Content the example depends on is declared via `requires`, not asserted by hand.
-- [ ] Fixture uses its host's shared client (`ReferenceSiteFixture.Client` or
+- [ ] (Asserted only) Fixture uses its host's shared client (`ReferenceSiteFixture.Client` or
   `BlankSiteFixture.Client`), restores any content it mutates, and asserts rendered content rather
   than just a status code.
 - [ ] Site-2 fixtures are named `*BlankTests.cs` — that suffix is what routes them into the blank test

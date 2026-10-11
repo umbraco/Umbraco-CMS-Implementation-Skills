@@ -54,7 +54,29 @@ Two reasons the split exists, and neither is about tidiness:
   naming scheme dodges that.
 
 Because there is one host per approach kind, **a skill may document at most two approaches**. That cap
-is what keeps the host count at two as skills are added.
+is what keeps the host count at two as skills are added. An *approach* is a competing implementation
+of the same feature; deployment scenarios that share one `examples/` project (umbraco-configuration's
+profiles) add no host and are not capped.
+
+## When neither host can boot it: the Bound tier
+
+Some deliverables are configuration the reference hosts cannot run — Production runtime mode, a
+load-balanced topology, a cloud platform. Layer 2 ("it serves") is unreachable for these, and an HTTP
+assertion would prove something other than what the skill ships. Gate them as **Bound** instead:
+
+- The JSON still ships in `assets/` and is still projected at build time (it is embedded in the
+  example assembly), so layers 1, 3 and 4 hold.
+- The fixture binds each file into the pinned Umbraco's own options classes with
+  `ErrorOnUnknownConfiguration`, and runs Umbraco's own validators over the result. It never touches
+  the host's shared client.
+- Include a negative control (a deliberately broken profile the validators reject), or the fixture
+  passes for any input.
+- Any C# shipped alongside still follows the host table above, and on a shared host must be inert
+  unless configured — with a test proving it.
+- The skill may claim "accepted by the pinned Umbraco's configuration model". It may not claim
+  "runs" or "tested on <platform>".
+
+`umbraco-configuration` is the reference: see its `examples/golden-configs/`.
 
 ## What you add
 

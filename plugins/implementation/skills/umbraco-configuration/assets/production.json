@@ -1,0 +1,43 @@
+{
+  "$schema": "appsettings-schema.json",
+  "Serilog": {
+    "MinimumLevel": {
+      "Default": "Information",
+      "Override": {
+        "Microsoft": "Warning",
+        "Microsoft.Hosting.Lifetime": "Information",
+        "System": "Warning"
+      }
+    }
+  },
+  "Umbraco": {
+    "CMS": {
+      "Runtime": {
+        "Mode": "Production"
+      },
+      "Hosting": {
+        "Debug": false
+      },
+      "Global": {
+        "UseHttps": true,
+        "VersionCheckPeriod": 0
+      },
+      "ModelsBuilder": {
+        "ModelsMode": "Nothing"
+      },
+      "WebRouting": {
+        "UmbracoApplicationUrl": "<UmbracoApplicationUrl>"
+      },
+      "Security": {
+        "UserPassword": {
+          "RequiredLength": 14
+        }
+      },
+      "Content": {
+        "ContentVersionCleanupPolicy": {
+          "EnableCleanup": true
+        }
+      }
+    }
+  }
+}

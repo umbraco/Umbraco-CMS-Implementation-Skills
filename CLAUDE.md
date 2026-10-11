@@ -80,7 +80,12 @@ serves correctly is a model-free `dotnet test` gate:
   package migration). Clean has to be absent from the second: it ships its own `xMLSitemap` and
   `error` types and views, which are competing implementations of the very features under test. Each
   example declares its host as `"host": "clean" | "blank"` in `.generate.json`. This is also why a
-  skill may document at most two approaches — it keeps the host count at two.
+  skill may document at most two approaches — it keeps the host count at two. (Deployment scenarios
+  sharing one example, as in `umbraco-configuration`, are not approaches.) Configuration the hosts
+  cannot boot — Production mode, load balancing, a cloud platform — is gated as **Bound** instead:
+  the fixture binds the shipped JSON into Umbraco's own options classes and runs Umbraco's
+  validators, with no HTTP assertion, and the skill may claim only "accepted by Umbraco's
+  configuration model".
 - `Umbraco-CMS.Skills.TestHost/` and `Umbraco-CMS.Skills.TestHost.Blank/` (NUnit +
   `WebApplicationFactory`) each boot their host in-process against an isolated test SQLite DB and
   HTTP-assert the skills. One host per assembly, because Umbraco's `StaticServiceProvider` is
