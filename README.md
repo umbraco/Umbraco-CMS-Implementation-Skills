@@ -11,6 +11,18 @@ A Claude Code plugin marketplace with skills for Umbraco **content modelling** a
 | `umbraco-cms-content-modelling-skills` | Document types, element types, data types, compositions, content structure |
 | `umbraco-cms-implementation-skills` | Site build-out, templates, views, controllers, delivery |
 
+### Available skills
+
+All current skills are in `umbraco-cms-implementation-skills`; the content modelling plugin has none yet.
+
+| Skill | What it does |
+|-------|--------------|
+| `umbraco-sitemap` | Adds an XML sitemap, as a cached controller or a Razor template with a Document Type |
+| `umbraco-custom-error-pages` | Custom 404 and 500 pages, via a last-chance content finder or the `Error404Collection` config |
+| `umbraco-custom-maintenance-page` | Customises the page visitors see while Umbraco runs upgrade migrations |
+| `umbraco-common-pitfalls` | Reference guide to anti-patterns, performance traps and common mistakes |
+| `umbraco-templating` | Templates, partial views, view components, route hijacking and surface-controller forms, with runtime-tested code |
+
 ## Quick Start
 
 Add the marketplace:
