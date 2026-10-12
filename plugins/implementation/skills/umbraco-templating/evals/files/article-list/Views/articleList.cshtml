@@ -1,0 +1,17 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ArticleList>
+@{
+    Layout = "master.cshtml";
+}
+<h1>@Model.Title</h1>
+
+@* Renders every article at once — ~600 of them. *@
+<ul class="article-list">
+    @foreach (Article article in Model.Children<Article>()!.OrderByDescending(a => a.PublishDate))
+    {
+        <li>
+            <a href="@article.Url()">@article.Title</a>
+            <time>@article.PublishDate.ToString("d MMM yyyy")</time>
+            <p>@article.Summary</p>
+        </li>
+    }
+</ul>
