@@ -15,7 +15,7 @@ controllers aren't for rendering widgets: that's a [view component](view-compone
 | Docs snippet | Problem | Use instead |
 |---|---|---|
 | `[ValidateUmbracoFormRouteString]` with the listed usings | Doesn't compile (CS0246) | Add `using Umbraco.Cms.Web.Common.Filters;` |
-| Async action named `SomethingAsync` | "Could not find a Surface controller route" | Drop the `Async` suffix from the action name |
+| Async action named `SomethingAsync` | MVC routes it as `Something`, so `BeginUmbracoForm(…, "SomethingAsync")` fails with "Could not find a Surface controller route" | Name the method `Something`, or keep `SomethingAsync` and add `[ActionName("Something")]`, then pass `"Something"` to `BeginUmbracoForm` |
 
 ## The files
 

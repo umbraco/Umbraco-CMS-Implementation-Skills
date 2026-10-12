@@ -31,6 +31,11 @@ the node's Template, a Razor view.
 | Accept a form POST from a content page | Surface controller | [surface-controllers.md](references/surface-controllers.md) |
 | JSON / REST endpoint | Not a templating concern: plain ASP.NET Core controller | *Other controller types* in [surface-controllers.md](references/surface-controllers.md) |
 
+**Before writing any code, open the reference for every block you use and start from its asset.**
+The Umbraco 17 traps that break these pages are covered only there. For example, a hijacked
+`Index` overload throws `AmbiguousMatchException`, and an `*Async` surface action name doesn't route.
+Code written from this page alone will hit them.
+
 ### How to decide
 
 Use the lightest block that does the job: template → partial → view component → hijacked
@@ -42,8 +47,10 @@ component and renders a form partial.
 A new template renders only once it's registered in Umbraco and assigned to the Document Type,
 otherwise the page 404s: see step 3 of [views-and-partials.md](references/views-and-partials.md).
 
-Finish every building block with `dotnet build` and a request to a page that exercises it; if no
-runnable project is available, say so rather than claiming it works.
+Finish every building block with `dotnet build -p:RazorCompileOnBuild=true` and a request to a page
+that exercises it. The stock Umbraco csproj sets `RazorCompileOnBuild=false`, so a plain `dotnet build`
+never compiles a single view and passes even when they're broken. If no runnable project is
+available, say so rather than claiming it works.
 
 ## Version compatibility
 
@@ -62,7 +69,8 @@ assets over the docs where they disagree.
   `Root()`), see the sibling skill `umbraco-common-pitfalls`.
 - **Async rendering only:** `<partial>`, `await Html.PartialAsync`, `await Component.InvokeAsync`.
   Never `Html.Partial`/`Html.RenderPartial`, which are sync-over-async and can deadlock (analyzer MVC1000).
-- **Typed values.** Use `Value<T>("alias")`, or the generated ModelsBuilder property. Rich text
+- **Typed values.** Use `@(Model.Value<T>("alias"))`, or the generated ModelsBuilder property. The
+  `@(...)` is required: in a bare `@Model.Value<T>(...)` Razor reads `<T>` as an HTML tag (CS1503). Rich text
   converts to `IHtmlEncodedString`, so render it directly. Never `Html.Raw` an editor string.
 - **Keep the master layout generically typed** (`UmbracoViewPage` or a shared interface, not `UmbracoViewPage<Home>`),
   or a hijacked page with a custom view model will throw when the layout binds.

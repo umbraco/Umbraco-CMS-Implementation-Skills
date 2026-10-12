@@ -16,7 +16,7 @@ data that isn't on the node, [hijack the route](route-hijacking.md).
 
 | Docs snippet | Problem | Use instead |
 |---|---|---|
-| `Model.Value<IHtmlString>("bodyContent")` | `IHtmlString` doesn't exist in ASP.NET Core | `Model.Value<IHtmlEncodedString>(…)` (`@using Umbraco.Cms.Core.Strings`) |
+| `Model.Value<IHtmlString>("bodyContent")` | `IHtmlString` doesn't exist in ASP.NET Core | `@(Model.Value<IHtmlEncodedString>(…))` (`@using Umbraco.Cms.Core.Strings`) |
 | `Members.IsLoggedIn()`, `Members.GetCurrentMemberProfileModel()` | The `Members` helper was removed | `@inject IMemberManager` (`Umbraco.Cms.Core.Security`) |
 | `@Html.Partial("ChildItem", page)` | Synchronous; analyzer MVC1000 | `<partial name="ChildItem" model="page" />` or `@await Html.PartialAsync(…)` |
 | `@Model` "of type `Umbraco.Web.Mvc.ContentModel`" | v8 type | The view's `UmbracoViewPage<T>` model is the content (or your view model) |
