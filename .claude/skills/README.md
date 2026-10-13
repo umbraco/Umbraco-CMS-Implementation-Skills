@@ -36,7 +36,7 @@ Each of these answers a different question, and none of them covers for another:
     └── eval-viewer/
 ```
 
-The contribution bar these enforce is summarised in [`CLAUDE.md`](../../CLAUDE.md#skill-development--contribution).
+The contribution bar these enforce is summarised in [`AGENTS.md`](../../AGENTS.md#contributing-a-skill).
 
 ## What goes here
 

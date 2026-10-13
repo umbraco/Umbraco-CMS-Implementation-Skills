@@ -70,7 +70,7 @@ fix anything that fails. A skill is ready only when every applicable item passes
 
 **Runtime gate (skip only if the skill ships nothing in `assets/` — and say so)**
 - [ ] `.generate.json` maps **every** placeholder the assets carry. Enforced by
-  `scripts/generate-examples.py --lint`, because a missed one survives substitution as a literal
+  `scripts/generate-examples.mjs --lint`, because a missed one survives substitution as a literal
   string, still compiles, and silently never matches.
 - [ ] Nothing generated is committed — examples are projected from `assets/` into `obj/` at build
   time, so there is no second copy that can drift.

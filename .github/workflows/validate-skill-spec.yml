@@ -1,0 +1,123 @@
+name: Validate skill spec
+
+# Static, model-free checks that published skills stay portable across agents:
+#   1. every SKILL.md conforms to the open Agent Skills spec (agentskills.io)
+#   2. the skills index in AGENTS.md is in sync
+#   3. the nested plugins/*/skills/ layout is still discoverable by the Vercel
+#      Skills CLI, so non-Claude installs can't silently break
+#
+# This complements validate-skills.yml, which is the runtime (dotnet test) gate
+# proving skill output compiles and serves.
+
+on:
+  pull_request:
+    paths:
+      - "plugins/**"
+      - ".claude/skills/**"
+      - "AGENTS.md"
+      - "scripts/**"
+      - ".claude-plugin/**"
+      - ".github/workflows/validate-skill-spec.yml"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  spec:
+    name: SKILL.md spec compliance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node only, and deliberately no install step: the validator and its
+      # tests use nothing beyond the Node standard library.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Test the validator
+        run: node --test scripts/*.test.mjs
+
+      - name: Validate skills and check index freshness
+        run: node scripts/validate-skills.mjs --check-index
+
+  cross-agent-install:
+    name: Cross-agent discoverability (Vercel Skills CLI)
+    runs-on: ubuntu-latest
+    needs: spec
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # Install from the local checkout so PRs are tested before merge. Each
+      # target exercises a different agent resolution path in the CLI; all
+      # currently converge on the shared .agents/skills/ directory.
+      - name: Install all skills for Cursor
+        run: npx --yes skills add . --skill '*' -a cursor --yes
+
+      - name: Install all skills for GitHub Copilot
+        run: npx --yes skills add . --skill '*' -a github-copilot --yes
+
+      - name: Install all skills for Codex
+        run: npx --yes skills add . --skill '*' -a codex --yes
+
+      - name: Assert every published skill was discovered
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Skill folder names, one per line, from a SKILL.md search rooted at $1
+          # at exactly depth $2.
+          skill_names() {
+            find "$1" -mindepth "$2" -maxdepth "$2" -name SKILL.md -print0 \
+              | xargs -0 -r -n1 dirname \
+              | xargs -r -n1 basename \
+              | sort -u
+          }
+
+          count() { [ -n "$1" ] && printf '%s\n' "$1" | wc -l | tr -d ' ' || echo 0; }
+
+          # SKILL.md sits at plugins/<plugin>/skills/<skill>/SKILL.md -> depth 4.
+          published=$(skill_names plugins 4)
+          published_count=$(count "$published")
+          echo "Published skills in repo: $published_count"
+          if [ "$published_count" -eq 0 ]; then
+            echo "No skills published yet - skipping placement assertions."
+            exit 0
+          fi
+
+          # The CLI currently places every agent's skills in the shared
+          # .agents/skills/ dir. If it ever splits per agent again, add those here.
+          dir=.agents/skills
+          if [ ! -d "$dir" ]; then
+            echo "::error::Expected $dir to exist after install but it does not - the CLI failed to place any skills."
+            exit 1
+          fi
+          installed=$(skill_names "$dir" 2)
+          echo "Placed in $dir: $(count "$installed") skill(s)"
+
+          # Hard requirement: every published skill must be discoverable. This is
+          # what guards the nested plugins/*/skills/ layout against silent breakage.
+          missing=$(comm -23 <(printf '%s\n' "$published") <(printf '%s\n' "$installed"))
+          if [ -n "$missing" ]; then
+            echo "::error::These published skills were NOT placed in $dir - the CLI failed to discover the nested plugins/*/skills/ layout:"
+            printf '%s\n' "$missing" | sed 's/^/  - /'
+            exit 1
+          fi
+          echo "OK: all $published_count published skill(s) were discovered and placed."
+
+          # Advisory: anything else the CLI picked up is not a published skill.
+          # Today this catches repo-authoring skills under .claude/skills/ being
+          # installed into consumer projects. The CLI has no ignore mechanism, so
+          # this is reported rather than enforced.
+          extra=$(comm -13 <(printf '%s\n' "$published") <(printf '%s\n' "$installed"))
+          if [ -n "$extra" ]; then
+            echo "::warning::The CLI also installed skills that are not published under plugins/*/skills/. Consumers running 'npx skills add' get these too:"
+            printf '%s\n' "$extra" | sed 's/^/  - /'
+          fi
