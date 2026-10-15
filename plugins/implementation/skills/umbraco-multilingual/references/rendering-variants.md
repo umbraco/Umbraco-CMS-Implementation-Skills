@@ -96,7 +96,9 @@ Both read the current request's culture. Prefer `GetDictionaryValueOrDefault` so
 translation renders readable text rather than an empty string. For dropdown/checkbox property editors,
 use dictionary keys as the option values and translate them at render time (the tutorial shows the
 loop). The package manifest in [`assets/`](../assets/multilingual-package.xml) shows the dictionary
-XML shape.
+XML shape. For depth - the full overload set, the `GetDictionaryValue(key, "fallback")` compile
+trap, key grouping, null-safe multi-value rendering and culture outside routed requests - load
+the `umbraco-dictionary-items` skill.
 
 ## Blocks
 
