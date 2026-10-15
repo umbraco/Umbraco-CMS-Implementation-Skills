@@ -74,6 +74,12 @@ public class ImportTemplatingExample : AsyncPackageMigrationBase
 /// Copies the skill's partial and view-component view to the paths its reference tells users to use,
 /// then seeds two productPage nodes under site 2's shared root.
 ///
+/// Also writes a folder-scoped _ViewImports.cshtml declaring a non-generic base page beside those
+/// views. Many real projects declare one in Views/_ViewImports.cshtml, and under it a view typed with a
+/// bare `@model T` fails to compile (CS1061). Scoping it to the two folders this example writes into
+/// reproduces that setup for the skill's own views without changing how the rest of the shared blank
+/// host renders.
+///
 /// Files are (re)written on every boot because Views/ is gitignored scratch on the host and a fresh
 /// checkout has none; the write is content-comparing so runtime compilation isn't invalidated for
 /// nothing. Content seeding is idempotent because the test database is reused across boots.
@@ -86,6 +92,13 @@ public class TemplatingExampleSeeder : INotificationAsyncHandler<UmbracoApplicat
         ("contactForm.cshtml", "Views/Partials/contactForm.cshtml"),
         ("RelatedPages.Default.cshtml", "Views/Shared/Components/RelatedPages/Default.cshtml"),
     ];
+
+    /// <summary>Example-owned, not from the skill: the base page a real project's _ViewImports often declares.</summary>
+    private const string BasePageViewImports =
+        "@* Written by the umbraco-templating example harness; see ExampleHostWiring.cs. *@\n"
+        + "@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage\n";
+
+    private static readonly string[] BasePageFolders = ["Views/Partials", "Views/Shared"];
 
     private readonly IWebHostEnvironment _environment;
     private readonly IContentService _contentService;
@@ -116,17 +129,14 @@ public class TemplatingExampleSeeder : INotificationAsyncHandler<UmbracoApplicat
     public async Task HandleAsync(UmbracoApplicationStartedNotification notification, CancellationToken cancellationToken)
     {
         var assembly = typeof(TemplatingExampleSeeder).Assembly;
+        foreach (string folder in BasePageFolders)
+        {
+            await WriteIfChangedAsync($"{folder}/_ViewImports.cshtml", BasePageViewImports, cancellationToken);
+        }
+
         foreach ((string resource, string relativePath) in ViewFiles)
         {
-            string path = Path.Combine(_environment.ContentRootPath, relativePath);
-            string markup = EmbeddedManifest.Text(assembly, resource);
-            if (System.IO.File.Exists(path) && await System.IO.File.ReadAllTextAsync(path, cancellationToken) == markup)
-            {
-                continue;
-            }
-
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            await System.IO.File.WriteAllTextAsync(path, markup, cancellationToken);
+            await WriteIfChangedAsync(relativePath, EmbeddedManifest.Text(assembly, resource), cancellationToken);
         }
 
         IContent? root = FixtureSite.FindRoot(_contentService);
@@ -143,6 +153,19 @@ public class TemplatingExampleSeeder : INotificationAsyncHandler<UmbracoApplicat
         FixtureSite.EnsureChild(_contentService, _contentTypeService, root, "productPage", "Related product");
 
         await FixtureSite.PublishAndRefreshAsync(_publishingService, _documentUrlService, _cacheRebuilder, root);
+    }
+
+    /// <summary>Content-comparing, so runtime compilation isn't invalidated on every boot.</summary>
+    private async Task WriteIfChangedAsync(string relativePath, string content, CancellationToken cancellationToken)
+    {
+        string path = Path.Combine(_environment.ContentRootPath, relativePath);
+        if (System.IO.File.Exists(path) && await System.IO.File.ReadAllTextAsync(path, cancellationToken) == content)
+        {
+            return;
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        await System.IO.File.WriteAllTextAsync(path, content, cancellationToken);
     }
 }
 
