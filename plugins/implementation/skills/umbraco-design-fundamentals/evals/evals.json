@@ -1,0 +1,69 @@
+{
+  "skill_name": "umbraco-design-fundamentals",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Umbraco 17 site. Add a site.css with our brand colours (#1b264f, #f5c1bc) and a site.js that logs 'ready', and hook both up so every page loads them.",
+      "expected_output": "Creates wwwroot/css/site.css and wwwroot/scripts/site.js and references them once in the shared layout.",
+      "files": [],
+      "expectations": [
+        "The stylesheet is created under wwwroot/css and the script under wwwroot/scripts (or the agent justifies another wwwroot path)",
+        "Both are referenced once in the shared layout (<link> in <head>, <script> near </body>), not per template",
+        "Served URLs are given as /css/site.css and /scripts/site.js",
+        "With the skill loaded: the agent opened only stylesheets-javascript.md from this skill, not every reference file (not applicable to baseline runs)",
+        "Any Umbraco docs fetched are the 17.latest pages",
+        "If a real buildable project is available, the build succeeds; if not, the agent does not falsely claim a verified build"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17, ModelsBuilder on. On the Article template render the title (fall back to the parent's title if empty), the rich text body, the article date as dd/MM/yyyy, and the hero image from the 'heroImage' media picker as a 'banner' crop plus an 800px-wide version for mobile.",
+      "expected_output": "Uses ModelsBuilder/typed values, Fallback.ToAncestors for the title, IHtmlEncodedString or typed body, formatted date, GetCropUrl with 'banner' and width: 800, with null checks.",
+      "files": [],
+      "expectations": [
+        "Title uses Fallback.ToAncestors (via Value or ValueFor) with the Umbraco.Cms.Core.Models.PublishedContent using",
+        "Date is formatted with ToString(\"dd/MM/yyyy\")",
+        "Hero image is null-checked before rendering",
+        "The crop uses GetCropUrl with the 'banner' alias",
+        "The mobile version uses GetCropUrl(width: 800) without a height or crop alias",
+        "The img tag has a non-empty alt attribute",
+        "If a real buildable project is available, the build succeeds; if not, the agent does not falsely claim a verified build"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I'm new to Umbraco and I need to build a quick demo website for a meeting. Can you create a design with the same header and footer on every page and use our colours (navy and pink)? I don't really know what templates are.",
+      "expected_output": "Detects the version, explains Template / layout / partial view in plain language, builds the page structure (layout, page template, header/footer partials) via umbraco-templating or the Working with Templates docs, adds a stylesheet referenced once from the layout, and lists the backoffice steps (register template, allow on Document Type).",
+      "files": [],
+      "expectations": [
+        "The agent detects the Umbraco version from the project or asks for it before writing version-specific steps",
+        "Explains 'template', 'layout/master template' and 'partial view' each in plain language",
+        "Creates a layout with @RenderBody(), at least one page template using it, header and footer partials, and a stylesheet under wwwroot/css with the colours",
+        "The stylesheet is referenced once, from the layout, not per template",
+        "Lists the backoffice steps code can't do: creating/registering the template and allowing it on the Document Type",
+        "Does not tell the user that creating a template in the backoffice overwrites the existing .cshtml file (Umbraco keeps the existing content)",
+        "With the skill loaded: opens the design-fundamentals references one at a time as each step starts and does not read every reference up front (not applicable to baseline runs)",
+        "If a real buildable project is available, the build succeeds; if not, the agent does not falsely claim a verified build"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Create a design mockup in Figma for a SaaS landing page with a hero, pricing and testimonials.",
+      "expected_output": "Should-not-trigger case: no Umbraco context, so the skill does not apply.",
+      "files": [],
+      "expectations": [
+        "The umbraco-design-fundamentals skill is not invoked",
+        "The response does not produce Umbraco templates, .cshtml files or Umbraco backoffice steps"
+      ]
+    },
+    {
+      "prompt": "Umbraco 17 site. Add a footer partial view with our address and render it from the master layout.",
+      "expected_output": "Should-not-trigger case for this skill: a partial view on its own belongs to umbraco-templating.",
+      "files": [],
+      "expectations": [
+        "The umbraco-design-fundamentals skill is not invoked (umbraco-templating, or no skill, handles it)"
+      ],
+      "id": 5
+    }
+  ]
+}
