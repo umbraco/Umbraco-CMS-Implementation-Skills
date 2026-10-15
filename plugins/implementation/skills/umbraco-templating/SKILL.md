@@ -47,10 +47,16 @@ component and renders a form partial.
 A new template renders only once it's registered in Umbraco and assigned to the Document Type,
 otherwise the page 404s: see step 3 of [views-and-partials.md](references/views-and-partials.md).
 
-Finish every building block with `dotnet build -p:RazorCompileOnBuild=true` and a request to a page
-that exercises it. The stock Umbraco csproj sets `RazorCompileOnBuild=false`, so a plain `dotnet build`
-never compiles a single view and passes even when they're broken. If no runnable project is
-available, say so rather than claiming it works.
+Finish every building block with a build and a request to a page that exercises it. Check
+`Umbraco:CMS:ModelsBuilder:ModelsMode` first:
+- **`Nothing` or `SourceCode*`:** build with `dotnet build -p:RazorCompileOnBuild=true`. The stock
+  Umbraco csproj sets `RazorCompileOnBuild=false`, so a plain `dotnet build` never compiles a view
+  and passes even when they're broken.
+- **`InMemoryAuto` (Umbraco's default):** the generated models exist only at runtime, so that build
+  fails with CS0246 on a healthy site. A plain `dotnet build` plus the page request is the check.
+  Don't change the user's `ModelsMode` or rewrite their views to make the Razor build pass.
+
+If no runnable project is available, say so rather than claiming it works.
 
 ## Version compatibility
 

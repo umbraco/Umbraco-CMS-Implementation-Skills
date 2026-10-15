@@ -53,5 +53,9 @@ example as `changed - Views__articleList.cshtml`), or a reviewer sees only `fina
 ## Grading notes
 
 Grade code expectations from the files under `outputs/project/`, not from `final-answer.md` alone.
+The Razor-compile expectation uses `dotnet build -p:RazorCompileOnBuild=true`. That only works because
+every fixture runs ModelsBuilder in `Nothing` or `SourceCodeAuto`. Under `InMemoryAuto` the generated
+models exist only at runtime, so a fixture in that mode needs the page-request check instead.
+
 The build-honesty expectation can now be checked: if the run says the build succeeded, the
 assembled project should build.
