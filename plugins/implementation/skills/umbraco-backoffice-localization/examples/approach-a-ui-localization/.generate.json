@@ -1,0 +1,14 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'blank' (site 2): a UI localization package is files under App_Plugins plus a manifest, not C# registered into DI, and the starter-kit-free host is the one whose backoffice text nothing else has localized. namespace is unused by these assets (JSON and JS only) but every manifest declares one. <PackageName> is the App_Plugins folder the wiring writes to, and it appears in the manifest's js paths, so the two must agree.",
+  "host": "blank",
+  "namespace": "Umbraco.Skills.Examples.BackofficeLocalization.UiLocalization",
+  "placeholders": {
+    "<PackageName>": "Skills.Localization"
+  },
+  "assets": [
+    "umbraco-package.json",
+    "en.js",
+    "da.js",
+    "core-overrides-package.json"
+  ]
+}

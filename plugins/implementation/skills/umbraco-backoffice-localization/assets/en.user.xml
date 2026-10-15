@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!-- The language is taken from the FILE NAME, not from these attributes: en.user.xml serves en-GB and
+     en-US alike, and the en-US fallback depends on that. Leave the header as it is and do not rename
+     the file to en-GB.user.xml. -->
+<language alias="en" intName="English (UK)" localName="English (UK)" lcid="" culture="en-GB">
+    <creator>
+        <name>Site</name>
+        <link>https://example.com</link>
+    </creator>
+    <!-- A new area is added as it is. Use an area of your own for new text. -->
+    <area alias="<NotificationArea>">
+        <key alias="subject">Welcome to the site, %0%</key>
+        <key alias="body">Your account is ready. Sign in to get started.</key>
+    </area>
+</language>

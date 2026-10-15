@@ -493,3 +493,6 @@ umbraco-package-schema.json
 # languageSwitcher/hreflangLinks partials).
 /Views/Partials/
 /Views/Shared/
+
+# Written at start-up by the umbraco-backoffice-localization example (App_Plugins)
+/App_Plugins/Skills.Localization*/

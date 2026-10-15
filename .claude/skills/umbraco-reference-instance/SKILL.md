@@ -200,6 +200,20 @@ scripts/instance.sh reset                                              # restore
 mutually-exclusive assets, point it at a pruned copy. This path is for exploration; the
 `dotnet test` gate above is the source of truth for whether a skill works.
 
+### Files the examples leave behind
+
+Some examples write files into the host at start-up, so they act on **every** boot of that host,
+including one for a different skill or for `try`. The files are git-ignored and stay on disk after the
+example's project reference is removed. If the instance shows something you didn't expect, check here:
+
+| Host | Written by | Files | Visible effect |
+| --- | --- | --- | --- |
+| Blank | `umbraco-backoffice-localization` approach A | `App_Plugins/Skills.Localization*/` | The English backoffice says **"Domains"** instead of "Culture and Hostnames"; a nested control package sits in `App_Plugins` (deliberately unregistered). |
+| Clean | `umbraco-backoffice-localization` approach B | `config/lang/` | The reset-password email subject reads "Skills: Reset your password". Nothing in the backoffice UI changes. |
+| Blank | Content-shaped examples' package migrations and harnesses (the host's `.gitignore` says which) | `Views/*.cshtml`, `Views/Partials/`, `Views/Shared/` | Templates and partials the examples install. |
+
+Delete those folders (and the reference) to get the stock instance back.
+
 ## Relationship to other skills
 
 - `umbraco-skill-evaluator` — grades whether Claude *produces* correct skill output (LLM

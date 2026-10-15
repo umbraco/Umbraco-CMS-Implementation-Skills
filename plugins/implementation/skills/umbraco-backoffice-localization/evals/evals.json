@@ -1,0 +1,102 @@
+{
+  "skill_name": "umbraco-backoffice-localization",
+  "evals": [
+    {
+      "id": 1,
+      "name": "translate-dashboard-and-doctypes",
+      "prompt": "Our editors in Copenhagen use the backoffice in Danish (their profile UI culture is da-DK) and the rest of the team uses English. This Umbraco 17.5 project is in the working folder. Our custom Acme.Welcome dashboard under App_Plugins is hardcoded English, and we have an 'Article page' Document Type (alias articlePage) whose name, description, a 'Content' tab, a 'Titles' group and a mandatory 'Main title' property (with its help text and a 'required' message) should all show in each editor's own language. Set up the Danish and English texts for the dashboard and for that Document Type, and tell me exactly what to type into the Document Type editor.",
+      "expected_output": "The agent adds a localization manifest for en and da directly in App_Plugins, one JS module per culture grouped by area, localizes the dashboard label and its element text, and gives the #area_key / {#area_key} values to enter in the Document Type editor, plus the restart and reload notes.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "A localization manifest is placed at App_Plugins/<name>/umbraco-package.json or App_Plugins/umbraco-package.json, not in a deeper subfolder (the existing Acme.Welcome manifest may be extended or a new package folder used)",
+        "The manifest registers one extension of type 'localization' for culture 'en' and one for a Danish culture ('da' or 'da-DK'), each with a unique alias and a 'js' path (or inline meta.localizations)",
+        "Each JS localization module uses 'export default' with text grouped one level deep as area then key (for example contentTypes: { article: '...' }), and the Danish file contains real Danish text",
+        "The dashboard manifest's meta.label is changed to a '#area_key' reference such as '#welcomeDashboard_label' and that exact key exists in both languages",
+        "The dashboard element's hardcoded strings are replaced with localized lookups ('this.localize.term(...)' or '<umb-localize key=...>'), and the 'You have 3 pages' text is localized in a way that carries the number (an argument, a '{0}' or '%0%' placeholder, or a function value) rather than a fixed sentence",
+        "The agent states that the property DESCRIPTION and the validation message use the brace form '{#area_key}' while names, tab, group and Document Type name/description use '#area_key'",
+        "The agent states that Umbraco must be restarted for the new manifest and that later text changes only need a browser reload",
+        "The agent says the language shown follows each user's UI Culture setting",
+        "The agent states whether it ran a build or opened the backoffice; it does not claim to have seen the translated backoffice unless it did"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "rename-core-wording",
+      "prompt": "In our Umbraco 17.5 backoffice the right-click action on a content node says 'Culture and Hostnames'. Editors have no idea what that means. Change it to 'Domains' for everyone using the English backoffice, and 'Domæner' for the Danish ones. The project is in the working folder. I've seen a .user.xml approach in the docs, so I'm not sure which route is right. Do it properly and don't touch anything Umbraco ships.",
+      "expected_output": "The agent recognises this is backoffice UI text, so uses a UI localization extension (not .user.xml), with the exact lowercase core key actions_assigndomain and a weight below 100 in a manifest of its own, for en and da.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "The agent uses a UI localization extension (an 'umbraco-package.json' with type 'localization') and explains that '.user.xml' files are for server-side .NET text and would not change this label",
+        "The override uses the area 'actions' and the key 'assigndomain' in lowercase (inline as { \"actions\": { \"assigndomain\": \"Domains\" } } or in a JS module as actions: { assigndomain: 'Domains' }); a camel-case 'assignDomain' is not used as the key",
+        "The extension sets 'weight' to a number below 100 (for example 50) and the agent explains that the lowest weight wins because the default is 100",
+        "Both an 'en' extension with 'Domains' and a Danish ('da' or 'da-DK') extension with 'Domæner' are registered",
+        "The manifest is at App_Plugins/<name>/umbraco-package.json or App_Plugins/umbraco-package.json, not in a deeper subfolder",
+        "No file shipped with Umbraco or inside a NuGet package folder is modified",
+        "The agent says Umbraco must be restarted for the new manifest to be picked up",
+        "The agent does not claim the label was seen to change unless a backoffice was actually opened"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "localize-welcome-email",
+      "prompt": "Our WelcomeEmailSender (Services/WelcomeEmailSender.cs) sends new backoffice users an English-only email. Editors have a UI language on their profile (IUser.Language). Make the subject ('Welcome to the site, <name>') and body ('Your account is ready. Sign in to get started.') come out in English, Danish and German according to the new user's own language, and make sure this works when the project is published to our Linux server. The project is in the working folder. This is Umbraco 17.5.",
+      "expected_output": "The agent adds en/da/de user XML files under config/lang with a new area and a %0% token, adds the csproj Content item, and changes the sender to pass the recipient's culture to ILocalizedTextService rather than relying on the thread culture.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/welcome-email/"
+      ],
+      "expectations": [
+        "Language files are created at config/lang/ (project root) named <language>.user.xml or <culture>.user.xml for en, da and de, using the '<language><area><key>' layout",
+        "The texts live under one area (the existing code's 'welcome' may be kept) with the keys 'subject' and 'body', the C# asks for that same area and keys, and every one of the three language files contains BOTH keys",
+        "The user's name is passed as a token: the XML uses '%0%' (not '{0}') and the C# passes the name through the tokens argument, and the existing 'body.Replace(\"{0}\", user.Name)' is removed or no longer needed",
+        "WelcomeEmailSender passes an explicit CultureInfo derived from IUser.Language to Localize (the overload that takes a culture); it does not rely on the two-argument Localize(area, key), whose culture is the current thread's",
+        "The .csproj gets '<Content Include=\"config/**\" CopyToOutputDirectory=\"Always\" />' (or an equivalent that copies config/lang on publish)",
+        "The agent states that a key missing from one language's file falls back to the English text, so the English file must contain every key",
+        "The agent states that when a key is missing from English too, or the recipient's language has no language file at all, Localize returns the key in square brackets such as '[subject]'",
+        "The code maps an unsupported or empty IUser.Language to en, da or de (or a default) rather than passing it through to Localize",
+        "The agent warns that building a CultureInfo such as da-DK on the Linux server needs ICU and fails under invariant globalization, or avoids constructing the culture in a way that can throw",
+        "The agent says the app must be restarted after changing the XML files",
+        "If a .NET SDK was available the agent ran dotnet build and reported the result; otherwise it says plainly that it did not build"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "fix-broken-manifest",
+      "prompt": "Danish editors still see the dashboard tab labelled with something like 'welcomeLabel' and the dashboard text shows the raw key names, even though we added a Danish localization file. It's the Acme.Welcome package in this Umbraco 17.5 project (working folder, App_Plugins/Acme.Welcome). Figure out why and fix it so a Danish editor sees Danish and everyone else sees English. We've restarted the site several times.",
+      "expected_output": "The agent finds that the manifest sits in a nested folder so it is never registered, the culture code is invalid, the inline localizations are not grouped one level deep, and the keys do not match what the dashboard and manifest request; it fixes all of them and adds an English set.",
+      "files": [
+        "evals/files/broken-manifest/"
+      ],
+      "expectations": [
+        "The agent identifies that App_Plugins/Acme.Welcome/Localization/umbraco-package.json is in a nested subfolder and is not registered, and moves the localization extension into App_Plugins/Acme.Welcome/umbraco-package.json (or another manifest directly under App_Plugins or one folder down)",
+        "The agent changes the culture 'da_DK' to a valid culture such as 'da' or 'da-DK'",
+        "The agent fixes the shape of the text so keys are grouped exactly one level deep (area then key), either inline under meta.localizations or in a JS module's default export, for example { welcomeDashboard: { headline, intro, label } }, with no keys directly at the top level and no further nesting",
+        "Every key the dashboard asks for resolves: the manifest label and each key the element requests (originally 'welcomeDashboard_headline', 'welcomeDashboard_intro' and the label '#welcomeLabel', which has no area_key form) exist in both the Danish and English sets, whether the agent kept the original names or renamed them consistently",
+        "The stale Localization/ folder and its manifest are removed, so there is no second, ignored copy left behind",
+        "An English ('en') set containing the same keys is added so non-Danish editors do not see raw keys",
+        "The agent explains that a restart does not help while the manifest is in a nested folder",
+        "The agent states whether it verified the fix in a running backoffice; it does not claim to have seen Danish text unless it did"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "visitor-labels-out-of-scope",
+      "prompt": "Visitors to our Danish pages on this Umbraco 17.5 site (working folder, Views/home.cshtml) still see the English 'Get in touch' link text, which is hardcoded in the view. We already serve /da from the same content tree. Fix that so Danish visitors see Danish and English visitors still see English. Tell me where the translations are edited.",
+      "expected_output": "The agent recognises this is website text, not backoffice text, and uses Umbraco dictionary items with the view reading them, without creating App_Plugins localization or config/lang files.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "Views/home.cshtml reads the link text from an Umbraco dictionary item through a call that exists on UmbracoHelper or ICultureDictionary: Umbraco.GetDictionaryValue(key), Umbraco.GetDictionaryValue(key, culture), Umbraco.GetDictionaryValueOrDefault(key, defaultValue) or an ICultureDictionary indexer. Umbraco.GetDictionaryValue(key, \"some default text\") does not exist and fails when the view compiles, so it does not satisfy this",
+        "The agent says translations are edited in the Translation section / dictionary of the backoffice, with a value per language",
+        "No file is created under App_Plugins and no '*.user.xml' file is created under config/lang",
+        "The agent does not describe localization extensions or .user.xml files as the way to translate this link text, other than to say they are for backoffice or server-side text",
+        "The agent states whether it built the project or not, and does not claim a build it did not run"
+      ]
+    }
+  ]
+}

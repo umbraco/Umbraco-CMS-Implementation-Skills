@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    VALIDATION-ONLY example project for umbraco-backoffice-localization, approach B (.NET localization).
+
+    Loaded by SITE 1 (Umbraco-CMS.Skills, Clean): NotificationTextProvider is registered into DI by the
+    skill's own composer. The skill's assets are generated into obj/ at build time by
+    plugins/Directory.Build.props; the .cs files are compiled and the .user.xml files are embedded.
+    ExampleHostWiring.cs writes the XML to the host's config/lang at start-up, where a user would put
+    it, and NetLocalizationTests.cs asserts the text service reads it.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.BackofficeLocalization.NetLocalization</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+</Project>

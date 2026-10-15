@@ -1,0 +1,19 @@
+{
+  "name": "<PackageName>.Overrides",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "<PackageName>.Overrides.En",
+      "name": "<PackageName> English core wording",
+      "weight": 50,
+      "meta": {
+        "culture": "en",
+        "localizations": {
+          "actions": {
+            "assigndomain": "Domains"
+          }
+        }
+      }
+    }
+  ]
+}

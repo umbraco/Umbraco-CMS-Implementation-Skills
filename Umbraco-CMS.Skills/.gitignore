@@ -480,3 +480,6 @@ umbraco-package-schema.json
 
 # Media files
 /wwwroot/media/
+
+# Written at start-up by the umbraco-backoffice-localization example (config/lang)
+/config/lang/
