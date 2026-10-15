@@ -171,10 +171,15 @@ a partial that is never rendered, otherwise passes every structural assertion.
 
 **Check compilation yourself rather than trusting the transcript.** After the runs, build each
 `outputs/project/` and save the result beside the run (e.g. `razor-build.txt`). Grade the
-compile assertion from that file. For Umbraco views, use `dotnet build -p:RazorCompileOnBuild=true`:
-the stock csproj never compiles views, so a plain build passes when they're broken. Keep the
-build-honesty assertion ("doesn't claim a build it didn't run") separate, so one broken view isn't
-failed twice.
+compile assertion from that file. For Umbraco views, check the fixture's ModelsBuilder `ModelsMode`:
+- **`Nothing` or `SourceCode*`:** use `dotnet build -p:RazorCompileOnBuild=true`. The stock csproj
+  never compiles views, so a plain build passes when they're broken.
+- **`InMemoryAuto`:** that build fails with CS0246 even on a healthy site, because the generated
+  models exist only at runtime. Grade views by rendering a page instead, or give the fixture
+  `Nothing`/`SourceCodeAuto` so the compile check is meaningful.
+
+Keep the build-honesty assertion ("doesn't claim a build it didn't run") separate, so one broken
+view isn't failed twice.
 
 Subjective qualities (writing voice, design taste) belong in qualitative review, not assertions. Don't force them.
 
