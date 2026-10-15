@@ -1,0 +1,105 @@
+{
+  "skill_name": "umbraco-add-page",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our local Umbraco 17 site. This session can't reach it directly, so I've saved what the read tools return in evals/files/mcp/site-context.md; treat that as the live site. Our schema requirements docs live in docs/umbraco-schema/ (only a README in there so far). I need a Contact Us page type: an address, a phone number and an email address shown on the page, plus the usual SEO bits. Call it ContactUs and allow it at root so editors can create it easily. A colleague said to check what's allowed at root with get-document-type-allowed-at-root before you start. Just create it, no need for paperwork, I'm in a hurry.",
+      "expected_output": "The agent reads the fixture, notes that get-document-type-allowed-at-root is not in the tool list, and writes a proposed requirements doc: contactPage or contactUsPage at the Document Types root, not allowed at root, taking the existing page details, SEO and open graph compositions, with its own address, phone and email fields on the Content tab (sort 100, property sorts in hundreds); a contactPage template under the existing master; and an update to homePage that keeps contentPage and adds the new type. It stops for approval and does not claim anything was created.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A requirements page exists directly in docs/umbraco-schema/Document-Types/ (not in a sub-folder) for a camelCase alias ending in Page, such as `contactPage` or `contactUsPage`, with a file name matching the alias in PascalCase; the alias is not `contactUs`, `ContactUs` or anything else without the Page suffix",
+        "The requirements doc has Allowed at root set to No, and the agent explains that only the home page is allowed at root and makes the page creatable by adding it to the Home Page's allowed children instead",
+        "The Home Page change (an Update requirements page for homePage, or a changeset checklist item) keeps `contentPage` in the Home Page's allowed children and adds the new contact page type",
+        "A template requirements page has the same alias as the page type and the file `<alias>.cshtml`, names the existing Master (`master`) as its master, and is the page type's default template",
+        "The page type lists the existing compositions (at least `seoComposition`; also `pageDetailsComposition` and/or `openGraphComposition`) as compositions flagged Exists, and no composition requirements page is written or created",
+        "The page's own properties sit on a tab named `Content` with Tab Sort 100 and property sorts in hundreds (100, 200, 300), and none of them repeats a field a composition already provides (no own `pageTitle`, `metaTitle` or similar)",
+        "Every requirements page and the changeset have the status `proposed`, and the agent stops and asks for approval instead of applying, does not call or plan a call to get-document-type-allowed-at-root (it is not in the tool list), and does not claim the type or template now exists on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We're on Umbraco 17. The MCP isn't configured on this laptop and I can't start the site right now, so you'll have to go on what I tell you. The site has a Home Page (alias homePage) that currently allows Content Page (contentPage) as a child, a master template called Master (alias master), and two compositions, SEO Composition (seoComposition) and Open Graph Composition (openGraphComposition). One language only. I need a search results page type. Our dev is writing a SearchController that hijacks the route and renders results from Examine, so he says we don't need a template for it, skip that. Requirements docs go in docs/umbraco-schema/ (just a README in there so far). Write it up and give me the steps to do it in the backoffice.",
+      "expected_output": "The agent writes a proposed requirements doc for searchPage (or searchResultsPage) at the Document Types root, not allowed at root, allowing no children, with a default template named after its alias under the master, and explains that a programmatic page still needs a template while the controller is code outside this change. The home page gains the new type as an allowed child while keeping contentPage. Everything the user described is flagged Exists on the user's word. The apply is a manual backoffice walkthrough, to be followed after approval; nothing is claimed as created.",
+      "files": [],
+      "expectations": [
+        "A requirements page exists at docs/umbraco-schema/Document-Types/ with an alias ending in Page (e.g. `searchPage` or `searchResultsPage`), Allowed at root No and Allowed children —",
+        "The requirements doc gives the page a default template whose alias equals the type alias (file `<alias>.cshtml`) under the master, and the agent explains that a programmatic page still needs a template and that the controller is code outside this schema change, rather than following the instruction to skip the template",
+        "The change adds the new type to the Home Page's allowed children while keeping `contentPage` (in a requirements page, the changeset checklist, or the walkthrough)",
+        "The Home Page, the master template and the compositions are flagged Exists, and the agent says (in the changeset summary or its reply) that these come from the user's description and were not read from the site",
+        "The agent says the change will be applied through a manual backoffice walkthrough generated from the requirements doc, and produces no uSync, package.xml, C# or Razor files",
+        "Every requirements page and the changeset have the status `proposed`, and the agent asks the user to approve the changeset (any walkthrough given is to be followed only after approval)",
+        "The agent does not claim anything was created, applied or verified in Umbraco; if it did not run lint-requirements.mjs it says the requirements doc was not linted rather than calling it lint-clean"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Brand new Umbraco 17 install, no starter kit. The Umbraco MCP is connected; this session can't call it, so evals/files/mcp/empty-site-context.md has what the read tools returned. Treat it as the live site. Keep requirements docs in docs/umbraco-schema/. Just add a page type so our editors can start making pages, and put it wherever you think is best.",
+      "expected_output": "The agent proposes the default Content Page (contentPage) with a Content tab (sort 100) holding a page title and body text sorted 100 and 200, allowing itself as a child. Because the site has no home page it does not allow contentPage at root; it raises the missing home page and asks whether to add one (or proposes homePage in the changeset for confirmation). Because the site has no SEO composition, seoComposition joins the same changeset, created before contentPage and listed in its Compositions, flagged New in this changeset. The change includes a Master template ahead of the contentPage template. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/empty-site-context.md"
+      ],
+      "expectations": [
+        "The agent proposes a type with the alias `contentPage` (Content Page) at docs/umbraco-schema/Document-Types/ContentPage.md",
+        "The contentPage requirements doc has its own properties on a `Content` tab with Tab Sort 100, using existing built-in data types (e.g. Textstring for `pageTitle`, Richtext editor for `bodyText`) with property sorts 100 and 200",
+        "The contentPage requirements doc has Allowed at root set to No, and the agent says the site has no home page and either asks whether to create one or includes a `homePage` (allowed at root) in the proposed change for the user to confirm",
+        "The contentPage requirements doc lists Content Page itself in its Allowed children",
+        "A Master template requirements doc (`master`) is part of the change, ordered before the `contentPage` template, which names it as its master and has the file `contentPage.cshtml`",
+        "A requirements page exists at docs/umbraco-schema/Document-Types/Compositions/SeoComposition.md for `seoComposition` (fields such as `metaTitle` and `metaDescription` on the `SEO` tab with Tab Sort 600), it is ordered before `contentPage` in the same changeset, and contentPage lists it in its Compositions row with the dependency flagged `New in this changeset`, not `Missing`",
+        "Every requirements page and the changeset have the status `proposed`, the agent stops for approval, and it does not claim that anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/no-seo-site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). Add an About page: an intro paragraph and the body text, under the home page. We've never done anything about SEO on this site, so don't worry about meta tags or social sharing for now, just get the page in.",
+      "expected_output": "The agent writes aboutPage at the Document Types root with its template under master and the home page updated to allow it. Because every page takes SEO and the site has none, it adds seoComposition (SEO tab 600, metaTitle, metaDescription, isIndexable with a Toggle (default on) data type created first) to the same changeset, applied to aboutPage only, flagged New in this changeset. It names homePage and contentPage as existing pages without SEO that can be updated separately and does not update them by default. It does not add an Open Graph composition. One changeset, one approval; nothing is claimed as done.",
+      "files": [
+        "evals/files/mcp/no-seo-site-context.md"
+      ],
+      "expectations": [
+        "A requirements page exists at docs/umbraco-schema/Document-Types/AboutPage.md with the alias `aboutPage`, Allowed at root No, a default template `aboutPage` under `master`, and the Home Page is updated (an Update requirements page or checklist item) to allow it while keeping `contentPage`",
+        "A requirements page exists at docs/umbraco-schema/Document-Types/Compositions/SeoComposition.md for `seoComposition` with its fields on the `SEO` tab (Tab Sort 600), including `metaTitle`, `metaDescription` and a boolean such as `isIndexable`, and the agent explains that every page takes SEO so the composition is added now despite the user's instruction to skip it",
+        "aboutPage lists the SEO composition in its Compositions row and its Dependencies flag it `New in this changeset` (not `Missing`), and the composition (and any data type it needs) is ordered before aboutPage in the changeset",
+        "The SEO composition is applied to aboutPage only: no Update page or checklist item adds it to `homePage` or `contentPage`, and the agent names those two as existing pages without SEO that can be updated in a separate or optional step",
+        "No Open Graph, sharing or social composition is written; if mentioned at all it is as a later follow-up",
+        "There is exactly one changeset file under docs/umbraco-schema/_changesets/ covering the page, its template, the SEO composition and the Home Page update, and the agent asks for one approval of that changeset",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/block-site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. We need a Landing Page type for campaigns. It's built from blocks like our content pages are, and it needs a new Testimonial block: a quote, the person's name, their job title and a photo. Put landing pages under the home page. Can you do the page and the block as one job? I don't want to approve five separate things.",
+      "expected_output": "The agent writes one changeset: a testimonial element (plain noun alias, Content group 0, short aliases, no styling fields) registered in the existing Main Content Block Grid with blockSettings as an Update that keeps hero and richText; landingPage at the Document Types root with a mainContent property using that grid on the Content tab, taking the existing compositions, a landingPage template under master, and the Home Page updated to allow it. The checklist is leaf-first: the element, the grid update, the template, the page, the parent. It asks for one approval and claims nothing was done.",
+      "files": [
+        "evals/files/mcp/block-site-context.md"
+      ],
+      "expectations": [
+        "A requirements page exists at docs/umbraco-schema/Document-Types/LandingPage.md with the alias `landingPage`, Allowed at root No, a default template `landingPage` under `master`, and the Home Page is updated to allow it while keeping `contentPage`",
+        "An element requirements page exists at docs/umbraco-schema/Document-Types/Elements/ with the alias `testimonial` (not `testimonialBlock`), every property row with Tab — and Group `Content` with Group Sort 0, short generic aliases for the quote, name, job title and photo (e.g. `personName`, never `name`, which Umbraco reserves), and no colour, spacing or alignment field on it",
+        "The Main Content Block Grid requirements page under docs/umbraco-schema/Data-Types/Block-Grid/ is an Update that keeps the existing `hero` (titledBlockSettings) and `richText` (blockSettings) registrations and adds `testimonial` with an existing settings model (`blockSettings` or `titledBlockSettings`)",
+        "landingPage has a `mainContent` property on the `Content` tab (Tab Sort 100) using the Main Content Block Grid, and lists the existing `seoComposition` (with the other page compositions) flagged Exists",
+        "There is exactly one changeset file under docs/umbraco-schema/_changesets/, and its order creates the testimonial element (moved into Elements/) before the Block Grid update, the Block Grid update before the landingPage document type, and the Home Page update last before verification",
+        "The agent asks for one approval of the whole changeset rather than separate approvals for the block and the page, its approval message calls out that the existing Main Content Block Grid and Home Page will change, and it does not apply anything in the same turn",
+        "Every requirements page and the changeset have the status `proposed`; the agent does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/no-seo-site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). Add an Events page that editors build from blocks in a main content area. It needs a new Speaker block (name, photo and a short bio) that always looks the same, so no styling options. Do the whole thing in one go and don't make me approve each bit separately.",
+      "expected_output": "The agent writes one changeset with one approval: the SEO composition (the site has none), a speaker content element with no settings element, a new Main Content Block Grid registering it, the eventsPage template under master and the eventsPage type taking seoComposition with mainContent, and the home page update keeping contentPage. Peer parts (composition, block, block area) are written into the same changeset rather than as separate changesets or separate approval stops. Leaf first. It stops once for approval.",
+      "files": [
+        "evals/files/mcp/no-seo-site-context.md"
+      ],
+      "expectations": [
+        "There is exactly one changeset file under docs/umbraco-schema/_changesets/, and it lists the SEO composition, the speaker element, the Block Grid data type, the page template and the page type (and the Home Page update) in one Requirements pages table",
+        "The agent asks for approval once, for the whole changeset; it does not stop partway to approve the composition, the block or the block area on their own, and does not write separate changesets for them",
+        "A content element requirements page exists in docs/umbraco-schema/Document-Types/Elements/ for a plain-noun alias such as `speaker`, with short generic aliases (e.g. `personName` or `fullName`, `image` or `photo`, `bio`) and no `name` alias, and no settings model or settings composition is created because the block has no style options",
+        "A Block Grid data type requirements page exists under docs/umbraco-schema/Data-Types/Block-Grid/ (Create) registering the speaker block with no settings element, and the events page has a `mainContent` property on the `Content` tab that uses it",
+        "A composition requirements page exists at docs/umbraco-schema/Document-Types/Compositions/SeoComposition.md, and the events page lists it in Compositions flagged `New in this changeset`",
+        "The changeset's apply order is leaf first: the SEO composition and the speaker element before the Block Grid, the Block Grid and the template before the page type, and the Home Page update (keeping `contentPage`) last before verification",
+        "Every requirements page and the changeset have the status `proposed`, and the agent does not claim anything was created or verified on the site"
+      ]
+    }
+  ]
+}

@@ -1,8 +1,10 @@
 name: Validate skills
 
-# Deterministic, model-free proof that skill output compiles and serves the right HTTP
-# responses: each skill's example project is compiled into the reference instance, which
-# Umbraco-CMS.Skills.TestHost boots in-process (WebApplicationFactory) and asserts over HTTP.
+# Deterministic, model-free gates. Implementation skills: each skill's example project is compiled
+# into the reference instance, which Umbraco-CMS.Skills.TestHost boots in-process
+# (WebApplicationFactory) and asserts over HTTP. Content-modelling skills ship markdown, so their
+# gate is the requirements linter against golden and broken fixtures. Every skill: links resolve
+# and the frontmatter is valid.
 
 on:
   push:
@@ -34,6 +36,39 @@ jobs:
       # aren't present on this branch are skipped, so it's safe pre-merge.
       - name: Placeholders declared for every asset
         run: node scripts/generate-examples.mjs --lint
+
+      # Skills link into their own references/ and into sibling skills. A link that doesn't resolve
+      # is a reference the agent can't read, and it fails silently at run time, so fail the build
+      # here instead. (Node is preinstalled on the runner; neither script has dependencies.)
+      - name: Skill links resolve
+        run: node scripts/check-skill-links.mjs
+
+      # A skill is discovered by its frontmatter alone: a name that doesn't match its folder or a
+      # description over the Agent Skills limit fails silently (never offered, or truncated). The
+      # same check proves every file an eval names exists.
+      - name: Skill frontmatter is valid and eval fixtures exist
+        run: node scripts/check-skill-frontmatter.mjs
+
+      # Requirements-driven content-modelling skills ship markdown, not code, so there is nothing for the
+      # dotnet test gate to compile. Their gate is the requirements linter: the golden requirements must pass, and
+      # the deliberately broken fixture must fail with exactly the rules it was written to break.
+      # Exit 1 is a lint failure; anything else (2 = usage, or a crash) means the linter itself is
+      # broken. The error and warning rule lists are compared so a rule that silently stops firing
+      # is caught too. The review skill's fixture is wrong on purpose in exactly one way (its eval
+      # expects the review to carry that finding), so it is pinned the same way.
+      - name: Requirements linter passes the golden requirements and fails the broken fixtures as expected
+        run: |
+          lint=plugins/content-modelling/skills/umbraco-content-requirements-documentation/scripts/lint-requirements.mjs
+          files=plugins/content-modelling/skills/umbraco-content-requirements-documentation/evals/files
+          review=plugins/content-modelling/skills/umbraco-review-content-model/evals/files/requirements
+          node "$lint" "$files/golden-requirements"
+          for fixture in "$files/broken-requirements" "$review"; do
+            status=0
+            node "$lint" "$fixture" > /dev/null || status=$?
+            test "$status" -eq 1
+            diff <(node "$lint" "$fixture" --rules) <(tr -d '\r' < "$fixture/expected-rules.txt")
+            diff <(node "$lint" "$fixture" --warnings) <(tr -d '\r' < "$fixture/expected-warnings.txt")
+          done
 
       - name: Restore
         run: dotnet restore Umbraco-CMS.Skills.sln

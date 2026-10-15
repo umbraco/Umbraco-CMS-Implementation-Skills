@@ -1,0 +1,52 @@
+{
+  "skill_name": "umbraco-content-model-conventions",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "I'm about to set up the blog on a new Umbraco 17 site. There's no MCP on this machine and the site isn't running, so this is just from my notes. Here's what I plan to create, can you sanity check the names and structure before I do it?\n\n- `BlogListing` (alias `blogListing`) allowed at root so editors can create it, lists `BlogPost` (alias `blogPost`)\n- A composition `HasSEO` (alias `hasSEO`) with a tab `SEO` (sort 1) holding `seoTitle` (sort 1), `seoDescription` (sort 2) and a toggle `indexing` (sort 3). I went with the Has prefix because I read it makes the Models Builder interfaces read nicely.\n- A composition `SocialComposition` that composes `HasSEO` and adds `ogImage`\n- Site-wide settings (footer links, social links) as a `Settings` tab on the `HomePage` type\n\nTell me what to rename or restructure, and why.",
+      "expected_output": "The agent renames to articleListingPage-style names with the Page suffix (blogListingPage and blogPage), renames the composition to seoComposition with the acronym collapsed and mentions the Has prefix as a considered but rejected alternative, moves the tab to SEO at sort 600 with property sorts in hundreds and a predicate boolean alias, flattens the nested composition, takes the listing off the root and under the home page, and moves site settings to a separate siteSettings root singleton. It does not claim to have checked the site.",
+      "files": [],
+      "expectations": [
+        "The agent renames the page types so both end in Page, with the listing ending in ListingPage (e.g. `blogListingPage` listing `blogPage` or `blogPostPage`)",
+        "The agent renames the composition to `seoComposition` (suffix Composition, acronym collapsed, not `sEOComposition` or `SEOComposition`) and says the `Has` prefix is a legitimate technique that this convention deliberately does not use",
+        "The agent says the tab should use the global sort (SEO at 600) rather than 1, and that property sorts go up in hundreds (100, 200, 300)",
+        "The agent renames the boolean to a predicate alias such as `isIndexable` (or `hideFromSearchEngines`), not a noun like `indexing`",
+        "The agent says a composition must not compose another composition and makes the social/open graph fields a separate flat composition applied alongside the SEO one",
+        "The agent says the listing page should not be allowed at root and should instead be an allowed child of the home page, and that site-wide settings belong on a separate root `siteSettings` type rather than a tab on the home page",
+        "The agent does not claim to have inspected, created or changed anything on the site, and states (or makes clear) that its review is based on the user's notes only"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The Umbraco MCP is connected to our dev site (Umbraco 17). I ran get-document-type-by-id on our News type and saved the result to evals/files/news-type-read-back.json. For reference the data type ids in there are Textstring (0cc0eba1...), Richtext editor (ca90c950...) and True/false (92897bc6...). Editors create News items under a News section page. Audit the type against our content-modelling conventions and list everything that's off, most important first. Then just fix it on the site for me.",
+      "expected_output": "The agent lists the departures: alias without a Page suffix, allowed at root, no default template, tab sorts 0 and 1 instead of the global sorts, property sorts not in hundreds, the generated alias sEOTitle with capitals, a non-predicate boolean alias, inline SEO fields that belong in a seoComposition, and missing descriptions. It does not change the site; it says the fix goes through a requirements doc and approval (umbraco-content-requirements-documentation) and does not claim anything was changed or verified.",
+      "files": [
+        "evals/files/news-type-read-back.json"
+      ],
+      "expectations": [
+        "The agent flags that the alias `news` lacks the `Page` suffix for a page type and proposes an alias ending in Page (e.g. `newsPage` or `articlePage`)",
+        "The agent flags `allowedAsRoot: true` as wrong for this type (only the home page, site settings and data folders are allowed at root)",
+        "The agent flags that the type has no default template and says a page needs one named after its alias",
+        "The agent flags the tab sorts (Content 0, SEO 1) and gives the global values: Content 100 and SEO 600",
+        "The agent flags the property alias `sEOTitle` (acronym casing) and the boolean alias `searchEngines` (not a predicate), and proposes aliases such as `metaTitle` and `isIndexable`",
+        "The agent says the SEO fields should move into a `seoComposition` rather than sit on the page type",
+        "The agent does not update the type through the MCP or claim the site was changed; it routes the fix through a written requirements doc and user approval (naming umbraco-content-requirements-documentation or the requirements-first workflow) and does not claim anything was verified on the site beyond the supplied JSON"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Quick one before I build it in our Umbraco 17 project: I want an FAQ block editors can drop into the main content area. My plan is an element type `FAQBlock` with two tabs, Content and Settings. Content has `faqTitle` and `faqItems` (a block list of question/answer pairs, element `FAQItemBlock`), Settings has a background colour picker. The block list data type would be called `FAQ Block List` and I'd make the `faqItems` property mandatory with a validation message so there's always at least one. What would you change to match the conventions, and where does each thing go in the Document Types and Data Types trees?",
+      "expected_output": "The agent renames the element to a plain noun (faq) and its child to faqItem, removes the tabs in favour of one Content group, uses generic field aliases (title, items), moves the background colour to a separate settings model built from a settings composition, names the Block List after the plural of the child (FAQ Items) with the minimum in the data type configuration, and places everything under Elements/, Elements/Settings/, Elements/Compositions/ and Data Types/Block List/. It presents this as recommendations, not as work done.",
+      "files": [],
+      "expectations": [
+        "The agent renames the element to a plain noun with the acronym collapsed (e.g. `faq`) and says `Block` is only a suffix for avoiding a name clash; the child becomes `faqItem`",
+        "The agent says an element type has no tabs and exactly one group named `Content` (sort 0)",
+        "The agent renames the block's fields to short generic aliases (`title`, `items`) instead of `faqTitle` and `faqItems`",
+        "The agent moves the background colour off the content element into a separate settings model element (e.g. `faqSettings` or a shared generic settings model) built from a settings composition",
+        "The agent names the Block List data type as the plural of its child (e.g. `FAQ Items`) and puts the minimum of one in the data type configuration rather than in property validation",
+        "The agent places the elements in `Elements/`, the settings model in `Elements/Settings/` (with settings compositions in `Elements/Compositions/`), and the data type in a `Block List` folder in Data Types",
+        "The agent presents these as recommendations and does not claim to have created or verified anything in Umbraco"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "allowedTemplates": [],
+  "defaultTemplate": null,
+  "cleanup": {
+    "preventCleanup": false,
+    "keepAllVersionsNewerThanDays": null,
+    "keepLatestVersionPerDayForDays": null
+  },
+  "allowedDocumentTypes": [],
+  "compositions": [
+    {
+      "documentType": {
+        "id": "d4e5f6a7-4444-4f5a-b1c2-000000000031"
+      },
+      "compositionType": "Composition"
+    },
+    {
+      "documentType": {
+        "id": "d4e5f6a7-4444-4f5a-b1c2-000000000032"
+      },
+      "compositionType": "Composition"
+    }
+  ],
+  "id": "d4e5f6a7-4444-4f5a-b1c2-000000000033",
+  "alias": "articlePage",
+  "name": "Article Page",
+  "description": "A single article, news item or story.",
+  "icon": "icon-newspaper color-light-blue",
+  "allowedAsRoot": false,
+  "variesByCulture": false,
+  "variesBySegment": false,
+  "collection": null,
+  "isElement": false,
+  "properties": [],
+  "containers": []
+}

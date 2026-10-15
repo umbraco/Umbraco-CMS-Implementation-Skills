@@ -1,0 +1,47 @@
+{
+  "skill_name": "umbraco-change-document-type",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our local Umbraco 17 site. This session can't reach it directly, so I've saved what the read tools return in evals/files/mcp/site-context.md; treat that as the live site. Requirements docs live in docs/umbraco-schema/ (only a README so far). Three quick changes to the Article Page please: add a subtitle text field under the main content, make the author mandatory, and rename metaTitle to seoTitle because the devs prefer it. Just push them through.",
+      "expected_output": "The agent reads the Article Page in full and writes one proposed Update page for articlePage showing the type after the change: a new `subtitle` Textstring on the Content tab at sort 400 (after legacyBanner at 300) or placed and sorted consistently with the existing properties, and `author` mandatory. It explains that mandatory is retroactive for the existing nodes. It does not rename the alias: metaTitle belongs to seoComposition, which five types take, and an alias rename empties the field on every node and breaks templates; it offers a name change or a new property plus migration instead. It stops for approval and changes nothing.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "An Update requirements page exists at docs/umbraco-schema/Document-Types/ArticlePage.md that is complete (Definition rows, all three existing properties plus the new one, Used by, Dependencies), not a partial page listing only the change",
+        "The new property has a camelCase alias such as `subtitle`, uses the existing Textstring data type, sits on the `Content` tab (sort 100) with a property sort that is a multiple of 100 and comes after the existing properties, and the changeset lists the type with the action `Update`",
+        "The `author` property is marked Mandatory Yes, and the agent says (in the summary or its reply) that existing articles with no author cannot be saved until one is set",
+        "The agent does not rename the `metaTitle` alias in place: it points out that metaTitle is defined by seoComposition (shared by five types), explains that renaming an alias empties the stored values and breaks templates and models, and offers either renaming the display name only or adding a new property with a migration",
+        "Every requirements page and the changeset have the status `proposed`, and the agent stops for approval instead of applying, despite being told to push the changes through, and does not claim anything was changed on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "We're on Umbraco 17. The MCP isn't set up on this machine and the site is down for maintenance, so work from what I tell you. Article Page (alias articlePage) has a Legacy Banner property (alias legacyBanner, Image Media Picker) that nothing renders any more, and I want it gone. Also the Home Page (alias homePage) currently allows Content Page and Article Listing Page as children; it should allow Event Page (alias eventPage) too. Requirements docs are in docs/umbraco-schema/, only a README in there. Write it up and give me the backoffice steps.",
+      "expected_output": "The agent classifies the two changes: allowing eventPage under homePage is safe; removing legacyBanner deletes every stored banner image and needs the user's explicit confirmation or a migration first. Without the MCP it does not reconstruct full pages for types it cannot read: both types are named as plain text flagged Exists and the changes are checklist items, with the summary saying the current shape and the node count are the user's word. It gives the backoffice walkthrough headed as steps to follow after approval, leaves everything proposed, and asks for approval and for explicit confirmation of the removal.",
+      "files": [],
+      "expectations": [
+        "The agent says the removal of `legacyBanner` deletes the stored values on every Article Page node and asks the user to confirm that loss explicitly (or offers to keep the property until the images are migrated), rather than treating it as a routine edit",
+        "The agent says adding `eventPage` to the Home Page's allowed children is safe for existing content and keeps `contentPage` and `articleListingPage` in the list",
+        "Because the MCP is not connected, the agent does not write complete Update pages for articlePage or homePage from memory: the types are named as plain text flagged Exists, the changes are changeset checklist items, and the summary says their current shape is the user's word",
+        "The backoffice walkthrough names the exact property to delete on Article Page and the exact types to tick under Home Page's allowed children (Structure), and is headed as steps to follow once the changeset is approved",
+        "Every requirements page and the changeset have the status `proposed`; the agent does not claim anything was applied, and if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco 17, MCP connected; this session can't call it, so evals/files/mcp/site-context.md has the read results. Treat it as the live site. Requirements docs go in docs/umbraco-schema/. Two tidy-ups: the Accordion element type is sitting loose at the root of the Document Types tree, move it into the Elements folder. And on Article Page, change the Author field from the Author Picker to the Multinode Treepicker so editors can pick several authors.",
+      "expected_output": "The agent classifies the move as safe (a tree position, no content impact) and specifies it. It explains that switching `author` from Umbraco.ContentPicker to Umbraco.MultiNodeTreePicker changes the stored format, so the existing single-author values would not carry over, and proposes the safe alternative: a new property (for example `authors`) using the Multinode Treepicker, a migration to copy the single values, and a later removal of `author`. It writes an Update page for articlePage showing both properties, stops for approval, and changes nothing.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The move of `accordion` into `Elements/` is specified as safe for content, as a changeset checklist item (move, with the folder looked up at apply time) and reflected in the Folder breadcrumb of its requirements page or named as plain text flagged Exists",
+        "The agent does not change the `author` property's data type to a different editor in place: it explains that `Umbraco.ContentPicker` and `Umbraco.MultiNodeTreePicker` store values differently so existing authors would be lost, and specifies a new property (such as `authors`) with the Multinode Treepicker instead, naming a migration and a later removal of `author` as follow-ups",
+        "The Update requirements page for articlePage is complete and shows the existing properties plus the new one, with the new property's sort a multiple of 100 after the existing ones",
+        "Every requirements page and the changeset have the status `proposed`, the agent stops for approval, and it does not claim the type was moved or changed on the site"
+      ]
+    }
+  ]
+}

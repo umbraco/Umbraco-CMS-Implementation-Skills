@@ -1,0 +1,50 @@
+{
+  "skill_name": "umbraco-configure-block-editor",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). Our Accordion block is built but editors can't use it anywhere. Add it to the main content area. While you're in there, take the Quote block out of the main content grid, we've decided we don't like it. Just do it.",
+      "expected_output": "The agent writes an Update of the Main Content Block Grid that adds accordion with titledBlockSettings as its settings element, keeping every existing block. It does not remove quote, because 37 pages use it, and asks the user how to handle those pages first. The apply is a read-modify-write of the whole configuration. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A requirements page for `Main Content Block Grid` exists under docs/umbraco-schema/Data-Types/Block-Grid/ and the changeset lists it with the action `Update` (not Create, and no second Block Grid is created)",
+        "The Main Content Block Grid requirements doc registers `accordion` with `titledBlockSettings` as its settings element",
+        "The requirements doc keeps the existing `hero` and `richText` registrations with their settings elements and column spans",
+        "The agent does not remove `quote` from the grid, citing the pages that use it, and asks the user how to handle that content first (or makes removal a separate, later decision)",
+        "The apply plan reads the existing data type configuration and writes the whole configuration back (read-modify-write with update-data-type), rather than recreating the data type",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was changed or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17. No MCP here and the site isn't running, so go on what I tell you. We have an element type Speaker Item (alias speakerItem: name, photo, bio) in Elements, a Main Content Block Grid used by our pages, and an Event Page (eventPage) whose Content tab (sort 100) has eventDate (sort 100) and mainContent (sort 200). Events need a list of speakers: at least 1, at most 12. Our dev suggests just registering Speaker Item in the Main Content Block Grid and adding a validation rule on the property to cap it at 12. Requirements docs go in docs/umbraco-schema/ (only a README there). Write it up with the backoffice steps.",
+      "expected_output": "The agent uses a Block List per repeater, not the Main Content Block Grid: a Block List data type named Speaker Items in Block List/, registering speakerItem with no settings element, with amount 1 to 12 in the data type. A new property (e.g. speakers) goes on eventPage's Content tab with a hundreds sort. Existing types are the user's word; the apply is a manual walkthrough after approval; nothing is claimed as done.",
+      "files": [],
+      "expectations": [
+        "A Block List data type requirements page exists under docs/umbraco-schema/Data-Types/Block-List/ using `Umbraco.BlockList`, named as the plural of the child (e.g. `Speaker Items`), registering `speakerItem` with no settings element (an em dash in the Settings element column)",
+        "The minimum of 1 and maximum of 12 are in the data type's amount configuration, not only as property validation",
+        "The agent does not register speakerItem in the Main Content Block Grid, and explains that a list of one kind of item is a Block List repeater rather than a layout placement",
+        "eventPage gains a new property (e.g. `speakers`) using the new Block List, on the `Content` tab (Tab Sort 100) with a sort in hundreds that does not clash with the existing 100 and 200",
+        "Existing artefacts are flagged Exists or named as plain text on the user's word, and the agent says they were not read from the site; it says the apply is a manual backoffice walkthrough and produces no uSync, package.xml or C# files",
+        "Every requirements page and the changeset have the status `proposed`; the agent asks for approval and does not claim anything was created or verified; if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. Content pages need a sidebar where editors can add rich text, a promo and a newsletter signup. To keep things consistent, just reuse the Main Content Block Grid for the sidebar property.",
+      "expected_output": "The agent creates a separate Sidebar Block Grid (one data type per placement), registering richText and promo with their settings models, grid columns 12. It notices there is no newsletter signup element and leaves it to umbraco-add-block (or umbraco-add-element-type) rather than inventing it. The sidebar property goes on contentPage in the global Sidebar tab (sort 500) as an Update. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A new Block Grid data type requirements page exists under docs/umbraco-schema/Data-Types/Block-Grid/ named for the placement (e.g. `Sidebar Block Grid`), and the agent explains why it does not reuse Main Content Block Grid (one data type per placement)",
+        "The new grid registers `richText` with `blockSettings` and `promo` with `blockSettings`, and states its grid columns",
+        "The agent notes that no newsletter signup element exists and does not register an invented one as if it existed; it is flagged Missing, deferred, or named as a follow-up for umbraco-add-block (or umbraco-add-element-type)",
+        "The sidebar property is added to contentPage (an Update requirements page or checklist item) on a tab named `Sidebar` with Tab Sort 500",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    }
+  ]
+}

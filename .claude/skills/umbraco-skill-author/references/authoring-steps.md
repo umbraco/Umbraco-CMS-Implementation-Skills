@@ -90,6 +90,9 @@ Don't paste doc links here that already live in a reference file. Push per-appro
     declares a non-generic base page, which many real projects do.
   - wrap generic calls in `@(...)`, e.g. `@(Model.Value<string>("alias"))`. Razor reads a bare
     `@Model.Value<T>(...)` as an HTML tag.
+- Markdown templates (a requirements page, a report) are assets too, but they are documents, not code: they
+  carry `<Placeholder>` tokens and are never compiled. Name any optional row in the reference file
+  that describes the format rather than with a comment, which would break a markdown table.
 
 ## Step 6 — Draft evals/evals.json
 
@@ -127,13 +130,24 @@ no longer exist, and output that never renders. Full detail — the `examples/<a
 A config-only or backoffice-only approach is NOT automatically exempt any more. If it can be expressed
 as a `package.xml` (Document Types, templates, content) plus a template file, it can ship those as
 assets and be asserted on the starter-kit-free host — that's how umbraco-sitemap's Approach B is
-gated. Skip the gate only when the approach ships nothing at all, and then say so explicitly rather
+gated. Skip the gate only when the approach ships no code at all, and then say so explicitly rather
 than leaving it ambiguous, so nobody assumes coverage that isn't there.
+
+**Documented-only skills.** A skill with no `assets/`, or with markdown assets only, ships no code, so
+there is nothing to compile and no `examples/` project. It is tier **Documented** throughout: say so in
+its `## Validation` section. The requirements-driven content-modelling skills are the case this exists for.
+They write a markdown requirements doc and apply it through the Umbraco Developer MCP or a manual walkthrough
+(one approach, two mechanisms), and they are validated by evals plus the Node requirements linter,
+`plugins/content-modelling/skills/umbraco-content-requirements-documentation/scripts/lint-requirements.mjs`, which CI runs
+against a golden requirements that must pass and a broken fixture that must fail.
 
 ## Step 8 — Audit and hand off
 
 - Run `node scripts/validate-skills.mjs` (frontmatter, spec compliance) and
   `node scripts/generate-examples.mjs --lint` (placeholders), from the repo root.
+- Run `node scripts/check-skill-links.mjs` (links and anchors, including links into a sibling skill)
+  and `node scripts/check-skill-frontmatter.mjs` (description length, eval file references) from the
+  repo root.
 - Self-audit against the [conformance checklist](conformance-checklist.md).
 - Hand off to `umbraco-skill-evaluator` to prove value against a baseline; iterate from results.
 

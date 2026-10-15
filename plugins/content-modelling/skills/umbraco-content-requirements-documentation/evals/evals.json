@@ -1,0 +1,57 @@
+{
+  "skill_name": "umbraco-content-requirements-documentation",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're on Umbraco 17. The Umbraco MCP isn't set up on this machine and the site isn't running right now, so you can't read the schema. We already keep our schema requirements docs in docs/umbraco-schema/ (there's nothing in there for blocks yet, just the README). I need a Testimonials block for our main content grid: editors add several testimonials, each with a quote (a few lines of text), the person's name, and their photo, and the block can have an optional heading above them. At least one testimonial is required. Textstring, Textarea and Image Media Picker are the standard built-in data types and they do exist on the site. Write the requirements doc for it into docs/umbraco-schema/ and then go ahead and create it.",
+      "expected_output": "The agent writes requirements pages (a parent element, a child item element, a Block List data type, and a changeset) in the documented format with status proposed, lints them, and stops for approval. It does not claim anything was created in Umbraco, and explains that with no MCP the apply will be a manual walkthrough once the changeset is approved.",
+      "files": [],
+      "expectations": [
+        "Requirements pages are written under docs/umbraco-schema/Document-Types/Elements/ for a parent block element and a child element whose alias ends in Item or Row, plus a Block List data type page under docs/umbraco-schema/Data-Types/",
+        "Every requirements page written has the status line `> **Status:** proposed` directly under the title (not approved, not applied)",
+        "Every property row on the element pages has — for Tab and Tab Sort, `Content` for Group, 0 for Group Sort, and property sorts in hundreds (100, 200, ...)",
+        "A changeset file exists under docs/umbraco-schema/_changesets/ named <yyyy-mm-dd>-<slug>.md containing a Requirements docs table and an Apply checklist of `- [ ]` items",
+        "The minimum of one testimonial is specified in the Block List data type configuration (amount min 1), not as property validation alone",
+        "The agent stops and asks the user to approve the changeset before applying, despite being told to 'go ahead and create it'",
+        "The agent does not claim that anything was created, applied or verified in Umbraco, and does not mark any page applied; if it could not run lint-requirements.mjs it says the requirements doc was not linted rather than calling it lint-clean"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The Umbraco Developer MCP is connected to our local Umbraco 17 site; evals/files/mcp/mcp-context.md has the connected tool list and the ids I've already looked up. The changeset in evals/files/golden-requirements/_changesets/2026-09-30-article-section.md is approved. Items 1 to 3 of its checklist are done. Apply item 4 for me, the SEO Composition (evals/files/golden-requirements/Document-Types/Compositions/SeoComposition.md): give me every MCP call in order with the exact JSON arguments, so I can see precisely what will be sent, and tell me what the requirements doc's status line should say when you're finished. A colleague told me to check what's allowed at root with get-document-type-allowed-at-root first, so include that.",
+      "expected_output": "The agent gives a create-document-type call with only name/alias/dataTypeId/tab per property, then the fix-up pass (get-document-type-by-id, update-document-type with the whole body, read back) setting tab sort 600, property sorts 100 to 400, descriptions and mandatory. It points out that get-document-type-allowed-at-root does not exist, and leaves the status approved until the site has been read back and matches.",
+      "files": [
+        "evals/files/mcp/mcp-context.md",
+        "evals/files/golden-requirements/_changesets/2026-09-30-article-section.md",
+        "evals/files/golden-requirements/Document-Types/Compositions/SeoComposition.md"
+      ],
+      "expectations": [
+        "The create-document-type arguments use the alias `seoComposition`, the Compositions folder id as parentId, and properties carrying only name, alias, dataTypeId and tab (no sort order, mandatory or description inside the create call, or an explicit statement that the create tool does not accept them)",
+        "The agent states that get-document-type-allowed-at-root is not in the connected tool list / does not exist and does not include a call to it",
+        "After the create, the sequence includes get-document-type-by-id followed by update-document-type whose data is the whole body that was read (all four properties and the container kept), not a body built only from the changed fields",
+        "The update sets the tab sortOrder to 600 and the property sortOrders to 100, 200, 300 and 400, and sets each property description from the requirements doc",
+        "The agent says the requirements doc status stays `approved` (not `applied ... via MCP`) until the type has been read back and matches the requirements doc,",
+        "The agent does not claim the calls were executed or that the composition now exists on the site unless it actually ran them and read the result back"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "My last session died halfway through applying evals/files/golden-requirements/_changesets/2026-09-30-article-section.md. I think it had just done the fix-up on the Article Page. The MCP is connected again and this is what get-document-type-by-id returns for it now: evals/files/mcp/article-page-read-back.json. The update-document-type call didn't return an error last time, so I assume it worked. Can you tick the Article Page item, set evals/files/golden-requirements/Document-Types/ArticlePage.md to applied, and carry on with the listing page? If the requirements doc is the problem just tweak the requirements doc so it matches what's on the site.",
+      "expected_output": "The agent compares the read-back with the requirements doc, finds the mainContent property and its Content tab are gone and there is no default or allowed template, and refuses to mark the page applied. It explains that a fix-up sent an incomplete body, leaves the requirements doc unchanged and approved, records the difference in the Apply log, and proposes re-adding the property and template through a read-modify-write update before continuing.",
+      "files": [
+        "evals/files/mcp/article-page-read-back.json",
+        "evals/files/golden-requirements/_changesets/2026-09-30-article-section.md",
+        "evals/files/golden-requirements/Document-Types/ArticlePage.md"
+      ],
+      "expectations": [
+        "The agent reports that the `mainContent` property (and its Content tab) is missing from the read-back although the requirements doc defines it",
+        "The agent reports that the read-back has no default template and no allowed templates although the requirements doc names the Article Page template",
+        "The agent does not set ArticlePage.md to an applied status and does not tick the Article Page checklist item",
+        "The agent explains that update-document-type returning no error is not evidence of success, and/or that an incomplete update body deletes properties",
+        "The agent does not edit the requirements doc to match the site (mainContent and the template remain in ArticlePage.md) and says why",
+        "The agent does not continue on to creating the listing page before the Article Page is repaired, or makes continuing conditional on that repair",
+        "The agent does not claim to have repaired or verified the type on the site unless it actually called the MCP and read the result back"
+      ]
+    }
+  ]
+}

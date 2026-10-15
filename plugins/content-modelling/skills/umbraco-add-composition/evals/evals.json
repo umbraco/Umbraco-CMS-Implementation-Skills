@@ -1,0 +1,52 @@
+{
+  "skill_name": "umbraco-add-composition",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our local Umbraco 17 site. This session can't reach it, so evals/files/mcp/site-context.md has what the read tools returned; treat it as the live site. Requirements docs live in docs/umbraco-schema/ (only a README so far). We want social sharing fields on every page: share title, share description and a share image, for Facebook/LinkedIn cards. Simplest is probably to add them to the existing SEO Composition so everything that has SEO gets sharing too. Add it to every document type while you're at it. Just get it done.",
+      "expected_output": "The agent makes a separate openGraphComposition (not an extension of seoComposition) in Compositions/, on the SEO tab (600) with a Sharing group, and updates seoComposition to put its fields in a Search group. It applies the new composition to the pages (types with a template) only, not to author, authorFolder, siteSettings or the hero element, and it spots that articlePage already has a shareImage property, so it leaves articlePage out (or flags it) rather than deleting the field. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A new composition requirements page exists under docs/umbraco-schema/Document-Types/Compositions/ with an alias ending in Composition (e.g. `openGraphComposition` or `sharingComposition`), separate from `seoComposition`, and its Compositions row is — (it does not compose seoComposition, and the sharing fields are not added to seoComposition)",
+        "The new composition's properties sit on the tab `SEO` with Tab Sort 600, in a named group (e.g. `Sharing`), with property sorts 100, 200, 300",
+        "`seoComposition` is updated (an Update requirements page or a changeset checklist item) so its existing fields sit in their own group (e.g. `Search`) within the SEO tab",
+        "The composition is applied to page types (types with a template; at least homePage, contentPage, articleListingPage and eventPage) and not to `author`, `authorFolder`, `siteSettings` or the `hero` element type",
+        "The agent notices that `articlePage` already has its own `shareImage` property, and either leaves articlePage out of this change or flags the clash for a decision; it does not plan to delete or rename that property",
+        "Every requirements page and the changeset have the status `proposed`, and the agent stops for approval instead of applying",
+        "The agent does not claim that anything was created, updated or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17 site, no MCP on this machine and the site isn't running, so go on what I tell you. We have Home Page (homePage), Content Page (contentPage), News Page (newsPage) and News Listing Page (newsListingPage). Each of them has its own metaTitle and metaDescription properties directly on the type, on a tab called SEO with sort 1, and there's live content in them. We also have a Page Details Composition (pageDetailsComposition) with pageTitle on it. Pull the meta fields out into a new SEO composition so they're shared, and make the SEO composition compose pageDetailsComposition so every page that gets SEO gets page details too. One language. Requirements docs go in docs/umbraco-schema/ (only a README there). Write it up with the backoffice steps.",
+      "expected_output": "The agent specifies seoComposition (acronym collapsed) in Compositions/ with no compositions of its own, explaining that compositions never nest and pages take both side by side. It warns that moving metaTitle and metaDescription off the four types deletes their stored values unless migrated, and does not plan to remove them; the composition is not applied to those types in this change. It uses the SEO tab at 600 with property sorts in hundreds. The existing types are the user's word. The apply is a manual walkthrough after approval; nothing is claimed as done.",
+      "files": [],
+      "expectations": [
+        "A composition requirements page exists under docs/umbraco-schema/Document-Types/Compositions/ with the alias `seoComposition` (not `sEOComposition` or `SEOComposition`), and the Compositions row in its Definition table is an em dash (—), not pageDetailsComposition",
+        "The agent explains that a composition must not compose another composition, and that pages should take pageDetailsComposition and seoComposition side by side instead",
+        "The agent warns that removing metaTitle/metaDescription from the existing types to make room for the composition would delete their stored content unless it is migrated first, and does not plan to delete those properties from homePage, contentPage, newsPage or newsListingPage",
+        "The composition's fields use the tab `SEO` with Tab Sort 600 (not a tab `SEO` with sort 1), and property sorts in hundreds",
+        "The existing types are referenced as plain text or flagged Exists, and the agent says (in the changeset summary or reply) that they come from the user's description and were not read from the site",
+        "Every requirements page and the changeset have the status `proposed`; the agent asks for approval, says the apply will be a manual backoffice walkthrough generated from the requirements doc, and produces no uSync, package.xml or C# files",
+        "The agent does not claim anything was created, applied or verified in Umbraco; if it did not run lint-requirements.mjs it says the requirements doc was not linted rather than calling it lint-clean"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 dev site; the read results are in evals/files/mcp/site-context.md (this session can't call it, treat the file as the live site). Requirements docs go in docs/umbraco-schema/. Our Event Page needs a venue name, a venue address and a link to a map. Put those in a new Venue Composition. And while you're at it, our Hero block needs a background colour option, so add a Background Colour Composition for that too. Please go ahead and set both up.",
+      "expected_output": "The agent points out that only eventPage needs the venue fields and recommends keeping them on the type, or asks whether other types will need them, rather than silently making a single-use composition. It treats the hero background colour as a block settings concern (a settings composition in Elements/Compositions/ for a settings model) that belongs to umbraco-add-block (or umbraco-add-element-type), not a page composition. Whatever it writes is proposed and waits for approval; it claims nothing was created.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The agent points out that only `eventPage` needs the venue fields, and recommends keeping them on eventPage or asks whether another type will need them, instead of silently creating a composition used by one type",
+        "The agent does not write a Background Colour composition as a page composition under Document-Types/Compositions/ or apply it to the `hero` element; it says block styling belongs in a settings composition for a settings model (Elements/Compositions/, alias ending SettingsComposition) handled by umbraco-add-block (or umbraco-add-element-type) or a separate step",
+        "Any venue field specified uses camelCase aliases and property sorts in hundreds, on either the `Content` tab (sort 100) or a type-specific tab with sort 0",
+        "Any requirements pages written and any changeset have the status `proposed`, and the agent stops for approval or for the user's answer before applying",
+        "The agent does not claim that anything was created, updated or verified on the site"
+      ]
+    }
+  ]
+}
