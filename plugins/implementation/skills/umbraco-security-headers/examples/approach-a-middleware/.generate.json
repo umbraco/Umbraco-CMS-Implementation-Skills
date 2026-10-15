@@ -1,0 +1,9 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. namespace = the fixed namespace the <Namespace> placeholder is substituted for; assets = Approach A's files (middleware, settings, composer). Approach B (NWebsec) ships no code, so there is nothing to compile for it. No requires: no assertion depends on a particular Document Type.",
+  "namespace": "Umbraco.Skills.Examples.SecurityHeaders",
+  "assets": [
+    "SecurityHeadersMiddleware.cs",
+    "SecurityHeadersSettings.cs",
+    "SecurityHeadersComposer.cs"
+  ]
+}
