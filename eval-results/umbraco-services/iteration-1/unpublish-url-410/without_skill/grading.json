@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The handler subscribes to ContentUnpublishingNotification, not ContentUnpublishedNotification",
+      "passed": true,
+      "evidence": "The handler class explicitly implements both interfaces: `INotificationHandler<ContentUnpublishingNotification>` and `INotificationHandler<ContentUnpublishedNotification>`. The response explains the two-phase approach: phase 1 in ContentUnpublishingNotification captures URLs while the page is still in the published cache, then phase 2 in ContentUnpublishedNotification persists them."
+    },
+    {
+      "text": "The agent explains that the pre-notification runs before the page leaves the published cache, so its URL can still be read",
+      "passed": true,
+      "evidence": "The response explicitly explains this in the 'key gotcha' section: 'By the time that notification fires [ContentUnpublishedNotification], the page has already left the published cache, so `IPublishedUrlProvider` has nothing to resolve and returns `\"#\"` (or null).' It then explains that ContentUnpublishingNotification is used because 'The page and its descendants are still in the published cache. Resolve their URLs here...'"
+    },
+    {
+      "text": "The URL is read from the published cache via IUmbracoContextFactory.EnsureUmbracoContext() inside a using",
+      "passed": true,
+      "evidence": "In the Handle(ContentUnpublishingNotification) method, line 106 shows: `using UmbracoContextReference contextRef = _umbracoContextFactory.EnsureUmbracoContext();` followed by line 107: `IPublishedContentCache? cache = contextRef.UmbracoContext.Content;`. The using statement ensures proper disposal of the context reference."
+    },
+    {
+      "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+      "passed": true,
+      "evidence": "The GoneUrlComposer class implements IComposer and in its Compose method calls: `builder.AddNotificationHandler<ContentUnpublishingNotification, GoneUrlCaptureHandler>();` and `builder.AddNotificationHandler<ContentUnpublishedNotification, GoneUrlCaptureHandler>();`"
+    },
+    {
+      "text": "Any Umbraco docs links point at the 17.latest pages, not the unversioned (v18) pages",
+      "passed": false,
+      "evidence": "The response contains no hyperlinks to Umbraco documentation. While it references API signatures like `IDocumentNavigationQueryService.TryGetDescendantsKeys` and `IPublishedContentCache.GetById(Guid)`, these are not linked. The response ends with: 'I wrote this from knowledge of the Umbraco 14–17 APIs and did not compile it against a 17.x build. Before relying on it, check these signatures against your installed version' but provides no documentation links to verify against."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the handler was compiled or run",
+      "passed": true,
+      "evidence": "The response explicitly states: 'I wrote this from knowledge of the Umbraco 14–17 APIs and did not compile it against a 17.x build.' The transcript also confirms: 'Verification. Nothing was compiled. I listed the signatures to check against 17.x.' The agent correctly avoids claiming the code was compiled or executed."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 1,
+    "total": 6,
+    "pass_rate": 0.833
+  },
+  "timing": {
+    "total_duration_seconds": 109.7
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Five of six expectations are clearly met. The only failure is the missing Umbraco documentation links — the response provides no hyperlinked references to verify version correctness, which is a reasonable expectation for a detailed technical implementation guide. The code quality and explanation are solid, and the agent appropriately disclaims that the code was not compiled or validated against a live Umbraco instance."
+  }
+}

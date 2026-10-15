@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The agent states that SaveBlueprint(IContent, int userId) was removed in Umbraco 18 (it was already obsolete on 17)",
+      "passed": true,
+      "evidence": "response.md lines 4-5: 'On 17, `IContentService.SaveBlueprint(IContent, int)` was already marked obsolete. Umbraco 18 removed it.'"
+    },
+    {
+      "text": "The replacement call uses the overload SaveBlueprint(content, createdFromContent, userId) (passing null when there is no source content is acceptable)",
+      "passed": true,
+      "evidence": "response.md lines 8-22 show both calling patterns: SaveBlueprint(blueprint, null, userId) when no source, and SaveBlueprint(blueprint, sourceContent, userId) when source exists. Lines 14-19 demonstrate both patterns with clear code examples. Transcript confirms the overload was verified to exist on 17.5.3."
+    },
+    {
+      "text": "For part 2, the agent reads UnpublishedCultures and also handles ContentPublishedNotification, because unpublishing some languages while others stay live raises ContentPublishedNotification (one per culture), not ContentUnpublishedNotification",
+      "passed": true,
+      "evidence": "response.md lines 32-35 contain a table explicitly stating that unpublishing some languages (while others stay live) raises ContentPublishedNotification, raised once per culture. The handler code (lines 47-49) implements both INotificationHandler<ContentPublishedNotification> and INotificationHandler<ContentUnpublishedNotification>, with separate Handle methods for each (lines 56-57 and 60-61)."
+    },
+    {
+      "text": "The agent notes that UnpublishedCultures is not available on older versions (it was added in 18.1.0 and 17.6.0; stating it is missing on 17.5.x or 18.0 also passes)",
+      "passed": true,
+      "evidence": "response.md line 28 states 'The notifications now have an `UnpublishedCultures` property... It isn't on 18.0.x. On the 17 line it arrives in 17.6.0.' Line 118 confirms 'UnpublishedCultures is missing in 18.0.0 and present from 18.1.0.' The transcript (line 12) also confirms grepping Umbraco.Core.xml showed UnpublishedCultures absent in 18.0.0, present from 18.1.0."
+    },
+    {
+      "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+      "passed": true,
+      "evidence": "response.md lines 98-105 show CultureUnpublishLoggerComposer implementing IComposer with Compose method that calls builder.AddNotificationHandler<ContentPublishedNotification, CultureUnpublishLogger>() and builder.AddNotificationHandler<ContentUnpublishedNotification, CultureUnpublishLogger>()."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "response.md line 115 states code 'compiled against `Umbraco.Cms.Core` 18.2.0 with no errors or warnings in a throwaway project' (transparent about how it was verified). Line 119 explicitly states '**Not run against a live site.**' The transcript (line 14) confirms a buildable project was created: 'Built a throwaway net10.0 project in the session scratchpad (outside the repo) referencing Umbraco.Cms.Core 18.2.0.' The agent was transparent about what was and wasn't tested."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 84.3
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations met. The agent provided correct technical answers backed by verification: it correctly identified the removed overload and its replacement, properly explained the notification behavior difference (partial vs. whole unpublish), accurately stated version requirements for UnpublishedCultures (18.1.0+/17.6.0+), and provided working handler code with proper IComposer registration. The agent went beyond minimum requirements by building a throwaway project to verify compilation and was transparent about limitations (not tested against live site). Expectations are well-designed and substantively verified by the outputs."
+  }
+}

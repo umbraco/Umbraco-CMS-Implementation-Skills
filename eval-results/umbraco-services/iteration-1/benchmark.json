@@ -1,0 +1,523 @@
+{
+  "metadata": {
+    "skill_name": "umbraco-services",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-10-15T12:48:03Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4,
+      6
+    ],
+    "runs_per_configuration": 5
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "background-job-no-context",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 119.7,
+        "tokens": 73016
+      },
+      "expectations": [
+        {
+          "text": "The agent explains that IUmbracoContextAccessor finds nothing because a background job runs outside any HTTP request",
+          "passed": true,
+          "evidence": "Response section 'Why TryGetUmbracoContext returns false' states: 'IUmbracoContextAccessor only gives you the UmbracoContext that already exists for the current front-end request. A hosted service or timer runs with no HTTP request, so there's nothing for it to find.'"
+        },
+        {
+          "text": "The solution injects IUmbracoContextFactory and calls EnsureUmbracoContext() inside a using (or using declaration) for each run, not once in the constructor",
+          "passed": true,
+          "evidence": "LatestNewsReader constructor (lines 47-55) injects IUmbracoContextFactory as a field. GetLatest method (line 60) calls EnsureUmbracoContext() inside a using declaration: 'using UmbracoContextReference contextReference = _umbracoContextFactory.EnsureUmbracoContext();' on each method call, not in the constructor."
+        },
+        {
+          "text": "Content is read from the published cache (UmbracoContext.Content or navigation services), not from IContentService",
+          "passed": true,
+          "evidence": "Line 61 retrieves cache from UmbracoContext: 'IPublishedContentCache? cache = contextReference.UmbracoContext.Content;'. Lines 72 and 85 use 'cache.GetById(k)' to read from the cache. Navigation service is used via 'IDocumentNavigationQueryService' (line 44). Response explicitly states 'Read from the published cache instead' and 'Get the tree structure from IDocumentNavigationQueryService'. No IContentService is injected or used."
+        },
+        {
+          "text": "The job does not inject IPublishedContentQuery or UmbracoHelper into the singleton hosted service",
+          "passed": true,
+          "evidence": "LatestNewsReader singleton (lines 36-55) injects only IUmbracoContextFactory, IDocumentNavigationQueryService, and IPublishedUrlProvider. Neither IPublishedContentQuery nor UmbracoHelper appear in the constructor or class definition."
+        },
+        {
+          "text": "The UmbracoContext or IPublishedContent read from it is not stored in a field between runs",
+          "passed": true,
+          "evidence": "GetLatest method (lines 57-92) uses only local variables for contextReference (line 60), cache (line 61), news list (line 68), newsPage (line 77), and articleKeys (line 79). Results are materialized to plain NewsItem records (lines 90-91) before the using statement ends. Response line 16 explicitly states: 'Turn everything into plain values before the using ends. Don't keep the context, or any IPublishedContent read from it, in a field.'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the job was compiled or run",
+          "passed": true,
+          "evidence": "Transcript (lines 27-31) describes a scratch project build that succeeded, and explicitly states 'No repo files were modified. Runtime behaviour was not verified.' Response Verification section (lines 185-188) confirms compilation on scratch project and states: 'I didn't run it against a live site, so the actual log output (names and absolute URLs) is not runtime-verified.' The agent explicitly distinguishes compile-time verification from runtime verification."
+        }
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "news-section-helper",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 84.7,
+        "tokens": 59357
+      },
+      "expectations": [
+        {
+          "text": "The agent rejects storing UmbracoHelper in a static field because it is request-scoped",
+          "passed": true,
+          "evidence": "Response explicitly states: \"UmbracoHelper is **scoped**: Umbraco creates one per HTTP request, tied to that request's `UmbracoContext` and published-cache snapshot. A static field keeps whichever instance it got first and hands it to every later request.\" The response details consequences including stale content, request-state leakage, and ObjectDisposedException. Full section titled \"Why the static `UmbracoHelper` field is wrong\" covers all aspects."
+        },
+        {
+          "text": "The agent offers an extension method on IPublishedContentQuery or UmbracoHelper as a valid option for a small stateless lookup",
+          "passed": true,
+          "evidence": "Response includes full \"Alternative: an extension method\" section with complete, working code showing `public static IPublishedContent? GetNewsSection(this IPublishedContentQuery query)`. Explicitly frames it as \"the lightweight option the docs show\" and notes \"the extension method is static, but it holds **no state**. The scoped object is passed in on every call.\""
+        },
+        {
+          "text": "If a service is proposed, it is registered in an IComposer with a lifetime matching its dependencies",
+          "passed": true,
+          "evidence": "Response shows SiteServiceComposer implementing IComposer with `AddScoped<ISiteService, SiteService>()` registration. Lifetime rationale is explicitly stated: \"Scoped because SiteService injects IPublishedContentQuery (scoped).\" The response also explains why singleton would fail: \"Registering it as a singleton fails at startup with scope validation\" and notes the equivalence to the anti-pattern: \"with validation off it silently shares the first request's state with every request: the same bug as the static UmbracoHelper field.\""
+        },
+        {
+          "text": "The agent shows how to call it from a controller (constructor injection) and from a view (@inject or the extension method)",
+          "passed": true,
+          "evidence": "Response includes three examples: (1) Controller with constructor injection: `public NewsLinkController(ISiteService siteService) => _siteService = siteService;` and `var newsSection = _siteService.GetNewsSection();`. (2) View with @inject: `@inject MySite.Services.ISiteService SiteService` followed by usage. (3) Extension method usage from controllers and views: \"Controllers inject `IPublishedContentQuery` and call `query.GetNewsSection()`. Views use `@inject IPublishedContentQuery Query`.\""
+        },
+        {
+          "text": "The lookup null-checks the result instead of assuming the news section exists",
+          "passed": true,
+          "evidence": "Multiple examples demonstrate null-checking: (1) Controller: `return newsSection is null ? NotFound() : Content(newsSection.Url());`. (2) View: `@if (newsSection is not null) { ... }`. (3) Service method: `public IPublishedContent? GetNewsSection() => GetSiteRoot()?.FirstChildOfType(NewsSectionAlias);` uses the ?. null-coalescing operator. (4) Extension method: `query.ContentAtRoot().FirstOrDefault()?.FirstChildOfType(\"newsSection\");` also uses ?. operator. (5) Explicit guidance: \"Always null-check the result. The news section may not exist yet, or it may be unpublished.\""
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Response includes \"Verification status\" section explicitly stating: \"I haven't compiled or run this against your project, because no project was provided.\" It clearly delineates verified components (\"The `ISiteService` / `SiteService` / composer / controller pattern is a skill asset that compiles and has runtime tests against Umbraco 17.5.3\") from unverified additions (\"The `GetNewsSection()` method ... and the `newsSection` alias are additions for your case and haven't been tested\"). Transcript confirms: \"I flagged that the code wasn't built.\""
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "readonly-api-contentservice",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 68.3,
+        "tokens": 57743
+      },
+      "expectations": [
+        {
+          "text": "The agent says IContentService is the wrong choice for this read-only endpoint",
+          "passed": true,
+          "evidence": "response.md lines 1-3: 'Short answer: no. Read from the published cache, not `IContentService`' and 'The endpoint is a good idea, but `IContentService` is the wrong service for it.' Agent explicitly states the service is wrong."
+        },
+        {
+          "text": "The agent explains that IContentService queries the database on each call (and can return unpublished content), while the published cache is in memory",
+          "passed": true,
+          "evidence": "response.md lines 10-12: 'Every request hits the database. `IContentService` takes a read lock and queries the DB on every call... The published cache is in memory' and 'It returns `IContent`, not published content. You get every child: drafts, unpublished pages...'. Both the DB hit and unpublished content issues are clearly explained, as is the in-memory cache benefit."
+        },
+        {
+          "text": "The implementation reads products through IPublishedContentQuery, UmbracoHelper, or IUmbracoContextFactory with the published cache",
+          "passed": true,
+          "evidence": "response.md line 17 and code example (lines 36, 57): Agent recommends 'Inject `IPublishedContentQuery` into the controller' with a code sample showing `private readonly IPublishedContentQuery _publishedContentQuery;` and usage `_publishedContentQuery.Content(key)`. Uses the recommended service for cache-based reads."
+        },
+        {
+          "text": "Only published content is returned (no explicit filtering of drafts needed because the cache holds published content)",
+          "passed": true,
+          "evidence": "response.md line 17: 'The cache only returns **published** content, so drafts and unpublished pages are excluded automatically'. Code sample (lines 47-64) contains no explicit filtering like `.Where(x => x.Published)` - relies entirely on the cache returning only published content. Line 58 shows `.OfType<IPublishedContent>()` which filters based on cache contents."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the endpoint was compiled or tested",
+          "passed": true,
+          "evidence": "response.md lines 92-93: 'Not compiled or run. No project was provided... The exact endpoint above, including the `TryGetChildrenKeysOfType` overload, was not compiled. Build it and request `/api/products` once to confirm.' Agent appropriately disclaims compilation and testing."
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "singleton-scoped-mismatch",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 65.5,
+        "tokens": 57801
+      },
+      "expectations": [
+        {
+          "text": "The agent identifies that UmbracoHelper is scoped and cannot be injected into a singleton",
+          "passed": true,
+          "evidence": "Response clearly states: 'UmbracoHelper (and IPublishedContentQuery) is scoped: Umbraco creates one per HTTP request' and 'injecting one into a class resolved outside a request, such as a singleton, makes Umbraco report an error at startup.' Explicitly identifies the problem as a lifetime mismatch."
+        },
+        {
+          "text": "The agent explains that production starting fine does not mean it is safe: scope validation is off there, so the singleton would reuse one request's helper",
+          "passed": true,
+          "evidence": "Response explains: 'Why only Development fails: ASP.NET Core turns on scope validation (ValidateScopes) by default only in the Development environment' and 'Production isn't fine, just quiet. With validation off, the container still builds the singleton once and gives it whatever UmbracoHelper it resolved first. Every later request then reuses that one helper and the context it was tied to.'"
+        },
+        {
+          "text": "The agent notes that AddScoped alone fixes request-only use but would not work from a scheduled job",
+          "passed": true,
+          "evidence": "Response includes a comparison table showing Fix A (AddScoped) with 'Works in a scheduled job, hosted service or notification handler: No. There's no request and no UmbracoContext there' and explains 'Fix A would make the startup error go away, but the service could still only be used during a request, so you'd hit the problem again when you add the job.'"
+        },
+        {
+          "text": "The recommended fix for request and background use is a singleton that injects IUmbracoContextFactory and opens a context with EnsureUmbracoContext() per call",
+          "passed": true,
+          "evidence": "Response recommends 'Because you'll call it from a scheduled job, Fix B is the right one' and provides complete code showing IUmbracoContextFactory injected as a singleton dependency and EnsureUmbracoContext() used in a using statement within FindFirstOfType method. Correctly demonstrates the pattern."
+        },
+        {
+          "text": "The service is registered in a composer with a lifetime that matches its dependencies",
+          "passed": true,
+          "evidence": "Response shows SiteServiceComposer implementing IComposer with 'builder.Services.AddSingleton<ISiteService, SiteService>()' and explains 'The AddSingleton call you already have is correct now that the class has no scoped dependencies.' Lifetime matches the singleton dependencies."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+          "passed": true,
+          "evidence": "Response includes 'Verification status' section stating: 'The pattern (a singleton with IUmbracoContextFactory, EnsureUmbracoContext() in a using, and IDocumentNavigationQueryService.TryGetRootKeys + GetById) is the same as a sample that is compiled and run against Umbraco 17.5.3' but then explicitly notes 'The TryGetDescendantsKeysOfType lookup, the contactPage/newsSection aliases and the exact class above were not built or run, because there was no project to build against.'"
+        }
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "unpublish-url-410",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 73.4,
+        "tokens": 58001
+      },
+      "expectations": [
+        {
+          "text": "The handler subscribes to ContentUnpublishingNotification, not ContentUnpublishedNotification",
+          "passed": true,
+          "evidence": "Line 31 of response.md shows 'public class UnpublishingUrlRecorder : INotificationHandler<ContentUnpublishingNotification>' and line 47 shows 'public void Handle(ContentUnpublishingNotification notification)'. The explanation (lines 3-6) explicitly contrasts the two, stating that ContentUnpublishingNotification fires before the cache updates."
+        },
+        {
+          "text": "The agent explains that the pre-notification runs before the page leaves the published cache, so its URL can still be read",
+          "passed": true,
+          "evidence": "Lines 3-6 explain: '`ContentUnpublishingNotification` (\"-ing\") fires *before* the cache updates. The page is still published, so its URL can be resolved. **Use this one.**' and lines 29-30 in the code comment reinforce this: 'Unpublishing fires BEFORE the page leaves the published cache, so its URL can still be read.'"
+        },
+        {
+          "text": "The URL is read from the published cache via IUmbracoContextFactory.EnsureUmbracoContext() inside a using",
+          "passed": true,
+          "evidence": "Line 51 shows the using statement: 'using UmbracoContextReference contextReference = _umbracoContextFactory.EnsureUmbracoContext();' and line 63 shows the URL is read from the published cache: 'string url = _publishedUrlProvider.GetUrl(published);'. This accesses the cache through the context opened by the factory."
+        },
+        {
+          "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+          "passed": true,
+          "evidence": "Line 102 shows 'public class SiteComposer : IComposer' and line 109 shows the registration: 'builder.AddNotificationHandler<ContentUnpublishingNotification, UnpublishingUrlRecorder>();'"
+        },
+        {
+          "text": "Any Umbraco docs links point at the 17.latest pages, not the unversioned (v18) pages",
+          "passed": true,
+          "evidence": "No explicit Umbraco docs hyperlinks are present in the response.md output. The agent correctly references the 'Umbraco 17 Services and Helpers' documentation (line 8) and the transcript confirms the agent fetched 'v17 Services and Helpers doc (docs.umbraco.com/umbraco-cms/17.latest/.../services.md)', confirming the correct version was consulted. There are no links pointing to v18 pages."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the handler was compiled or run",
+          "passed": true,
+          "evidence": "Line 129 explicitly states: '**Verification:** No project was provided, so I haven't compiled or run this here.' The agent correctly disclaims compilation and runtime verification when no project was available."
+        }
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "background-job-no-context",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 71.2,
+        "tokens": 50722
+      },
+      "expectations": [
+        {
+          "text": "The agent explains that IUmbracoContextAccessor finds nothing because a background job runs outside any HTTP request",
+          "passed": true,
+          "evidence": "Response explicitly states: 'A timer or hosted service runs on a thread-pool thread with no request behind it, so the accessor has nothing to give you and `TryGetUmbracoContext` returns `false`. This is expected behaviour, not a bug.' (lines 4-5)"
+        },
+        {
+          "text": "The solution injects IUmbracoContextFactory and calls EnsureUmbracoContext() inside a using (or using declaration) for each run, not once in the constructor",
+          "passed": true,
+          "evidence": "Constructor shows IUmbracoContextFactory injected (line 49). EnsureUmbracoContext() is called inside RunJobAsync with a using declaration: 'using UmbracoContextReference _ = _umbracoContextFactory.EnsureUmbracoContext();' (line 76). It is not stored in a field or called in constructor."
+        },
+        {
+          "text": "Content is read from the published cache (UmbracoContext.Content or navigation services), not from IContentService",
+          "passed": true,
+          "evidence": "Response uses IPublishedContentCache (injected at line 43, used at line 91 with _contentCache.GetById) and IDocumentNavigationQueryService for navigation (lines 85, 108, 116). Response explicitly states 'Skip `UmbracoContext` for content lookups. Since v15 the published cache (`IPublishedContentCache`) and the navigation structure (`IDocumentNavigationQueryService`) are injectable services' (lines 9-10). IContentService is mentioned only as something to avoid in the main solution (line 166)."
+        },
+        {
+          "text": "The job does not inject IPublishedContentQuery or UmbracoHelper into the singleton hosted service",
+          "passed": true,
+          "evidence": "Constructor dependencies (lines 48-60) are: IUmbracoContextFactory, IPublishedContentCache, IDocumentNavigationQueryService, IPublishedUrlProvider, ILogger<LatestNewsLoggerJob>. Neither IPublishedContentQuery nor UmbracoHelper appear anywhere in the injected dependencies or fields."
+        },
+        {
+          "text": "The UmbracoContext or IPublishedContent read from it is not stored in a field between runs",
+          "passed": true,
+          "evidence": "Class fields (lines 37-46) only contain injected dependencies (_umbracoContextFactory, _contentCache, _navigation, _urlProvider, _logger). UmbracoContext is created via using declaration inside RunJobAsync (line 76) and not stored. No IPublishedContent objects are stored in fields; they are local to the RunJobAsync method."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the job was compiled or run",
+          "passed": true,
+          "evidence": "Transcript explicitly states (line 8): 'Flagged as unverified: the exact namespaces and the existence of the `*OfType` navigation methods in 17. Not compiled.' Response includes 'Notes on accuracy' section (lines 171-176) stating: 'I wrote this from my knowledge of the Umbraco 13\u201317 APIs, without compiling it against 17' with explicit verification checklist requested."
+        }
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "news-section-helper",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8333,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 71.0,
+        "tokens": 50363
+      },
+      "expectations": [
+        {
+          "text": "The agent rejects storing UmbracoHelper in a static field because it is request-scoped",
+          "passed": true,
+          "evidence": "Response explicitly states (line 5): '**UmbracoHelper** is request-scoped. It wraps the **IUmbracoContext** for *one* HTTP request' and explains multiple failures: 'If you put it in a static field, the first request's helper lives for the whole lifetime of the app... You get stale or wrong content, broken preview and wrong-culture results' (lines 7\u20138). Also lists ObjectDisposedException and thread-safety issues."
+        },
+        {
+          "text": "The agent offers an extension method on IPublishedContentQuery or UmbracoHelper as a valid option for a small stateless lookup",
+          "passed": false,
+          "evidence": "Extension methods are mentioned only in passing (line 118) as an alternative syntax ('If you prefer the extension-method style, `current.Root()` / `AncestorOrSelf(1)` also work in templates'), but the primary recommendation is the DI service. Extension methods are not presented as a first-class 'valid option' for the core architectural choice\u2014they're offered as syntactic convenience in templates after the main guidance settles on a service. The expectation asks for extension methods to be offered as a valid option, but the response does not position them that way."
+        },
+        {
+          "text": "If a service is proposed, it is registered in an IComposer with a lifetime matching its dependencies",
+          "passed": true,
+          "evidence": "Response shows NewsSectionComposer implementing IComposer (lines 130\u2013134) with `builder.Services.AddScoped<INewsSectionService, NewsSectionService>()`. Scoped lifetime is explained (lines 137\u2013138): 'scoped is the safe default' and dependencies (IDocumentNavigationQueryService, IPublishedContentCache, IUmbracoContextAccessor) are all app-wide, making scoped appropriate."
+        },
+        {
+          "text": "The agent shows how to call it from a controller (constructor injection) and from a view (@inject or the extension method)",
+          "passed": true,
+          "evidence": "Template example (lines 142\u2013162) shows `@inject INewsSectionService NewsSections` and usage `var newsSection = NewsSections.GetNewsSection(Model)`. RenderController example (lines 171\u2013199) shows constructor injection: `INewsSectionService newsSections` parameter in the constructor with `_newsSections = newsSections;`."
+        },
+        {
+          "text": "The lookup null-checks the result instead of assuming the news section exists",
+          "passed": true,
+          "evidence": "Service returns nullable type `IPublishedContent?` (line 38). Implementation includes: TryGetChildrenKeysOfType check returning null (line 82\u201384), FirstOrDefault filter (line 90), null check in GetNewsSectionForCurrentRequest (lines 100\u2013101), and template usage null-checks (line 159: `@if (newsSection is not null)`)."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Response includes explicit caveat (line 217): 'method names are from Umbraco 15\u201317's...written from memory and not compiled here. Confirm them against your installed version.' No claims of compilation or successful execution are made."
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "readonly-api-contentservice",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 52.2,
+        "tokens": 48116
+      },
+      "expectations": [
+        {
+          "text": "The agent says IContentService is the wrong choice for this read-only endpoint",
+          "passed": true,
+          "evidence": "Response explicitly states: 'The problem is reading the data with IContentService.GetPagedChildren. It is the wrong tool for a public, read-only endpoint.' Section header: 'Why IContentService is the wrong fit here.' Transcript also notes: 'Spotted the classic anti-pattern: IContentService (DB-backed management API) used for front-end reads.'"
+        },
+        {
+          "text": "The agent explains that IContentService queries the database on each call (and can return unpublished content), while the published cache is in memory",
+          "passed": true,
+          "evidence": "Response clearly states: 'It queries the database on every call' and 'Each request to /api/products would go to the database (with paging) and skip Umbraco's published content cache.' Also: 'It returns drafts as well as published content. GetPagedChildren returns IContent items whether they are published, unpublished or have pending changes.' Comparison table shows database vs 'In-memory/hybrid cache' distinction."
+        },
+        {
+          "text": "The implementation reads products through IPublishedContentQuery, UmbracoHelper, or IUmbracoContextFactory with the published cache",
+          "passed": true,
+          "evidence": "Code example injects IPublishedContentQuery: 'private readonly IPublishedContentQuery _publishedContentQuery;' and uses it: 'IPublishedContent? folder = _publishedContentQuery.Content(ProductsFolderKey);' Alternative option documented: 'Another option is IUmbracoContextAccessor \u2192 umbracoContext.Content' which provides equivalent access to the published content cache."
+        },
+        {
+          "text": "Only published content is returned (no explicit filtering of drafts needed because the cache holds published content)",
+          "passed": true,
+          "evidence": "Response states: 'Only published content comes back. The published cache only holds published content, so you don't need a .Published filter, and values are the published ones.' Code comment reinforces: '.Children() // published children only'. Comparison table confirms: 'Published only? Yes'."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the endpoint was compiled or tested",
+          "passed": true,
+          "evidence": "Transcript explicitly states: 'Fetched: nothing (no web fetches, no repo files read). Answered from model knowledge.' Response ends with disclaimer: 'Unverified points to check against your exact 17.x version: the precise IPublishedContentQuery.Content(Guid) overload...' No claims about compilation, execution, or testing the code."
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "singleton-scoped-mismatch",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 65.8,
+        "tokens": 49818
+      },
+      "expectations": [
+        {
+          "text": "The agent identifies that UmbracoHelper is scoped and cannot be injected into a singleton",
+          "passed": true,
+          "evidence": "Response clearly states in 'What's wrong' section: 'UmbracoHelper is registered as **scoped**: one instance per HTTP request. Your `SiteService` is a **singleton**... The scoped object is now \"captured\" by the singleton and outlives the request it belonged to.'"
+        },
+        {
+          "text": "The agent explains that production starting fine does not mean it is safe: scope validation is off there, so the singleton would reuse one request's helper",
+          "passed": true,
+          "evidence": "Section 'Why it only fails in Development' explains: 'In Production that check is off, so the app starts. **The bug is still there, though.** The singleton silently keeps the first `UmbracoHelper` it got. Expect intermittent errors such as `ObjectDisposedException`...'"
+        },
+        {
+          "text": "The agent notes that AddScoped alone fixes request-only use but would not work from a scheduled job",
+          "passed": true,
+          "evidence": "Table entry for 'Make `SiteService` scoped' shows 'Yes' for requests but '**No.**' for scheduled jobs with explanation: 'A job has no HTTP request, so there's no `UmbracoHelper` or Umbraco context to inject'"
+        },
+        {
+          "text": "The recommended fix for request and background use is a singleton that injects IUmbracoContextFactory and opens a context with EnsureUmbracoContext() per call",
+          "passed": true,
+          "evidence": "Table marks 'Keep it a singleton, drop `UmbracoHelper`, and use `IUmbracoContextFactory`...' as 'Recommended'. Implementation shows: `private readonly IUmbracoContextFactory _umbracoContextFactory;` and `using UmbracoContextReference contextReference = _umbracoContextFactory.EnsureUmbracoContext();`"
+        },
+        {
+          "text": "The service is registered in a composer with a lifetime that matches its dependencies",
+          "passed": true,
+          "evidence": "Code shows registration as `builder.Services.AddSingleton<ISiteService, SiteService>();` in composer. Response confirms: 'A singleton is now correct because every dependency is a singleton' (IUmbracoContextFactory and IDocumentNavigationQueryService are both singletons)"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+          "passed": true,
+          "evidence": "Response ends with explicit disclaimer: '*Note: this answer is from general knowledge of Umbraco 15\u201317 and ASP.NET Core DI, **without checking against the Umbraco 17 source**... confirm the exact signatures... against your installed version.*'"
+        }
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "unpublish-url-410",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.833,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 109.7,
+        "tokens": 55265
+      },
+      "expectations": [
+        {
+          "text": "The handler subscribes to ContentUnpublishingNotification, not ContentUnpublishedNotification",
+          "passed": true,
+          "evidence": "The handler class explicitly implements both interfaces: `INotificationHandler<ContentUnpublishingNotification>` and `INotificationHandler<ContentUnpublishedNotification>`. The response explains the two-phase approach: phase 1 in ContentUnpublishingNotification captures URLs while the page is still in the published cache, then phase 2 in ContentUnpublishedNotification persists them."
+        },
+        {
+          "text": "The agent explains that the pre-notification runs before the page leaves the published cache, so its URL can still be read",
+          "passed": true,
+          "evidence": "The response explicitly explains this in the 'key gotcha' section: 'By the time that notification fires [ContentUnpublishedNotification], the page has already left the published cache, so `IPublishedUrlProvider` has nothing to resolve and returns `\"#\"` (or null).' It then explains that ContentUnpublishingNotification is used because 'The page and its descendants are still in the published cache. Resolve their URLs here...'"
+        },
+        {
+          "text": "The URL is read from the published cache via IUmbracoContextFactory.EnsureUmbracoContext() inside a using",
+          "passed": true,
+          "evidence": "In the Handle(ContentUnpublishingNotification) method, line 106 shows: `using UmbracoContextReference contextRef = _umbracoContextFactory.EnsureUmbracoContext();` followed by line 107: `IPublishedContentCache? cache = contextRef.UmbracoContext.Content;`. The using statement ensures proper disposal of the context reference."
+        },
+        {
+          "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+          "passed": true,
+          "evidence": "The GoneUrlComposer class implements IComposer and in its Compose method calls: `builder.AddNotificationHandler<ContentUnpublishingNotification, GoneUrlCaptureHandler>();` and `builder.AddNotificationHandler<ContentUnpublishedNotification, GoneUrlCaptureHandler>();`"
+        },
+        {
+          "text": "Any Umbraco docs links point at the 17.latest pages, not the unversioned (v18) pages",
+          "passed": false,
+          "evidence": "The response contains no hyperlinks to Umbraco documentation. While it references API signatures like `IDocumentNavigationQueryService.TryGetDescendantsKeys` and `IPublishedContentCache.GetById(Guid)`, these are not linked. The response ends with: 'I wrote this from knowledge of the Umbraco 14\u201317 APIs and did not compile it against a 17.x build. Before relying on it, check these signatures against your installed version' but provides no documentation links to verify against."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the handler was compiled or run",
+          "passed": true,
+          "evidence": "The response explicitly states: 'I wrote this from knowledge of the Umbraco 14\u201317 APIs and did not compile it against a 17.x build.' The transcript also confirms: 'Verification. Nothing was compiled. I listed the signatures to check against 17.x.' The agent correctly avoids claiming the code was compiled or executed."
+        }
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 82.32,
+        "stddev": 22.1471,
+        "min": 65.5,
+        "max": 119.7
+      },
+      "tokens": {
+        "mean": 61183.6,
+        "stddev": 6647.3832,
+        "min": 57743,
+        "max": 73016
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9333,
+        "stddev": 0.0914,
+        "min": 0.833,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 73.98,
+        "stddev": 21.4115,
+        "min": 52.2,
+        "max": 109.7
+      },
+      "tokens": {
+        "mean": 50856.8,
+        "stddev": 2659.1976,
+        "min": 48116,
+        "max": 55265
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.07",
+      "time_seconds": "+8.3",
+      "tokens": "+10327"
+    }
+  },
+  "notes": [
+    "Baseline is strong: 3 of 5 evals score 100% without the skill. The model already knows the core DI / UmbracoContext rules.",
+    "The eval 6 'docs links point at 17.latest' expectation was graded inconsistently: it passed vacuously with the skill (no links) and failed for the same reason without. Treat it as a tie; real pass-rate delta is about +3 points (eval 4 extension-method option).",
+    "Cost: +10.3k tokens (+20%) and +8s per run with the skill.",
+    "Not captured by the assertions: with-skill answers build on runtime-tested assets (one even compiled its code and caught a RunJobAsync signature error); baselines flag their API calls as unverified.",
+    "Trigger/conflict check (separate, 6 skills side by side, 10 queries x 3 runs): 30/30 picked the expected skill, 0 false triggers."
+  ]
+}

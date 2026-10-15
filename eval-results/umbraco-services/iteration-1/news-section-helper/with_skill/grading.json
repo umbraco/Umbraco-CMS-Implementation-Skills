@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The agent rejects storing UmbracoHelper in a static field because it is request-scoped",
+      "passed": true,
+      "evidence": "Response explicitly states: \"UmbracoHelper is **scoped**: Umbraco creates one per HTTP request, tied to that request's `UmbracoContext` and published-cache snapshot. A static field keeps whichever instance it got first and hands it to every later request.\" The response details consequences including stale content, request-state leakage, and ObjectDisposedException. Full section titled \"Why the static `UmbracoHelper` field is wrong\" covers all aspects."
+    },
+    {
+      "text": "The agent offers an extension method on IPublishedContentQuery or UmbracoHelper as a valid option for a small stateless lookup",
+      "passed": true,
+      "evidence": "Response includes full \"Alternative: an extension method\" section with complete, working code showing `public static IPublishedContent? GetNewsSection(this IPublishedContentQuery query)`. Explicitly frames it as \"the lightweight option the docs show\" and notes \"the extension method is static, but it holds **no state**. The scoped object is passed in on every call.\""
+    },
+    {
+      "text": "If a service is proposed, it is registered in an IComposer with a lifetime matching its dependencies",
+      "passed": true,
+      "evidence": "Response shows SiteServiceComposer implementing IComposer with `AddScoped<ISiteService, SiteService>()` registration. Lifetime rationale is explicitly stated: \"Scoped because SiteService injects IPublishedContentQuery (scoped).\" The response also explains why singleton would fail: \"Registering it as a singleton fails at startup with scope validation\" and notes the equivalence to the anti-pattern: \"with validation off it silently shares the first request's state with every request: the same bug as the static UmbracoHelper field.\""
+    },
+    {
+      "text": "The agent shows how to call it from a controller (constructor injection) and from a view (@inject or the extension method)",
+      "passed": true,
+      "evidence": "Response includes three examples: (1) Controller with constructor injection: `public NewsLinkController(ISiteService siteService) => _siteService = siteService;` and `var newsSection = _siteService.GetNewsSection();`. (2) View with @inject: `@inject MySite.Services.ISiteService SiteService` followed by usage. (3) Extension method usage from controllers and views: \"Controllers inject `IPublishedContentQuery` and call `query.GetNewsSection()`. Views use `@inject IPublishedContentQuery Query`.\""
+    },
+    {
+      "text": "The lookup null-checks the result instead of assuming the news section exists",
+      "passed": true,
+      "evidence": "Multiple examples demonstrate null-checking: (1) Controller: `return newsSection is null ? NotFound() : Content(newsSection.Url());`. (2) View: `@if (newsSection is not null) { ... }`. (3) Service method: `public IPublishedContent? GetNewsSection() => GetSiteRoot()?.FirstChildOfType(NewsSectionAlias);` uses the ?. null-coalescing operator. (4) Extension method: `query.ContentAtRoot().FirstOrDefault()?.FirstChildOfType(\"newsSection\");` also uses ?. operator. (5) Explicit guidance: \"Always null-check the result. The news section may not exist yet, or it may be unpublished.\""
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Response includes \"Verification status\" section explicitly stating: \"I haven't compiled or run this against your project, because no project was provided.\" It clearly delineates verified components (\"The `ISiteService` / `SiteService` / composer / controller pattern is a skill asset that compiles and has runtime tests against Umbraco 17.5.3\") from unverified additions (\"The `GetNewsSection()` method ... and the `newsSection` alias are additions for your case and haven't been tested\"). Transcript confirms: \"I flagged that the code wasn't built.\""
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 84.7
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Expectations are well-structured and comprehensive. They effectively test both rejection of an anti-pattern (static field) and correct implementation of two valid approaches (service and extension method). The eval verifies practical concerns (constructor injection, view injection, null-checking) and epistemic integrity (no false claims about compilation/testing). No weak assertions identified; all expectations check substantive aspects of the task."
+  }
+}

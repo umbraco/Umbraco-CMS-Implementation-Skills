@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The handler subscribes to ContentUnpublishingNotification, not ContentUnpublishedNotification",
+      "passed": true,
+      "evidence": "Line 36: `public class UnpublishingUrlRecorder : INotificationHandler<ContentUnpublishingNotification>`. Lines 9-10 explain the critical difference: ContentUnpublishedNotification fires after the cache is cleared (URL unrecoverable), but ContentUnpublishingNotification fires before (URL still available)."
+    },
+    {
+      "text": "The agent explains that the pre-notification runs before the page leaves the published cache, so its URL can still be read",
+      "passed": true,
+      "evidence": "Lines 7-10: 'Once it has been unpublished it is gone from the cache... ContentUnpublishedNotification (\"-ed\") fires **after** the page has left the cache... ContentUnpublishingNotification (\"-ing\") fires **before** the page leaves the cache, so you can still resolve its URL.'"
+    },
+    {
+      "text": "The URL is read from the published cache via IUmbracoContextFactory.EnsureUmbracoContext() inside a using",
+      "passed": true,
+      "evidence": "Line 55: `using UmbracoContextReference contextReference = _umbracoContextFactory.EnsureUmbracoContext();` Inside the using block, line 60 reads from the published cache: `contextReference.UmbracoContext.Content?.GetById(item.Key)`, and line 66 gets the URL: `_publishedUrlProvider.GetUrl(published)`."
+    },
+    {
+      "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+      "passed": true,
+      "evidence": "Lines 108-117 show UnpublishedUrlComposer implementing IComposer. Line 115: `builder.AddNotificationHandler<ContentUnpublishingNotification, UnpublishingUrlRecorder>();`. Correctly follows Umbraco's IComposer discovery pattern (no Program.cs changes needed, as stated on line 120)."
+    },
+    {
+      "text": "Any Umbraco docs links point at the 17.latest pages, not the unversioned (v18) pages",
+      "passed": true,
+      "evidence": "vacuous: no docs links present. The response references v17 and v18 docs by name (lines 9-10) but does not include any hyperlinks to Umbraco documentation."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the handler was compiled or run",
+      "passed": true,
+      "evidence": "Lines 133-135: 'Nothing has been compiled or tested for this answer, because no project was provided.' The agent carefully distinguishes: the asset (previously tested on 17.5.3 and 18.2.0) vs. the new code (composer, store methods, URL filtering) which 'hasn't been built.' Instructs user to run `dotnet build`."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 61.3
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations pass. The response demonstrates strong understanding of Umbraco notifications, context lifecycle, and DI composition. It correctly prioritizes accuracy over completeness: acknowledges that new code (composer, helper methods) hasn't been compiled, and distinguishes this from the proven asset pattern. The explanation of why ContentUnpublishingNotification is needed (pre-cache-clear access) is clear and well-grounded."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The agent identifies that UmbracoHelper is scoped and cannot be injected into a singleton",
+      "passed": true,
+      "evidence": "Response clearly states in 'What's wrong' section: 'UmbracoHelper is registered as **scoped**: one instance per HTTP request. Your `SiteService` is a **singleton**... The scoped object is now \"captured\" by the singleton and outlives the request it belonged to.'"
+    },
+    {
+      "text": "The agent explains that production starting fine does not mean it is safe: scope validation is off there, so the singleton would reuse one request's helper",
+      "passed": true,
+      "evidence": "Section 'Why it only fails in Development' explains: 'In Production that check is off, so the app starts. **The bug is still there, though.** The singleton silently keeps the first `UmbracoHelper` it got. Expect intermittent errors such as `ObjectDisposedException`...'"
+    },
+    {
+      "text": "The agent notes that AddScoped alone fixes request-only use but would not work from a scheduled job",
+      "passed": true,
+      "evidence": "Table entry for 'Make `SiteService` scoped' shows 'Yes' for requests but '**No.**' for scheduled jobs with explanation: 'A job has no HTTP request, so there's no `UmbracoHelper` or Umbraco context to inject'"
+    },
+    {
+      "text": "The recommended fix for request and background use is a singleton that injects IUmbracoContextFactory and opens a context with EnsureUmbracoContext() per call",
+      "passed": true,
+      "evidence": "Table marks 'Keep it a singleton, drop `UmbracoHelper`, and use `IUmbracoContextFactory`...' as 'Recommended'. Implementation shows: `private readonly IUmbracoContextFactory _umbracoContextFactory;` and `using UmbracoContextReference contextReference = _umbracoContextFactory.EnsureUmbracoContext();`"
+    },
+    {
+      "text": "The service is registered in a composer with a lifetime that matches its dependencies",
+      "passed": true,
+      "evidence": "Code shows registration as `builder.Services.AddSingleton<ISiteService, SiteService>();` in composer. Response confirms: 'A singleton is now correct because every dependency is a singleton' (IUmbracoContextFactory and IDocumentNavigationQueryService are both singletons)"
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+      "passed": true,
+      "evidence": "Response ends with explicit disclaimer: '*Note: this answer is from general knowledge of Umbraco 15–17 and ASP.NET Core DI, **without checking against the Umbraco 17 source**... confirm the exact signatures... against your installed version.*'"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 65.8
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations pass with clear, substantive evidence. The response provides both correct diagnosis and working code implementation. Assertions are well-designed: they check understanding of the fundamental issue (captive dependency, lifetime mismatch), awareness of production risk, and practical knowledge of both request-based and background-job constraints. The agent appropriately hedges about API signatures not being verified against the actual Umbraco 17 source, satisfying the verification expectation."
+  }
+}

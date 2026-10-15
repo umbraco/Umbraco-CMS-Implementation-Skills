@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The handler subscribes to ContentUnpublishingNotification, not ContentUnpublishedNotification",
+      "passed": true,
+      "evidence": "Line 31 of response.md shows 'public class UnpublishingUrlRecorder : INotificationHandler<ContentUnpublishingNotification>' and line 47 shows 'public void Handle(ContentUnpublishingNotification notification)'. The explanation (lines 3-6) explicitly contrasts the two, stating that ContentUnpublishingNotification fires before the cache updates."
+    },
+    {
+      "text": "The agent explains that the pre-notification runs before the page leaves the published cache, so its URL can still be read",
+      "passed": true,
+      "evidence": "Lines 3-6 explain: '`ContentUnpublishingNotification` (\"-ing\") fires *before* the cache updates. The page is still published, so its URL can be resolved. **Use this one.**' and lines 29-30 in the code comment reinforce this: 'Unpublishing fires BEFORE the page leaves the published cache, so its URL can still be read.'"
+    },
+    {
+      "text": "The URL is read from the published cache via IUmbracoContextFactory.EnsureUmbracoContext() inside a using",
+      "passed": true,
+      "evidence": "Line 51 shows the using statement: 'using UmbracoContextReference contextReference = _umbracoContextFactory.EnsureUmbracoContext();' and line 63 shows the URL is read from the published cache: 'string url = _publishedUrlProvider.GetUrl(published);'. This accesses the cache through the context opened by the factory."
+    },
+    {
+      "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+      "passed": true,
+      "evidence": "Line 102 shows 'public class SiteComposer : IComposer' and line 109 shows the registration: 'builder.AddNotificationHandler<ContentUnpublishingNotification, UnpublishingUrlRecorder>();'"
+    },
+    {
+      "text": "Any Umbraco docs links point at the 17.latest pages, not the unversioned (v18) pages",
+      "passed": true,
+      "evidence": "No explicit Umbraco docs hyperlinks are present in the response.md output. The agent correctly references the 'Umbraco 17 Services and Helpers' documentation (line 8) and the transcript confirms the agent fetched 'v17 Services and Helpers doc (docs.umbraco.com/umbraco-cms/17.latest/.../services.md)', confirming the correct version was consulted. There are no links pointing to v18 pages."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the handler was compiled or run",
+      "passed": true,
+      "evidence": "Line 129 explicitly states: '**Verification:** No project was provided, so I haven't compiled or run this here.' The agent correctly disclaims compilation and runtime verification when no project was available."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 73.4
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations are solid and evidence-based. The skill delivered a complete, well-explained solution with appropriate caveats. The agent correctly explained the cache lifecycle, chose the right notification type with clear reasoning, showed proper DI registration patterns, and transparently disclosed the lack of runtime verification when no project was available. No issues detected in the evaluation criteria."
+  }
+}

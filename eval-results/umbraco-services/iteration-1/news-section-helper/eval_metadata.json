@@ -1,0 +1,13 @@
+{
+  "eval_id": 4,
+  "eval_name": "news-section-helper",
+  "prompt": "Umbraco 17. Several templates and two controllers need 'the news section under the site root'. A colleague says write a static helper class with a static UmbracoHelper field, another says make a service. What's the right way, and show me the code?",
+  "expectations": [
+    "The agent rejects storing UmbracoHelper in a static field because it is request-scoped",
+    "The agent offers an extension method on IPublishedContentQuery or UmbracoHelper as a valid option for a small stateless lookup",
+    "If a service is proposed, it is registered in an IComposer with a lifetime matching its dependencies",
+    "The agent shows how to call it from a controller (constructor injection) and from a view (@inject or the extension method)",
+    "The lookup null-checks the result instead of assuming the news section exists",
+    "If no buildable project is available, the agent does not claim the code was compiled or run"
+  ]
+}

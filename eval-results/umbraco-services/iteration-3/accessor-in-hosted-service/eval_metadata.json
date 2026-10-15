@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "accessor-in-hosted-service",
+  "prompt": "Umbraco 17 site. I have a nightly IHostedService that builds a digest of the 5 newest articles under 'News'. I read in the Umbraco docs that I should not use IContentService for reading and should inject IPublishedContentQueryAccessor instead, so I did that (the hosted service is a singleton, and the accessor is a singleton too, so DI is happy). But accessor.TryGetValue(out var query) always returns false when the job runs at night. During the day, when I trigger the same code from a controller, it works. What's going on, and what's the right fix?",
+  "expectations": [
+    "The agent explains that IPublishedContentQueryAccessor only yields an IPublishedContentQuery during an HTTP request (it resolves from the request's services), which is why it works from a controller and returns false in the job",
+    "The agent does not suggest keeping the accessor and retrying, or caching a query obtained during a request for later use by the job",
+    "The fix reads published content per run via IUmbracoContextFactory.EnsureUmbracoContext() inside a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+    "Content is read from the published cache (UmbracoContext.Content and/or IDocumentNavigationQueryService), not from IContentService",
+    "The agent notes that the docs' accessor advice applies to request-time code, not to background jobs",
+    "If no buildable project is available, the agent does not claim the fix was compiled or run"
+  ]
+}

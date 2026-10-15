@@ -1,0 +1,13 @@
+{
+  "eval_id": 3,
+  "eval_name": "singleton-scoped-mismatch",
+  "prompt": "I wrote a SiteService for our Umbraco 17 site that finds the contact page and the news section. It takes UmbracoHelper in its constructor and I registered it with builder.Services.AddSingleton<ISiteService, SiteService>() in a composer. Now the site won't start in Development: 'Cannot consume scoped service UmbracoHelper from singleton ISiteService'. In production it starts fine. What's wrong, and which fix is right if I also want to call the service from a scheduled job later?",
+  "expectations": [
+    "The agent identifies that UmbracoHelper is scoped and cannot be injected into a singleton",
+    "The agent explains that production starting fine does not mean it is safe: scope validation is off there, so the singleton would reuse one request's helper",
+    "The agent notes that AddScoped alone fixes request-only use but would not work from a scheduled job",
+    "The recommended fix for request and background use is a singleton that injects IUmbracoContextFactory and opens a context with EnsureUmbracoContext() per call",
+    "The service is registered in a composer with a lifetime that matches its dependencies",
+    "If no buildable project is available, the agent does not claim the fix was compiled or run"
+  ]
+}

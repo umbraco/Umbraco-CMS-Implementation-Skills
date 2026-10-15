@@ -1,0 +1,13 @@
+{
+  "eval_id": 2,
+  "eval_name": "singleton-cached-content",
+  "prompt": "Umbraco 17. Editors complain that after they rename the News section and publish, the old title keeps showing in our site header until we restart the app. We have no output caching or CDN. Here's the service the header uses:\n\n```csharp\npublic class SiteService : ISiteService\n{\n    private readonly IPublishedContent? _newsSection;\n\n    public SiteService(IUmbracoContextFactory umbracoContextFactory, IDocumentNavigationQueryService navigation)\n    {\n        using var reference = umbracoContextFactory.EnsureUmbracoContext();\n        navigation.TryGetRootKeys(out var rootKeys);\n        var root = reference.UmbracoContext.Content?.GetById(rootKeys.First());\n        _newsSection = root?.Children().FirstOrDefault(x => x.ContentType.Alias == \"newsSection\");\n    }\n\n    public IPublishedContent? GetNewsSection() => _newsSection;\n}\n\n// composer\nbuilder.Services.AddSingleton<ISiteService, SiteService>();\n```\n\nWhat's wrong and how should it be written?",
+  "expectations": [
+    "The agent identifies that the IPublishedContent is read once in the constructor and stored in a field of a singleton, so later publishes are never seen",
+    "The agent points out that the content was read inside a context that is disposed at the end of the constructor, so the stored object outlives its context",
+    "The agent does not blame output caching, a CDN or browser caching as the cause",
+    "The fix looks the news section up per call, via EnsureUmbracoContext() in a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+    "If anything is cached across calls, it is the content key (or id), not the IPublishedContent object",
+    "If no buildable project is available, the agent does not claim the fix was compiled or run"
+  ]
+}

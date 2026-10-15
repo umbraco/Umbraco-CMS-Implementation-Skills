@@ -1,0 +1,13 @@
+{
+  "eval_id": 6,
+  "eval_name": "unpublish-url-410",
+  "prompt": "Our Umbraco 17 site needs to answer 410 Gone for pages editors unpublish. Step one: whenever a page is unpublished, store the URL it had so a content finder can match it later. Write the notification handler and its registration.",
+  "expectations": [
+    "The handler subscribes to ContentUnpublishingNotification, not ContentUnpublishedNotification",
+    "The agent explains that the pre-notification runs before the page leaves the published cache, so its URL can still be read",
+    "The URL is read from the published cache via IUmbracoContextFactory.EnsureUmbracoContext() inside a using",
+    "The handler is registered with builder.AddNotificationHandler in an IComposer",
+    "Any Umbraco docs links point at the 17.latest pages, not the unversioned (v18) pages",
+    "If no buildable project is available, the agent does not claim the handler was compiled or run"
+  ]
+}

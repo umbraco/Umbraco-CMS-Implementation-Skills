@@ -1,0 +1,32 @@
+Umbraco 17. We want to answer 410 Gone for unpublished pages, so I copied this handler from the Umbraco docs (Services and Helpers page). It runs (I see it in the debugger) but it never records any URL. Why, and how do I fix it?
+
+```csharp
+public class HandleUnPublishingHandler : INotificationHandler<ContentUnpublishedNotification>
+{
+    private readonly IUmbracoContextFactory _umbracoContextFactory;
+    private readonly IGoneUrlStore _store;
+
+    public HandleUnPublishingHandler(IUmbracoContextFactory umbracoContextFactory, IGoneUrlStore store)
+    {
+        _umbracoContextFactory = umbracoContextFactory;
+        _store = store;
+    }
+
+    public void Handle(ContentUnpublishedNotification notification)
+    {
+        using (UmbracoContextReference umbracoContextReference = _umbracoContextFactory.EnsureUmbracoContext())
+        {
+            IPublishedContentCache contentCache = umbracoContextReference.UmbracoContext.Content;
+            foreach (var item in notification.UnpublishedEntities)
+            {
+                // item being unpublished will still be in the cache, as unpublishing event fires before the cache is updated.
+                IPublishedContent soonToBeUnPublishedItem = contentCache.GetById(item.Id);
+                if (soonToBeUnPublishedItem != null)
+                {
+                    _store.Add(soonToBeUnPublishedItem.Url());
+                }
+            }
+        }
+    }
+}
+```

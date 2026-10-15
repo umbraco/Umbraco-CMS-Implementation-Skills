@@ -1,0 +1,84 @@
+{
+  "skill_name": "umbraco-services",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Umbraco 17 site. I have a nightly IHostedService that builds a digest of the 5 newest articles under 'News'. I read in the Umbraco docs that I should not use IContentService for reading and should inject IPublishedContentQueryAccessor instead, so I did that (the hosted service is a singleton, and the accessor is a singleton too, so DI is happy). But accessor.TryGetValue(out var query) always returns false when the job runs at night. During the day, when I trigger the same code from a controller, it works. What's going on, and what's the right fix?",
+      "expected_output": "The agent explains that IPublishedContentQueryAccessor only returns a query while an HTTP request is running (it resolves from the current request's services), so in a hosted service it always returns false; the fix is IUmbracoContextFactory.EnsureUmbracoContext() per run, reading from the published cache.",
+      "files": [],
+      "expectations": [
+        "The agent explains that IPublishedContentQueryAccessor only yields an IPublishedContentQuery during an HTTP request (it resolves from the request's services), which is why it works from a controller and returns false in the job",
+        "The agent does not suggest keeping the accessor and retrying, or caching a query obtained during a request for later use by the job",
+        "The fix reads published content per run via IUmbracoContextFactory.EnsureUmbracoContext() inside a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+        "Content is read from the published cache (UmbracoContext.Content and/or IDocumentNavigationQueryService), not from IContentService",
+        "The agent notes that the docs' accessor advice applies to request-time code, not to background jobs",
+        "If no buildable project is available, the agent does not claim the fix was compiled or run"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17. Editors complain that after they rename the News section and publish, the old title keeps showing in our site header until we restart the app. We have no output caching or CDN. Here's the service the header uses:\n\n```csharp\npublic class SiteService : ISiteService\n{\n    private readonly IPublishedContent? _newsSection;\n\n    public SiteService(IUmbracoContextFactory umbracoContextFactory, IDocumentNavigationQueryService navigation)\n    {\n        using var reference = umbracoContextFactory.EnsureUmbracoContext();\n        navigation.TryGetRootKeys(out var rootKeys);\n        var root = reference.UmbracoContext.Content?.GetById(rootKeys.First());\n        _newsSection = root?.Children().FirstOrDefault(x => x.ContentType.Alias == \"newsSection\");\n    }\n\n    public IPublishedContent? GetNewsSection() => _newsSection;\n}\n\n// composer\nbuilder.Services.AddSingleton<ISiteService, SiteService>();\n```\n\nWhat's wrong and how should it be written?",
+      "expected_output": "The agent identifies that the singleton reads the news section once in its constructor and keeps the IPublishedContent in a field, so it never sees later publishes (and it was read from a context that is disposed right away); the fix looks it up per call inside EnsureUmbracoContext, optionally caching only the key.",
+      "files": [],
+      "expectations": [
+        "The agent identifies that the IPublishedContent is read once in the constructor and stored in a field of a singleton, so later publishes are never seen",
+        "The agent points out that the content was read inside a context that is disposed at the end of the constructor, so the stored object outlives its context",
+        "The agent does not blame output caching, a CDN or browser caching as the cause",
+        "The fix looks the news section up per call, via EnsureUmbracoContext() in a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+        "If anything is cached across calls, it is the content key (or id), not the IPublishedContent object",
+        "If no buildable project is available, the agent does not claim the fix was compiled or run"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We're upgrading our Umbraco site from 17 to 18. Two things:\n1. This line no longer compiles on 18: `_contentService.SaveBlueprint(blueprint, userId);` (CS1501/no overload). It worked on 17. What should it be?\n2. On 18 we'd like a notification handler that logs WHICH cultures were unpublished whenever an editor unpublishes one or more languages of a variant page. Is there a way to get that from the notification itself?",
+      "expected_output": "The agent explains that SaveBlueprint(IContent, int) was obsolete on 17 and removed in 18 (use SaveBlueprint(content, createdFromContent, userId)), and that UnpublishedCultures (added in 18.1.0/17.6.0) is on both ContentPublishedNotification and ContentUnpublishedNotification: a partial-language unpublish raises ContentPublishedNotification once per culture, a full unpublish raises ContentUnpublishedNotification.",
+      "files": [],
+      "expectations": [
+        "The agent states that SaveBlueprint(IContent, int userId) was removed in Umbraco 18 (it was already obsolete on 17)",
+        "The replacement call uses the overload SaveBlueprint(content, createdFromContent, userId) (passing null when there is no source content is acceptable)",
+        "For part 2, the agent reads UnpublishedCultures and also handles ContentPublishedNotification, because unpublishing some languages while others stay live raises ContentPublishedNotification (one per culture), not ContentUnpublishedNotification",
+        "The agent notes that UnpublishedCultures is not available on older versions (it was added in 18.1.0 and 17.6.0; stating it is missing on 17.5.x or 18.0 also passes)",
+        "The handler is registered with builder.AddNotificationHandler in an IComposer",
+        "If no buildable project is available, the agent does not claim the code was compiled or run"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Umbraco 17. Several templates and two controllers need 'the news section under the site root'. A colleague says write a static helper class with a static UmbracoHelper field, another says make a service. What's the right way, and show me the code?",
+      "expected_output": "The agent rejects the static UmbracoHelper field, then chooses between an extension method on IPublishedContentQuery/UmbracoHelper (small stateless lookup) and a registered custom service, and shows how it is called from a controller and a view.",
+      "files": [],
+      "expectations": [
+        "The agent rejects storing UmbracoHelper in a static field because it is request-scoped",
+        "The agent offers an extension method on IPublishedContentQuery or UmbracoHelper as a valid option for a small stateless lookup",
+        "If a service is proposed, it is registered in an IComposer with a lifetime matching its dependencies",
+        "The agent shows how to call it from a controller (constructor injection) and from a view (@inject or the extension method)",
+        "The lookup null-checks the result instead of assuming the news section exists",
+        "If no buildable project is available, the agent does not claim the code was compiled or run"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Umbraco 17 site. Add a partial view that shows the site name in the footer, and render it from the master layout.",
+      "expected_output": "This is a templating task; the umbraco-services skill should not be invoked.",
+      "files": [],
+      "expectations": [
+        "The umbraco-services skill is not invoked (umbraco-templating, or no skill, handles it)"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Umbraco 17. We want to answer 410 Gone for unpublished pages, so I copied this handler from the Umbraco docs (Services and Helpers page). It runs (I see it in the debugger) but it never records any URL. Why, and how do I fix it?\n\n```csharp\npublic class HandleUnPublishingHandler : INotificationHandler<ContentUnpublishedNotification>\n{\n    private readonly IUmbracoContextFactory _umbracoContextFactory;\n    private readonly IGoneUrlStore _store;\n\n    public HandleUnPublishingHandler(IUmbracoContextFactory umbracoContextFactory, IGoneUrlStore store)\n    {\n        _umbracoContextFactory = umbracoContextFactory;\n        _store = store;\n    }\n\n    public void Handle(ContentUnpublishedNotification notification)\n    {\n        using (UmbracoContextReference umbracoContextReference = _umbracoContextFactory.EnsureUmbracoContext())\n        {\n            IPublishedContentCache contentCache = umbracoContextReference.UmbracoContext.Content;\n            foreach (var item in notification.UnpublishedEntities)\n            {\n                // item being unpublished will still be in the cache, as unpublishing event fires before the cache is updated.\n                IPublishedContent soonToBeUnPublishedItem = contentCache.GetById(item.Id);\n                if (soonToBeUnPublishedItem != null)\n                {\n                    _store.Add(soonToBeUnPublishedItem.Url());\n                }\n            }\n        }\n    }\n}\n```",
+      "expected_output": "The agent explains that ContentUnpublishedNotification fires after the page has left the published cache, so GetById returns null and nothing is stored; the code comment (from the docs) is wrong for this notification. The fix handles ContentUnpublishingNotification, which fires before the cache update, and registers it accordingly.",
+      "files": [],
+      "expectations": [
+        "The agent explains that ContentUnpublishedNotification fires after the page has been removed from the published cache, so GetById returns null and nothing is recorded",
+        "The agent states that the comment in the copied code (that the item is still in the cache) is wrong for this notification",
+        "The fix handles ContentUnpublishingNotification instead",
+        "The fix reads the URL from the published cache via EnsureUmbracoContext() in a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+        "The handler registration is updated to the -ing notification with builder.AddNotificationHandler",
+        "If no buildable project is available, the agent does not claim the fix was compiled or run"
+      ]
+    }
+  ]
+}

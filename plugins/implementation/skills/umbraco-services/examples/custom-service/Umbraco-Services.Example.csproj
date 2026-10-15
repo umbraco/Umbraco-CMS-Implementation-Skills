@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-services skill.
+
+    It is a compilable projection of the skill's assets
+    (SiteService, RootContentReader, UnpublishingUrlRecorder, composer, controller) with the
+    <Namespace> placeholder substituted for a fixed namespace. The reference
+    instance (Umbraco-CMS.Skills) references this project so the code is compiled
+    and loaded in-process, and Umbraco-CMS.Skills.TestHost asserts the services over
+    HTTP and in-process. The .cs files are projected from the skill's assets/ into obj/
+    at build time (plugins/Directory.Build.props); nothing generated is committed.
+    Not shipped to users; not part of any plugin.
+
+    Razor SDK so the controller registers as an application part.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.Services</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Web.Website pulls in Web.Common + Core + Infrastructure transitively, covering the
+         Umbraco.Cms.* namespaces the assets use. Version comes from the repo-root
+         Directory.Packages.props, so it stays in lockstep with the Umbraco the host loads. -->
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+</Project>

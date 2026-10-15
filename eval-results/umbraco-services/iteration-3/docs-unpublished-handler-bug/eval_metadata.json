@@ -1,0 +1,13 @@
+{
+  "eval_id": 6,
+  "eval_name": "docs-unpublished-handler-bug",
+  "prompt": "Umbraco 17. We want to answer 410 Gone for unpublished pages, so I copied this handler from the Umbraco docs (Services and Helpers page). It runs (I see it in the debugger) but it never records any URL. Why, and how do I fix it?\n\n```csharp\npublic class HandleUnPublishingHandler : INotificationHandler<ContentUnpublishedNotification>\n{\n    private readonly IUmbracoContextFactory _umbracoContextFactory;\n    private readonly IGoneUrlStore _store;\n\n    public HandleUnPublishingHandler(IUmbracoContextFactory umbracoContextFactory, IGoneUrlStore store)\n    {\n        _umbracoContextFactory = umbracoContextFactory;\n        _store = store;\n    }\n\n    public void Handle(ContentUnpublishedNotification notification)\n    {\n        using (UmbracoContextReference umbracoContextReference = _umbracoContextFactory.EnsureUmbracoContext())\n        {\n            IPublishedContentCache contentCache = umbracoContextReference.UmbracoContext.Content;\n            foreach (var item in notification.UnpublishedEntities)\n            {\n                // item being unpublished will still be in the cache, as unpublishing event fires before the cache is updated.\n                IPublishedContent soonToBeUnPublishedItem = contentCache.GetById(item.Id);\n                if (soonToBeUnPublishedItem != null)\n                {\n                    _store.Add(soonToBeUnPublishedItem.Url());\n                }\n            }\n        }\n    }\n}\n```",
+  "expectations": [
+    "The agent explains that ContentUnpublishedNotification fires after the page has been removed from the published cache, so GetById returns null and nothing is recorded",
+    "The agent states that the comment in the copied code (that the item is still in the cache) is wrong for this notification",
+    "The fix handles ContentUnpublishingNotification instead",
+    "The fix reads the URL from the published cache via EnsureUmbracoContext() in a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+    "The handler registration is updated to the -ing notification with builder.AddNotificationHandler",
+    "If no buildable project is available, the agent does not claim the fix was compiled or run"
+  ]
+}

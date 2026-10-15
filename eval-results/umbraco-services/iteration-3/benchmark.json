@@ -1,0 +1,434 @@
+{
+  "metadata": {
+    "skill_name": "umbraco-services",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-10-15T13:18:14Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      6
+    ],
+    "runs_per_configuration": 4
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "accessor-in-hosted-service",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 114.2,
+        "tokens": 60407
+      },
+      "expectations": [
+        {
+          "text": "The agent explains that IPublishedContentQueryAccessor only yields an IPublishedContentQuery during an HTTP request (it resolves from the request's services), which is why it works from a controller and returns false in the job",
+          "passed": true,
+          "evidence": "Response includes detailed explanation with actual Umbraco 17.5.3 source code. Lines 4-22 explain: 'IPublishedContentQueryAccessor doesn't hold a query object of its own. It looks up the scoped IPublishedContentQuery from the current HTTP request's service provider.' Shows ScopedServiceProvider source proving HttpContext dependency, and explicitly states: 'From a controller (daytime): a request is in progress, HttpContext.RequestServices exists, and TryGetValue returns true. From your IHostedService (night): no request exists, HttpContext is null, and TryGetValue always returns false.'"
+        },
+        {
+          "text": "The agent does not suggest keeping the accessor and retrying, or caching a query obtained during a request for later use by the job",
+          "passed": true,
+          "evidence": "Response completely avoids anti-patterns. The entire fix section directs toward EnsureUmbracoContext as the correct approach, with explicit rules against storing UmbracoContext in fields (line 112: 'Never store the UmbracoContext, the reference, or any IPublishedContent in a field'). No mention of retrying or caching queries."
+        },
+        {
+          "text": "The fix reads published content per run via IUmbracoContextFactory.EnsureUmbracoContext() inside a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+          "passed": true,
+          "evidence": "Response line 30 states: 'inject the singleton IUmbracoContextFactory and create a short-lived Umbraco context with EnsureUmbracoContext() inside a using block.' Code example (lines 59-60) shows correct pattern: 'using UmbracoContextReference contextReference = _umbracoContextFactory.EnsureUmbracoContext(); var cache = contextReference.UmbracoContext.Content;' This matches the expected approach of singleton injection with per-run context creation."
+        },
+        {
+          "text": "Content is read from the published cache (UmbracoContext.Content and/or IDocumentNavigationQueryService), not from IContentService",
+          "passed": true,
+          "evidence": "Response line 30 states: 'Read the published cache through UmbracoContext.Content. Use IDocumentNavigationQueryService'. Code uses UmbracoContext.Content (line 60), _navigation.TryGetChildrenKeys and TryGetRootKeys (lines 61, 69, 75), and cache.GetById (lines 70, 82) exclusively. Line 26 explicitly rejects IContentService: 'You were right not to use IContentService for this. It's a management service, and every read takes a lock and queries the database.' No IContentService usage anywhere in the solution."
+        },
+        {
+          "text": "The agent notes that the docs' accessor advice applies to request-time code, not to background jobs",
+          "passed": true,
+          "evidence": "Response line 24 cites official Umbraco docs: 'The v17 docs for IPublishedContentQuery say so directly: \"In a background task, accessing the content cache using an injected IPublishedContentQuery or IPublishedContentQueryAccessor will not work, as they rely on HttpContext.\"' Additionally clarifies line 24: 'The accessor exists for singletons that run during a request. It doesn't help when there is no request.'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+          "passed": true,
+          "evidence": "Response line 125 explicitly states: 'The digest code above was written for this answer and has not been compiled or run against your site. Build it and trigger one run (for example with a short delay on startup) before relying on it.' Appropriately disclaims compilation and runtime testing given no buildable project was available."
+        }
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "docs-unpublished-handler-bug",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 50.9,
+        "tokens": 52776
+      },
+      "expectations": [
+        {
+          "text": "The agent explains that ContentUnpublishedNotification fires after the page has been removed from the published cache, so GetById returns null and nothing is recorded",
+          "passed": true,
+          "evidence": "Response states: 'ContentUnpublishedNotification (the \"-ed\" one) fires **after** the page has already been removed from the published cache. When your handler runs, `contentCache.GetById(item.Id)` returns `null`, the `if` is skipped, and nothing gets added.'"
+        },
+        {
+          "text": "The agent states that the comment in the copied code (that the item is still in the cache) is wrong for this notification",
+          "passed": true,
+          "evidence": "Response explicitly states: 'The comment in the docs snippet (\"item being unpublished will still be in the cache, as unpublishing event fires before the cache is updated\") is wrong for v17.'"
+        },
+        {
+          "text": "The fix handles ContentUnpublishingNotification instead",
+          "passed": true,
+          "evidence": "Fixed code shows: `public class HandleUnPublishingHandler : INotificationHandler<ContentUnpublishingNotification>` (line 19). Response explains: 'The \"-ing\" notification fires **before** the unpublish, while the page is still in the published cache, so you can still look up its URL.'"
+        },
+        {
+          "text": "The fix keeps reading the URL from the published cache via EnsureUmbracoContext() in a using",
+          "passed": true,
+          "evidence": "Fixed code shows: `using UmbracoContextReference contextReference = _umbracoContextFactory.EnsureUmbracoContext();` followed by `IPublishedContent? published = contextReference.UmbracoContext.Content?.GetById(item.Key);`"
+        },
+        {
+          "text": "The handler registration is updated to the -ing notification with builder.AddNotificationHandler",
+          "passed": true,
+          "evidence": "Registration code shows: `builder.AddNotificationHandler<ContentUnpublishingNotification, HandleUnPublishingHandler>();` with comment 'Fix the registration too. The notification type in the registration has to match the handler's interface.'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+          "passed": true,
+          "evidence": "Verification status section states: 'I haven't built or run your code (`IGoneUrlStore`, your composer), because you didn't share your project.' Agent notes the fixed pattern matches the asset which compiles and has a runtime test, but explicitly disclaims testing the user's code."
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "singleton-cached-content",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 58.4,
+        "tokens": 53268
+      },
+      "expectations": [
+        {
+          "text": "The agent identifies that the IPublishedContent is read once in the constructor and stored in a field of a singleton, so later publishes are never seen",
+          "passed": true,
+          "evidence": "Response states: 'AddSingleton builds `SiteService` once per app lifetime, the first time something resolves it. The constructor reads the News section once and saves it in `_newsSection`. After that, `GetNewsSection()` returns the same object on every request until the app restarts.' Also explains that IPublishedContent is a snapshot and when published, the field still points to the old snapshot."
+        },
+        {
+          "text": "The agent points out that the content was read inside a context that is disposed at the end of the constructor, so the stored object outlives its context",
+          "passed": true,
+          "evidence": "Response includes: 'The content outlives its `UmbracoContext`. `using var reference = EnsureUmbracoContext()` disposes the context at the end of the constructor. The content you read through it is kept long after that. The rule is one disposed context per read, and never store the context or content read from it in a field.'"
+        },
+        {
+          "text": "The agent does not blame output caching, a CDN or browser caching as the cause",
+          "passed": true,
+          "evidence": "Response opens with 'The cause is not caching.' and proceeds to identify the singleton/constructor pattern as the root cause. No mention of output caching, CDN, or browser caching appears in the diagnosis of the problem."
+        },
+        {
+          "text": "The fix looks the news section up per call, via EnsureUmbracoContext() in a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+          "passed": true,
+          "evidence": "Option A provides scoped IPublishedContentQuery lookup. Option B provides singleton with per-call EnsureUmbracoContext in using statements: 'public IPublishedContent? GetSiteRoot() { using UmbracoContextReference reference = _umbracoContextFactory.EnsureUmbracoContext(); return FindRoot(reference); }' Both approaches perform per-call lookups rather than storing content in constructor."
+        },
+        {
+          "text": "If anything is cached across calls, it is the content key (or id), not the IPublishedContent object",
+          "passed": true,
+          "evidence": "Response explicitly states: 'Cache the **key** (`Guid`) of the News section, not the `IPublishedContent`. Resolve it per call with `GetById(key)`. The published cache lookup is cheap, and the result is always the latest published version.'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+          "passed": true,
+          "evidence": "Response includes: 'Verification: I haven't compiled or run this code against your project.' It explicitly disclaims compilation/runtime verification, instead noting the patterns match compiled skill assets and recommending the user build and test themselves."
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "upgrade-17-to-18-apis",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 126.2,
+        "tokens": 66148
+      },
+      "expectations": [
+        {
+          "text": "The agent states that SaveBlueprint(IContent, int userId) was removed in Umbraco 18 (it was already obsolete on 17)",
+          "passed": true,
+          "evidence": "Response states: 'On 17, `IContentService.SaveBlueprint(IContent, int)` was already marked obsolete... On 18 that overload has been removed from `IContentService`.' This directly addresses both the obsolescence on 17 and removal on 18."
+        },
+        {
+          "text": "The replacement call uses the overload SaveBlueprint(content, createdFromContent, userId) (passing null when there is no source content is acceptable)",
+          "passed": true,
+          "evidence": "Response provides the correct 3-argument signature: 'void SaveBlueprint(IContent content, IContent? createdFromContent, int userId = -1);' and shows the replacement call: '_contentService.SaveBlueprint(blueprint, null, userId);'. It also explains that passing null is acceptable: '`createdFromContent` is nullable, so passing `null` gives the same behaviour as the old 2-argument call.'"
+        },
+        {
+          "text": "For part 2, the agent reads UnpublishedCultures and also handles ContentPublishedNotification, because unpublishing some languages while others stay live raises ContentPublishedNotification (one per culture), not ContentUnpublishedNotification",
+          "passed": true,
+          "evidence": "Response clearly identifies the distinction: 'Unpublished **some** languages; page stays published in others | `ContentPublishedNotification`... Raised once per culture when several are unpublished together.' The handler code implements both `INotificationHandler<ContentPublishedNotification>` and `INotificationHandler<ContentUnpublishedNotification>`. Response also warns: 'If you only handle `ContentUnpublishedNotification`, you will **miss** the case you described...because unpublishing a single culture does not raise it.'"
+        },
+        {
+          "text": "The agent notes that UnpublishedCultures is not available on older versions (it was added in 18.1.0 and 17.6.0; stating it is missing on 17.5.x or 18.0 also passes)",
+          "passed": true,
+          "evidence": "Response states: 'Both properties are new on 18 and both have the type `IReadOnlyDictionary<Guid, IReadOnlyCollection<string>>?`... Neither exists on 17.' Later reinforces: 'There is no `UnpublishedCultures` on 17.' This correctly identifies version availability."
+        },
+        {
+          "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+          "passed": true,
+          "evidence": "Response provides complete registration code: 'public class CultureUnpublishLoggerComposer : IComposer { public void Compose(IUmbracoBuilder builder) { builder.AddNotificationHandler<ContentPublishedNotification, CultureUnpublishLogger>(); builder.AddNotificationHandler<ContentUnpublishedNotification, CultureUnpublishLogger>(); } }' This uses the correct pattern with IComposer and builder.AddNotificationHandler."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Response appropriately qualifies verification: 'Both answers were checked by reflecting over and compiling against `Umbraco.Cms.Core`...Neither has been run on a live site.' Later: '**Compiled with no warnings** against `Umbraco.Cms.Core` 18.2.0' and '**Behaviour comes from the 18.2.0 XML API docs and was not checked at runtime.**' The agent clearly distinguishes between what was compiled (signatures, reflection) versus what was not (runtime behavior)."
+        }
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "accessor-in-hosted-service",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 63.6,
+        "tokens": 49634
+      },
+      "expectations": [
+        {
+          "text": "The agent explains that IPublishedContentQueryAccessor only yields an IPublishedContentQuery during an HTTP request (it resolves from the request's services), which is why it works from a controller and returns false in the job",
+          "passed": true,
+          "evidence": "Lines 7-22 of response.md explain this precisely. The agent shows the simplified implementation of TryGetValue(), states 'From a controller: a request is running, so HttpContext exists' and 'From an IHostedService / timer / background job: no request is running, so HttpContext is null and TryGetValue returns false.'"
+        },
+        {
+          "text": "The agent does not suggest keeping the accessor and retrying, or caching a query obtained during a request for later use by the job",
+          "passed": true,
+          "evidence": "The response does not suggest retrying the accessor or caching queries. Instead, lines 24-31 explicitly move toward proper solutions: using IRecurringBackgroundJob and either EnsureUmbracoContext or v15+ services. No mention of workarounds with the accessor."
+        },
+        {
+          "text": "The fix reads published content per run via IUmbracoContextFactory.EnsureUmbracoContext() inside a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+          "passed": true,
+          "evidence": "Option A (lines 33-95) demonstrates EnsureUmbracoContext in a using statement (line 65). Option B (lines 107-147) demonstrates IPublishedContentCache for v15+ (line 116). Both approaches are correctly presented as alternatives."
+        },
+        {
+          "text": "Content is read from the published cache (UmbracoContext.Content and/or IDocumentNavigationQueryService), not from IContentService",
+          "passed": true,
+          "evidence": "Option A reads from UmbracoContext.Content (line 66). Option B uses IDocumentNavigationQueryService (lines 130-134) and IPublishedContentCache (line 139). Line 158 explicitly warns: 'Don't fall back to IContentService: it would work at night, but it reads from the database, returns drafts, and is slow.'"
+        },
+        {
+          "text": "The agent notes that the docs' accessor advice applies to request-time code, not to background jobs",
+          "passed": true,
+          "evidence": "Line 24 directly addresses this: 'So the docs advice is only half right for your case. It is correct that you shouldn't read content through IContentService... But the accessor only covers request-bound code. Background code has to set up its own context.'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+          "passed": true,
+          "evidence": "The agent qualifies the code as examples and notes: 'Check the exact method names against your 17.x version' (line 150). At the end, the agent states 'Sources (from memory of the Umbraco docs and source; check them against your exact 17.x version)' (lines 167-171), explicitly indicating no runtime verification."
+        }
+      ]
+    },
+    {
+      "eval_id": 6,
+      "eval_name": "docs-unpublished-handler-bug",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 72.1,
+        "tokens": 51213
+      },
+      "expectations": [
+        {
+          "text": "The agent explains that ContentUnpublishedNotification fires after the page has been removed from the published cache, so GetById returns null and nothing is recorded",
+          "passed": true,
+          "evidence": "Response section 'The short answer' (lines 9-14) clearly explains: 'ContentUnpublishedNotification (past tense, \"-ed\") is published **after** the unpublish has happened. By the time your handler runs, the published content cache has already been updated... `contentCache.GetById(item.Id); // -> null` returns `null`. The `if (... != null)` guard then skips the item every time, so `_store.Add(...)` never runs.'"
+        },
+        {
+          "text": "The agent states that the comment in the copied code (that the item is still in the cache) is wrong for this notification",
+          "passed": true,
+          "evidence": "Response identifies the discrepancy (lines 16-19): 'The code comment you copied (\"item being unpublished will still be in the cache, as unpublishing event fires before the cache is updated\") describes the **\"-ing\"** notification, not the \"-ed\" one. It is a leftover from the old v7/v8 sample...'"
+        },
+        {
+          "text": "The fix handles ContentUnpublishingNotification instead",
+          "passed": true,
+          "evidence": "Minimal fix code block (line 33) shows: `public class HandleUnPublishingHandler : INotificationHandler<ContentUnpublishingNotification>`. Text also states (line 21): '**Fix:** handle `ContentUnpublishingNotification` instead.'"
+        },
+        {
+          "text": "The fix reads the URL from the published cache via EnsureUmbracoContext() in a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+          "passed": true,
+          "evidence": "Fix injects IPublishedContentCache and IPublishedUrlProvider (lines 35-46). Handler retrieves published content via `_contentCache.GetById(item.Key)` (line 54) and gets URL via `_urlProvider.GetUrl(published)` (line 60). Response notes (lines 80-82): 'In Umbraco 15+ `IPublishedContentCache` can be injected directly, so you don't need `IUmbracoContextFactory.EnsureUmbracoContext()`...' This matches the second option allowed by the expectation."
+        },
+        {
+          "text": "The handler registration is updated to the -ing notification with builder.AddNotificationHandler",
+          "passed": true,
+          "evidence": "Registration code shown (line 74): `builder.AddNotificationHandler<ContentUnpublishingNotification, HandleUnPublishingHandler>();` with explanatory text (lines 70-71) noting the notification type needs to be changed in registration."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+          "passed": true,
+          "evidence": "Transcript confirms 'No repo files read (baseline run)'. Response makes no claims of compilation or execution; instead provides verification instructions (lines 121-124): 'Set a breakpoint after `GetById` in the new handler and unpublish a page: `published` should now be non-null...'"
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "singleton-cached-content",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.833,
+        "passed": 5,
+        "failed": 1,
+        "total": 6,
+        "time_seconds": 58.9,
+        "tokens": 48890
+      },
+      "expectations": [
+        {
+          "text": "The agent identifies that the IPublishedContent is read once in the constructor and stored in a field of a singleton, so later publishes are never seen",
+          "passed": true,
+          "evidence": "Response section 'What's wrong', point 1: 'AddSingleton builds SiteService once, the first time something resolves it. The constructor runs once, looks up the News node and stores that IPublishedContent in a field. From then on GetNewsSection() hands back that same object on every request.' Also: 'IPublishedContent is a read-only snapshot of the node as it was published when it was read. Publishing does not change that object... Your service never looks the node up again, so it keeps returning the object from startup... until a restart builds a new singleton.'"
+        },
+        {
+          "text": "The agent points out that the content was read inside a context that is disposed at the end of the constructor, so the stored object outlives its context",
+          "passed": false,
+          "evidence": "The response mentions EnsureUmbracoContext in point 2 ('Calling EnsureUmbracoContext() in a constructor only to read content is unnecessary in Umbraco 15 and later') and notes it's unnecessary. However, the agent does not explicitly explain that the context from the using statement is disposed at the end of the constructor, and the stored IPublishedContent object outlives that disposed context. This specific disposal/lifetime issue is not addressed."
+        },
+        {
+          "text": "The agent does not blame output caching, a CDN or browser caching as the cause",
+          "passed": true,
+          "evidence": "Response explicitly states: 'no output cache or CDN is involved, because the stale data is held in your own field.' The agent identifies the singleton field as the root cause, not external caching mechanisms."
+        },
+        {
+          "text": "The fix looks the news section up per call, via EnsureUmbracoContext() in a using (injecting the singleton IPublishedContentCache, available in Umbraco 15+, and looking up per call is equally acceptable)",
+          "passed": true,
+          "evidence": "The fixed code injects IPublishedContentCache and performs lookup per call inside GetNewsSection() method. The code shows: 'var newsSection = _contentCache.GetById(childKey)' called within the method. Notes section confirms: 'IPublishedContentCache.GetById reads the Umbraco 15+ HybridCache-backed published cache.' The solution uses the acceptable IPublishedContentCache approach rather than EnsureUmbracoContext."
+        },
+        {
+          "text": "If anything is cached across calls, it is the content key (or id), not the IPublishedContent object",
+          "passed": true,
+          "evidence": "Rule of thumb section states: 'If you want to cache anything, cache the identity (key or id), not the content, and still resolve the content per call.' Optional section demonstrates this with 'private Guid? _newsSectionKey; // identity only, never IPublishedContent' and 'return _newsSectionKey is { } key ? _contentCache.GetById(key) : null;'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+          "passed": true,
+          "evidence": "Response concludes with caveat: '*Written from general Umbraco 15\u201317 knowledge and not compiled against a 17.x project. Check member names such as TryGetChildrenKeysOfType against your installed version.*' Transcript also notes: 'the code was not compiled, so API member names should be checked against 17.x.'"
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "upgrade-17-to-18-apis",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 126.6,
+        "tokens": 68203
+      },
+      "expectations": [
+        {
+          "text": "The agent states that SaveBlueprint(IContent, int userId) was removed in Umbraco 18 (it was already obsolete on 17)",
+          "passed": true,
+          "evidence": "Response section 1 explicitly states: 'In v17, `IContentService` had two overloads:... v18 removed the obsolete one, as announced.' The response also shows the obsolete signature with `[Obsolete(\"Please use the method taking all parameters. Scheduled for removal in Umbraco 18.\")]` and confirms only the 3-arg overload remains in v18."
+        },
+        {
+          "text": "The replacement call uses the overload SaveBlueprint(content, createdFromContent, userId) (passing null when there is no source content is acceptable)",
+          "passed": true,
+          "evidence": "Response explicitly provides the correct fix: '_contentService.SaveBlueprint(blueprint, null, userId);' and explains 'So your call is now trying to pass `userId` into the `IContent? createdFromContent` slot. The fix is to pass the source content as the second argument, or `null` if the blueprint wasn't created from an existing page.' Multiple examples show both null and sourceContent usage."
+        },
+        {
+          "text": "For part 2, the agent reads UnpublishedCultures and also handles ContentPublishedNotification, because unpublishing some languages while others stay live raises ContentPublishedNotification (one per culture), not ContentUnpublishedNotification",
+          "passed": true,
+          "evidence": "Response section 2 includes a table and explicit statement: 'If you only handle `ContentUnpublishedNotification`, you will **miss the most common case**: an editor taking one language offline while the others stay live. To cover everything, handle both notifications.' The handler code implements both `INotificationHandler<ContentUnpublishedNotification>` and `INotificationHandler<ContentPublishedNotification>`, with separate handlers for each."
+        },
+        {
+          "text": "The agent notes that UnpublishedCultures is not available on older versions (it was added in 18.1.0 and 17.6.0; stating it is missing on 17.5.x or 18.0 also passes)",
+          "passed": true,
+          "evidence": "Response states: 'Starting with **Umbraco 18.1.0** (backported to 17.6.0), the notifications include the cultures... **18.0.0 does not have these properties**, so you need 18.1 or later.' Also notes in the handler comments: 'Older alternative, also on 18.0.0: in the \"-ed\" handlers, loop over `content.AvailableCultures` and call `notification.HasUnpublishedCulture(content, culture)`.' This explicitly calls out the version gap."
+        },
+        {
+          "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+          "passed": true,
+          "evidence": "Response includes complete `LogUnpublishedCulturesComposer : IComposer` class that correctly registers both handlers with `builder.AddNotificationHandler<ContentUnpublishedNotification, LogUnpublishedCulturesHandler>()` and `builder.AddNotificationHandler<ContentPublishedNotification, LogUnpublishedCulturesHandler>()`."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Response ends with: 'I read the code above from source but have not compiled or run it against an 18.x site. Verify it on your exact 18.x minor before you rely on it.' Transcript confirms 'The code was not compiled or run (no buildable project for this task).'"
+        }
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 87.425,
+        "stddev": 38.2837,
+        "min": 50.9,
+        "max": 126.2
+      },
+      "tokens": {
+        "mean": 58149.75,
+        "stddev": 6371.1813,
+        "min": 52776,
+        "max": 66148
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.9583,
+        "stddev": 0.0835,
+        "min": 0.833,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 80.3,
+        "stddev": 31.3463,
+        "min": 58.9,
+        "max": 126.6
+      },
+      "tokens": {
+        "mean": 54485.0,
+        "stddev": 9196.48,
+        "min": 48890,
+        "max": 68203
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.04",
+      "time_seconds": "+7.1",
+      "tokens": "+3665"
+    }
+  },
+  "notes": []
+}

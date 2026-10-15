@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The agent states that SaveBlueprint(IContent, int userId) was removed in Umbraco 18 (it was already obsolete on 17)",
+      "passed": true,
+      "evidence": "Response states: 'On 17, `IContentService.SaveBlueprint(IContent, int)` was already marked obsolete... On 18 that overload has been removed from `IContentService`.' This directly addresses both the obsolescence on 17 and removal on 18."
+    },
+    {
+      "text": "The replacement call uses the overload SaveBlueprint(content, createdFromContent, userId) (passing null when there is no source content is acceptable)",
+      "passed": true,
+      "evidence": "Response provides the correct 3-argument signature: 'void SaveBlueprint(IContent content, IContent? createdFromContent, int userId = -1);' and shows the replacement call: '_contentService.SaveBlueprint(blueprint, null, userId);'. It also explains that passing null is acceptable: '`createdFromContent` is nullable, so passing `null` gives the same behaviour as the old 2-argument call.'"
+    },
+    {
+      "text": "For part 2, the agent reads UnpublishedCultures and also handles ContentPublishedNotification, because unpublishing some languages while others stay live raises ContentPublishedNotification (one per culture), not ContentUnpublishedNotification",
+      "passed": true,
+      "evidence": "Response clearly identifies the distinction: 'Unpublished **some** languages; page stays published in others | `ContentPublishedNotification`... Raised once per culture when several are unpublished together.' The handler code implements both `INotificationHandler<ContentPublishedNotification>` and `INotificationHandler<ContentUnpublishedNotification>`. Response also warns: 'If you only handle `ContentUnpublishedNotification`, you will **miss** the case you described...because unpublishing a single culture does not raise it.'"
+    },
+    {
+      "text": "The agent notes that UnpublishedCultures is not available on older versions (it was added in 18.1.0 and 17.6.0; stating it is missing on 17.5.x or 18.0 also passes)",
+      "passed": true,
+      "evidence": "Response states: 'Both properties are new on 18 and both have the type `IReadOnlyDictionary<Guid, IReadOnlyCollection<string>>?`... Neither exists on 17.' Later reinforces: 'There is no `UnpublishedCultures` on 17.' This correctly identifies version availability."
+    },
+    {
+      "text": "The handler is registered with builder.AddNotificationHandler in an IComposer",
+      "passed": true,
+      "evidence": "Response provides complete registration code: 'public class CultureUnpublishLoggerComposer : IComposer { public void Compose(IUmbracoBuilder builder) { builder.AddNotificationHandler<ContentPublishedNotification, CultureUnpublishLogger>(); builder.AddNotificationHandler<ContentUnpublishedNotification, CultureUnpublishLogger>(); } }' This uses the correct pattern with IComposer and builder.AddNotificationHandler."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Response appropriately qualifies verification: 'Both answers were checked by reflecting over and compiling against `Umbraco.Cms.Core`...Neither has been run on a live site.' Later: '**Compiled with no warnings** against `Umbraco.Cms.Core` 18.2.0' and '**Behaviour comes from the 18.2.0 XML API docs and was not checked at runtime.**' The agent clearly distinguishes between what was compiled (signatures, reflection) versus what was not (runtime behavior)."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 126.2
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Excellent eval. All expectations check meaningful correctness outcomes: the API migration path, notification selection logic, version compatibility, and proper DI registration. The agent's response demonstrates deep technical understanding—particularly identifying that partial culture unpublishes are reported on ContentPublishedNotification rather than ContentUnpublishedNotification, which is a subtle but critical distinction. Verification claims are appropriately qualified (compiled signatures and reflection vs. runtime behavior not tested). No weak assertions or gaps detected."
+  }
+}

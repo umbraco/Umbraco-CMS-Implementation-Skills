@@ -1,0 +1,246 @@
+{
+ "skills": [
+  "umbraco-common-pitfalls",
+  "umbraco-custom-error-pages",
+  "umbraco-custom-maintenance-page",
+  "umbraco-services",
+  "umbraco-sitemap",
+  "umbraco-templating"
+ ],
+ "results": [
+  {
+   "query": "Umbraco 17: my IHostedService needs to read published content every night, but IUmbracoContextAccessor returns nothing. How do I get content there?",
+   "expect": "umbraco-services",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    }
+   ]
+  },
+  {
+   "query": "In Umbraco 17, should my API controller use IContentService or UmbracoHelper to list published products?",
+   "expect": "umbraco-services",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    }
+   ]
+  },
+  {
+   "query": "Umbraco site won't start: 'Cannot consume scoped service UmbracoHelper from singleton ISiteService'. How do I fix my service registration?",
+   "expect": "umbraco-services",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 2
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    }
+   ]
+  },
+  {
+   "query": "How do I create a custom service in Umbraco 17 and register it in a composer so my controllers can use it?",
+   "expect": "umbraco-services",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    }
+   ]
+  },
+  {
+   "query": "Umbraco 17: when an editor unpublishes a page I want to save the URL it had. Which notification should I handle?",
+   "expect": "umbraco-services",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-services"
+     ],
+     "tool_calls": 1
+    }
+   ]
+  },
+  {
+   "query": "Umbraco 17 site. Add a partial view that shows the site name in the footer, and render it from the master layout.",
+   "expect": "umbraco-templating",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-templating"
+     ],
+     "tool_calls": 5
+    },
+    {
+     "invoked": [
+      "umbraco-templating"
+     ],
+     "tool_calls": 5
+    },
+    {
+     "invoked": [
+      "umbraco-templating"
+     ],
+     "tool_calls": 5
+    }
+   ]
+  },
+  {
+   "query": "Our Umbraco 17 site gets slower every week until we restart it. Can you review what might be wrong?",
+   "expect": "umbraco-common-pitfalls",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-common-pitfalls"
+     ],
+     "tool_calls": 5
+    },
+    {
+     "invoked": [
+      "umbraco-common-pitfalls"
+     ],
+     "tool_calls": 2
+    },
+    {
+     "invoked": [
+      "umbraco-common-pitfalls"
+     ],
+     "tool_calls": 3
+    }
+   ]
+  },
+  {
+   "query": "A colleague injected IContentService into a Razor view in our Umbraco 17 site to load a featured article. Is that OK?",
+   "expect": "umbraco-common-pitfalls",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-common-pitfalls"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-common-pitfalls"
+     ],
+     "tool_calls": 1
+    },
+    {
+     "invoked": [
+      "umbraco-common-pitfalls"
+     ],
+     "tool_calls": 1
+    }
+   ]
+  },
+  {
+   "query": "Add a custom 404 page to my Umbraco 17 site with a content finder.",
+   "expect": "umbraco-custom-error-pages",
+   "runs": [
+    {
+     "invoked": [
+      "umbraco-custom-error-pages"
+     ],
+     "tool_calls": 5
+    },
+    {
+     "invoked": [
+      "umbraco-custom-error-pages"
+     ],
+     "tool_calls": 4
+    },
+    {
+     "invoked": [
+      "umbraco-custom-error-pages"
+     ],
+     "tool_calls": 5
+    }
+   ]
+  },
+  {
+   "query": "My React app re-renders a 5,000-item list slowly. How do I speed it up?",
+   "expect": "none",
+   "runs": [
+    {
+     "invoked": [],
+     "tool_calls": 0
+    },
+    {
+     "invoked": [],
+     "tool_calls": 0
+    },
+    {
+     "invoked": [],
+     "tool_calls": 0
+    }
+   ]
+  }
+ ]
+}

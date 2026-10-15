@@ -1,0 +1,12 @@
+{
+  "eval_id": 2,
+  "eval_name": "readonly-api-contentservice",
+  "prompt": "On our Umbraco 17 site I'm adding a small read-only API endpoint, GET /api/products, that returns the name and price of every published product page. My plan is to inject IContentService into the controller and call GetPagedChildren on the products folder. Good plan?",
+  "expectations": [
+    "The agent says IContentService is the wrong choice for this read-only endpoint",
+    "The agent explains that IContentService queries the database on each call (and can return unpublished content), while the published cache is in memory",
+    "The implementation reads products through IPublishedContentQuery, UmbracoHelper, or IUmbracoContextFactory with the published cache",
+    "Only published content is returned (no explicit filtering of drafts needed because the cache holds published content)",
+    "If no buildable project is available, the agent does not claim the endpoint was compiled or tested"
+  ]
+}

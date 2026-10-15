@@ -1,0 +1,13 @@
+{
+  "eval_id": 1,
+  "eval_name": "background-job-no-context",
+  "prompt": "Umbraco 17 site. I need a nightly job (an IHostedService with a timer is fine) that collects the 5 most recently published articles under the 'News' page and logs their names and URLs. I tried injecting IUmbracoContextAccessor but TryGetUmbracoContext always returns false in the job. How should I do this?",
+  "expectations": [
+    "The agent explains that IUmbracoContextAccessor finds nothing because a background job runs outside any HTTP request",
+    "The solution injects IUmbracoContextFactory and calls EnsureUmbracoContext() inside a using (or using declaration) for each run, not once in the constructor",
+    "Content is read from the published cache (UmbracoContext.Content or navigation services), not from IContentService",
+    "The job does not inject IPublishedContentQuery or UmbracoHelper into the singleton hosted service",
+    "The UmbracoContext or IPublishedContent read from it is not stored in a field between runs",
+    "If no buildable project is available, the agent does not claim the job was compiled or run"
+  ]
+}

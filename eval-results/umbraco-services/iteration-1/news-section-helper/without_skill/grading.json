@@ -1,0 +1,52 @@
+{
+  "expectations": [
+    {
+      "text": "The agent rejects storing UmbracoHelper in a static field because it is request-scoped",
+      "passed": true,
+      "evidence": "Response explicitly states (line 5): '**UmbracoHelper** is request-scoped. It wraps the **IUmbracoContext** for *one* HTTP request' and explains multiple failures: 'If you put it in a static field, the first request's helper lives for the whole lifetime of the app... You get stale or wrong content, broken preview and wrong-culture results' (lines 7–8). Also lists ObjectDisposedException and thread-safety issues."
+    },
+    {
+      "text": "The agent offers an extension method on IPublishedContentQuery or UmbracoHelper as a valid option for a small stateless lookup",
+      "passed": false,
+      "evidence": "Extension methods are mentioned only in passing (line 118) as an alternative syntax ('If you prefer the extension-method style, `current.Root()` / `AncestorOrSelf(1)` also work in templates'), but the primary recommendation is the DI service. Extension methods are not presented as a first-class 'valid option' for the core architectural choice—they're offered as syntactic convenience in templates after the main guidance settles on a service. The expectation asks for extension methods to be offered as a valid option, but the response does not position them that way."
+    },
+    {
+      "text": "If a service is proposed, it is registered in an IComposer with a lifetime matching its dependencies",
+      "passed": true,
+      "evidence": "Response shows NewsSectionComposer implementing IComposer (lines 130–134) with `builder.Services.AddScoped<INewsSectionService, NewsSectionService>()`. Scoped lifetime is explained (lines 137–138): 'scoped is the safe default' and dependencies (IDocumentNavigationQueryService, IPublishedContentCache, IUmbracoContextAccessor) are all app-wide, making scoped appropriate."
+    },
+    {
+      "text": "The agent shows how to call it from a controller (constructor injection) and from a view (@inject or the extension method)",
+      "passed": true,
+      "evidence": "Template example (lines 142–162) shows `@inject INewsSectionService NewsSections` and usage `var newsSection = NewsSections.GetNewsSection(Model)`. RenderController example (lines 171–199) shows constructor injection: `INewsSectionService newsSections` parameter in the constructor with `_newsSections = newsSections;`."
+    },
+    {
+      "text": "The lookup null-checks the result instead of assuming the news section exists",
+      "passed": true,
+      "evidence": "Service returns nullable type `IPublishedContent?` (line 38). Implementation includes: TryGetChildrenKeysOfType check returning null (line 82–84), FirstOrDefault filter (line 90), null check in GetNewsSectionForCurrentRequest (lines 100–101), and template usage null-checks (line 159: `@if (newsSection is not null)`)."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Response includes explicit caveat (line 217): 'method names are from Umbraco 15–17's...written from memory and not compiled here. Confirm them against your installed version.' No claims of compilation or successful execution are made."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 1,
+    "total": 6,
+    "pass_rate": 0.8333
+  },
+  "timing": {
+    "total_duration_seconds": 71.0
+  },
+  "eval_feedback": {
+    "suggestions": [
+      {
+        "assertion": "The agent offers an extension method on IPublishedContentQuery or UmbracoHelper as a valid option for a small stateless lookup",
+        "reason": "Extension methods are mentioned only as an optional syntax preference for templates at the end, not presented as a recommended architectural choice alongside or instead of the service. If the eval intends to check whether extension methods are offered as a first-tier recommendation for the core problem, this assertion caught a gap. If it's checking mere mention, the assertion passes but is weakly satisfied."
+      }
+    ],
+    "overall": "Evaluation is well-structured and checks substantive architectural decisions (rejecting static, choosing DI, proper lifetime, null-safety, caveats on uncompiled code). The one failing assertion touches on a real gap—extension methods aren't presented as a coequal option—though the response does acknowledge them exist. No other significant issues detected."
+  }
+}

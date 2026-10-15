@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The agent rejects storing UmbracoHelper in a static field because it is request-scoped",
+      "passed": true,
+      "evidence": "Response explicitly explains under 'Why the static `UmbracoHelper` field is wrong': '`UmbracoHelper` (and the `IPublishedContentQuery` it wraps) is a **scoped** service. You get a new one for each request, tied to that request's `UmbracoContext`.' The response details the problem: 'A static field keeps whichever instance it got first (usually from the first request) and holds it for the life of the app. Every later request then reads content through **another request's** context.'"
+    },
+    {
+      "text": "The agent offers an extension method on IPublishedContentQuery or UmbracoHelper as a valid option for a small stateless lookup",
+      "passed": true,
+      "evidence": "Response includes 'Lighter alternative (no registration)' section showing a static extension method on `IPublishedContentQuery` with `GetNewsSection()`. Text states: 'A static class **is** fine if it holds no state, meaning plain extension methods that take the helper as a parameter.'"
+    },
+    {
+      "text": "If a service is proposed, it is registered in an IComposer with a lifetime matching its dependencies",
+      "passed": true,
+      "evidence": "Response shows `SiteServiceComposer : IComposer` with `builder.Services.AddScoped<ISiteService, SiteService>()`. Lifetime is correct: 'The lifetime follows from the dependencies. This service injects `IPublishedContentQuery`, which is scoped, so the service must be registered `AddScoped`.'"
+    },
+    {
+      "text": "The agent shows how to call it from a controller (constructor injection) and from a view (@inject or the extension method)",
+      "passed": true,
+      "evidence": "Response shows controller usage with constructor injection: 'public NewsWidgetController(ISiteService siteService) => _siteService = siteService;' and call in Index(). View usage shows '@inject ISiteService SiteService' with example: '@if (newsSection is not null) { <a href=\"@newsSection.Url()\">@newsSection.Name</a> }'"
+    },
+    {
+      "text": "The lookup null-checks the result instead of assuming the news section exists",
+      "passed": true,
+      "evidence": "Service method uses null-coalescing: 'GetSiteRoot()?.Children()...'. Controller example includes: 'if (news is null) { return NotFound(); }'. View example includes: '@if (newsSection is not null)'. Response states: 'Its return type is `IPublishedContent?`, so always null-check the result, because the page may not exist or may not be published.'"
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Verification section states: 'I had no project to build against, so this code is **unverified** in your solution... The `GetNewsSection()` addition, the controller and the view snippets have not been compiled.' Transcript confirms: 'Version: the user stated Umbraco 17. No project was provided, so nothing was built and the answer says it is unverified.'"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 65.8
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations are met. The response provides a complete, technically sound explanation grounded in Umbraco 17 patterns. Each assertion checks for both conceptual understanding (why static fields are wrong) and practical implementation (service registration, lifetime, null-checking, usage patterns). The agent properly distinguishes between what has been verified against a reference implementation (the pattern itself) and what has not been compiled (the specific additions). No issues detected with the evaluation itself."
+  }
+}

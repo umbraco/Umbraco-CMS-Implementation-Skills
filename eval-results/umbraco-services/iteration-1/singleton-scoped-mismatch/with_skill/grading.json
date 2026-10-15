@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The agent identifies that UmbracoHelper is scoped and cannot be injected into a singleton",
+      "passed": true,
+      "evidence": "Response clearly states: 'UmbracoHelper (and IPublishedContentQuery) is scoped: Umbraco creates one per HTTP request' and 'injecting one into a class resolved outside a request, such as a singleton, makes Umbraco report an error at startup.' Explicitly identifies the problem as a lifetime mismatch."
+    },
+    {
+      "text": "The agent explains that production starting fine does not mean it is safe: scope validation is off there, so the singleton would reuse one request's helper",
+      "passed": true,
+      "evidence": "Response explains: 'Why only Development fails: ASP.NET Core turns on scope validation (ValidateScopes) by default only in the Development environment' and 'Production isn't fine, just quiet. With validation off, the container still builds the singleton once and gives it whatever UmbracoHelper it resolved first. Every later request then reuses that one helper and the context it was tied to.'"
+    },
+    {
+      "text": "The agent notes that AddScoped alone fixes request-only use but would not work from a scheduled job",
+      "passed": true,
+      "evidence": "Response includes a comparison table showing Fix A (AddScoped) with 'Works in a scheduled job, hosted service or notification handler: No. There's no request and no UmbracoContext there' and explains 'Fix A would make the startup error go away, but the service could still only be used during a request, so you'd hit the problem again when you add the job.'"
+    },
+    {
+      "text": "The recommended fix for request and background use is a singleton that injects IUmbracoContextFactory and opens a context with EnsureUmbracoContext() per call",
+      "passed": true,
+      "evidence": "Response recommends 'Because you'll call it from a scheduled job, Fix B is the right one' and provides complete code showing IUmbracoContextFactory injected as a singleton dependency and EnsureUmbracoContext() used in a using statement within FindFirstOfType method. Correctly demonstrates the pattern."
+    },
+    {
+      "text": "The service is registered in a composer with a lifetime that matches its dependencies",
+      "passed": true,
+      "evidence": "Response shows SiteServiceComposer implementing IComposer with 'builder.Services.AddSingleton<ISiteService, SiteService>()' and explains 'The AddSingleton call you already have is correct now that the class has no scoped dependencies.' Lifetime matches the singleton dependencies."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the fix was compiled or run",
+      "passed": true,
+      "evidence": "Response includes 'Verification status' section stating: 'The pattern (a singleton with IUmbracoContextFactory, EnsureUmbracoContext() in a using, and IDocumentNavigationQueryService.TryGetRootKeys + GetById) is the same as a sample that is compiled and run against Umbraco 17.5.3' but then explicitly notes 'The TryGetDescendantsKeysOfType lookup, the contactPage/newsSection aliases and the exact class above were not built or run, because there was no project to build against.'"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 65.5
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations are well-designed and thoroughly satisfied. The response demonstrates strong understanding of service lifetime rules, explains production vs. development scope validation clearly, provides correct code with proper context management, and appropriately qualifies verification limits. No weaknesses detected in the eval assertions."
+  }
+}

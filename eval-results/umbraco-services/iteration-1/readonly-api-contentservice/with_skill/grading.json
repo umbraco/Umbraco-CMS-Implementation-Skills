@@ -1,0 +1,42 @@
+{
+  "expectations": [
+    {
+      "text": "The agent says IContentService is the wrong choice for this read-only endpoint",
+      "passed": true,
+      "evidence": "response.md lines 1-3: 'Short answer: no. Read from the published cache, not `IContentService`' and 'The endpoint is a good idea, but `IContentService` is the wrong service for it.' Agent explicitly states the service is wrong."
+    },
+    {
+      "text": "The agent explains that IContentService queries the database on each call (and can return unpublished content), while the published cache is in memory",
+      "passed": true,
+      "evidence": "response.md lines 10-12: 'Every request hits the database. `IContentService` takes a read lock and queries the DB on every call... The published cache is in memory' and 'It returns `IContent`, not published content. You get every child: drafts, unpublished pages...'. Both the DB hit and unpublished content issues are clearly explained, as is the in-memory cache benefit."
+    },
+    {
+      "text": "The implementation reads products through IPublishedContentQuery, UmbracoHelper, or IUmbracoContextFactory with the published cache",
+      "passed": true,
+      "evidence": "response.md line 17 and code example (lines 36, 57): Agent recommends 'Inject `IPublishedContentQuery` into the controller' with a code sample showing `private readonly IPublishedContentQuery _publishedContentQuery;` and usage `_publishedContentQuery.Content(key)`. Uses the recommended service for cache-based reads."
+    },
+    {
+      "text": "Only published content is returned (no explicit filtering of drafts needed because the cache holds published content)",
+      "passed": true,
+      "evidence": "response.md line 17: 'The cache only returns **published** content, so drafts and unpublished pages are excluded automatically'. Code sample (lines 47-64) contains no explicit filtering like `.Where(x => x.Published)` - relies entirely on the cache returning only published content. Line 58 shows `.OfType<IPublishedContent>()` which filters based on cache contents."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the endpoint was compiled or tested",
+      "passed": true,
+      "evidence": "response.md lines 92-93: 'Not compiled or run. No project was provided... The exact endpoint above, including the `TryGetChildrenKeysOfType` overload, was not compiled. Build it and request `/api/products` once to confirm.' Agent appropriately disclaims compilation and testing."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 68.3
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations are well-targeted, evidence-based, and appropriately ambitious. The assertions verify genuine task completion rather than surface-level compliance. The agent's response is thorough, properly cautious about uncompiled code, and addresses all key dimensions: the problem with IContentService (DB hits and unpublished content), the cache-based alternative, the lack of filtering needed, and honest about limitations. No weak assertions or missing coverage identified."
+  }
+}

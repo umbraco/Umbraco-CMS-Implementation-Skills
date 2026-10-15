@@ -1,0 +1,23 @@
+Umbraco 17. Editors complain that after they rename the News section and publish, the old title keeps showing in our site header until we restart the app. We have no output caching or CDN. Here's the service the header uses:
+
+```csharp
+public class SiteService : ISiteService
+{
+    private readonly IPublishedContent? _newsSection;
+
+    public SiteService(IUmbracoContextFactory umbracoContextFactory, IDocumentNavigationQueryService navigation)
+    {
+        using var reference = umbracoContextFactory.EnsureUmbracoContext();
+        navigation.TryGetRootKeys(out var rootKeys);
+        var root = reference.UmbracoContext.Content?.GetById(rootKeys.First());
+        _newsSection = root?.Children().FirstOrDefault(x => x.ContentType.Alias == "newsSection");
+    }
+
+    public IPublishedContent? GetNewsSection() => _newsSection;
+}
+
+// composer
+builder.Services.AddSingleton<ISiteService, SiteService>();
+```
+
+What's wrong and how should it be written?

@@ -1,0 +1,13 @@
+{
+  "eval_id": 3,
+  "eval_name": "upgrade-17-to-18-apis",
+  "prompt": "We're upgrading our Umbraco site from 17 to 18. Two things:\n1. This line no longer compiles on 18: `_contentService.SaveBlueprint(blueprint, userId);` (CS1501/no overload). It worked on 17. What should it be?\n2. On 18 we'd like a notification handler that logs WHICH cultures were unpublished whenever an editor unpublishes one or more languages of a variant page. Is there a way to get that from the notification itself?",
+  "expectations": [
+    "The agent states that SaveBlueprint(IContent, int userId) was removed in Umbraco 18 (it was already obsolete on 17)",
+    "The replacement call uses the overload SaveBlueprint(content, createdFromContent, userId) (passing null when there is no source content is acceptable)",
+    "For part 2, the agent reads UnpublishedCultures and also handles ContentPublishedNotification, because unpublishing some languages while others stay live raises ContentPublishedNotification (one per culture), not ContentUnpublishedNotification",
+    "The agent notes that UnpublishedCultures is not available on older versions (it was added in 18.1.0 and 17.6.0; stating it is missing on 17.5.x or 18.0 also passes)",
+    "The handler is registered with builder.AddNotificationHandler in an IComposer",
+    "If no buildable project is available, the agent does not claim the code was compiled or run"
+  ]
+}
