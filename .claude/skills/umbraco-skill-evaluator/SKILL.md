@@ -79,6 +79,32 @@ Start with **at most 3**. Three runs each side (with vs. without) at one iterati
 
 Save prompts to `evals/evals.json` (schema in `references/schemas.md`). Don't write `expectations` yet — draft those while the runs are in flight (Step 3).
 
+### Run on Haiku and Sonnet, not the default model
+
+Run every eval on both sides on **Haiku and Sonnet**, and report the results per model. A strong
+default model makes the comparison meaningless. The baseline decompiles the Umbraco packages,
+builds scratch projects, and finds the traps unaided. `umbraco-templating`'s first round on the
+default model scored 100% with the skill and 96% without, which is noise. On Haiku, the same evals
+separated the two sides: 56% against 41% first, then 100% against 44% once the skill was fixed
+from what those runs showed. Weaker models are where a skill earns its keep,
+and many users run them.
+
+### Give the runs a project, not an abstract task
+
+A run told "there is no project on disk" can only answer in the abstract. Its build-honesty claim
+can't be checked, and the baseline has nothing to inspect. Give every run the same small,
+buildable project instead, and have it edit the project in place:
+
+- Commit a base project under `evals/files/project/`, plus one overlay folder per eval holding that
+  eval's starting state (the broken view, the slow template, the service it calls). Point each
+  eval's `files` at the base and its overlay.
+- For each run, assemble `<run>/outputs/project/` from the base and the overlay, and copy the
+  repo-root `Directory.Packages.props` into `<run>/outputs/` so the project restores.
+- **Build every assembled project before the first run.** A fixture that doesn't build gives both
+  sides the same unrelated trap.
+- Record the setup in `evals/README.md` (`umbraco-templating` and `umbraco-configuration` have
+  worked examples), so the next person reruns it the same way.
+
 ---
 
 ## Step 2 — Spawn all runs in the same turn
@@ -95,6 +121,13 @@ Execute this task:
 - Save your transcript to: <workspace>/iteration-<N>/<eval-name>/with_skill/transcript.md
 - Outputs to save: <what the user actually cares about — the final file(s), not scratch work>
 ```
+
+**Isolate both sides.** A run that can reach the skill's `evals/` folder will read the
+expectations; telling it not to is not enough, and this has happened. So:
+- Give the with-skill run a **snapshot** containing only `SKILL.md`, `references/` and `assets/`,
+  not the skill folder itself.
+- Tell the baseline not to read `plugins/`, `.claude/`, the snapshot, or any Umbraco source
+  checkout. Otherwise it finds the skill by browsing.
 
 **Baseline run prompt:** identical, but no skill path. For improving an existing skill, snapshot the previous version first (`cp -r <skill-path> <workspace>/skill-snapshot/`) and point the baseline subagent at the snapshot; save to `old_skill/outputs/` instead of `without_skill/outputs/`.
 
@@ -128,6 +161,26 @@ Bad assertions (these read as passes regardless of skill):
 
 If `evals.json` already had assertions, review them and keep only the discriminating ones. Save the final list back into `eval_metadata.json` and `evals.json`.
 
+**Assert outcomes, not one implementation.** If a run solves the problem a different valid way
+(a template-named action instead of a `[NonAction]` override; `[ActionName]` instead of renaming
+the method), the assertion is wrong, not the run. Widen it before grading, and say so in the
+benchmark notes.
+
+**Check the feature is wired in, not only written.** A view component that is never invoked, or
+a partial that is never rendered, otherwise passes every structural assertion.
+
+**Check compilation yourself rather than trusting the transcript.** After the runs, build each
+`outputs/project/` and save the result beside the run (e.g. `razor-build.txt`). Grade the
+compile assertion from that file. For Umbraco views, check the fixture's ModelsBuilder `ModelsMode`:
+- **`Nothing` or `SourceCode*`:** use `dotnet build -p:RazorCompileOnBuild=true`. The stock csproj
+  never compiles views, so a plain build passes when they're broken.
+- **`InMemoryAuto`:** that build fails with CS0246 even on a healthy site, because the generated
+  models exist only at runtime. Grade views by rendering a page instead, or give the fixture
+  `Nothing`/`SourceCodeAuto` so the compile check is meaningful.
+
+Keep the build-honesty assertion ("doesn't claim a build it didn't run") separate, so one broken
+view isn't failed twice.
+
 Subjective qualities (writing voice, design taste) belong in qualitative review, not assertions. Don't force them.
 
 ---
@@ -148,7 +201,11 @@ Process notifications as they arrive; don't try to batch.
 
 Once a run's outputs and transcript are on disk, spawn a **Haiku grader subagent** for it. Read `agents/grader.md` and pass it as the subagent's instructions. Use Haiku (`model: "haiku"`) — grading is structured evidence-checking, Haiku does it well, and it keeps the eval loop cheap.
 
-For deterministic assertions ("file X exists with mime type Y", "transcript contains string Z"), prefer writing a tiny Python script over having the grader eyeball it — scripts are faster, free, and reusable across iterations. The grader can call the script and record the result.
+For deterministic assertions ("file X exists with mime type Y", "transcript contains string Z", "the project compiles"), prefer a tiny script (Node, like the rest of the repo's tooling) over having the grader eyeball it — scripts are faster, free, and reusable across iterations. The grader can call the script and record the result.
+
+Give the grader the run directory's **absolute path** and tell it to write `grading.json` there
+exactly. Graders have written it one level up, into the eval folder, where the aggregator doesn't
+look.
 
 The grader writes `grading.json` into each run directory. The viewer and aggregator depend on the exact field names `expectations[].text`, `expectations[].passed`, `expectations[].evidence` — don't accept renamed variants from the grader.
 
@@ -186,6 +243,18 @@ For iteration 2+, also pass `--previous-workspace <workspace>/iteration-<N-1>` s
 
 **Headless / no-display environments:** use `--static <output_path>` to write a standalone HTML file. Feedback downloads as `feedback.json`; copy it into the workspace yourself before reading.
 
+**Before generating the viewer**, copy each file a run created or changed under
+`outputs/project/` up into `outputs/` (for example as `changed - Views__articleList.cshtml`).
+Leave out `bin/`, `obj/` and generated schema files. The viewer only lists files directly inside
+`outputs/`, so otherwise a reviewer sees only the final answer.
+
+**Prefer the viewer's server mode.** The launch command above (no `--static`) serves the page at
+`http://localhost:3117` and saves feedback straight to `feedback.json`. A `--static` file is a
+JavaScript page: preview panes that show a local file as a static snapshot, including the desktop
+app's for files outside the project folder, display it as raw text. Use `--static` only where no
+local server can run, and open the file in a browser that runs its scripts. If the browser shows
+an earlier copy, add a query string to the URL to bust the cache.
+
 Tell the user: "I've opened the results. The 'Outputs' tab lets you click through each test case and leave feedback; the 'Benchmark' tab shows the quantitative comparison. Tell me when you're done."
 
 ---
@@ -209,9 +278,13 @@ Empty feedback = the user thought it was fine. Focus on runs with concrete compl
 When improving the skill, think hard:
 
 1. **Generalize from the feedback.** The skill is going to run against many prompts — don't overfit to these three. If a fix only helps `extract-liability-sections`, it's probably the wrong fix.
-2. **Keep the prompt lean.** Read the transcripts, not just the outputs. If the skill is making the model do unproductive work, cut the part that caused it.
-3. **Explain the *why*.** Today's models have good theory of mind. Heavy-handed `MUST`/`NEVER` and rigid templates are a yellow flag — reframe as "here's why this matters." That generalizes better than rules.
-4. **Notice repeated work across runs.** If all three with-skill runs independently wrote a similar helper script, the skill should bundle that script. Write it once, drop it in `scripts/`, point the skill at it.
+2. **Check what the run actually read.** A low with-skill score often means the agent never opened
+   the skill's `references/` or `assets/` and answered from SKILL.md alone, which the transcript
+   shows. The fix is a line in SKILL.md telling it to open the reference before writing code, not
+   more content. That one line took Haiku from 56% to 100% on `umbraco-templating`.
+3. **Keep the prompt lean.** Read the transcripts, not just the outputs. If the skill is making the model do unproductive work, cut the part that caused it.
+4. **Explain the *why*.** Today's models have good theory of mind. Heavy-handed `MUST`/`NEVER` and rigid templates are a yellow flag — reframe as "here's why this matters." That generalizes better than rules.
+5. **Notice repeated work across runs.** If all three with-skill runs independently wrote a similar helper script, the skill should bundle that script. Write it once, drop it in `scripts/`, point the skill at it.
 
 Then kill the viewer, rerun all evals into `iteration-<N+1>/`, and loop.
 
