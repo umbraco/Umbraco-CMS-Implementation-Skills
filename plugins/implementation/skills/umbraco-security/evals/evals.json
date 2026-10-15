@@ -1,0 +1,81 @@
+{
+  "skill_name": "umbraco-security",
+  "evals": [
+    {
+      "id": 1,
+      "name": "csp-nwebsec-output-cache",
+      "prompt": "Since we upgraded our Umbraco site to 17 the backoffice loads as a blank white page, and the browser console is full of 'Refused to execute inline script because it violates the following Content Security Policy directive'. The front end is fine. We set up the CSP a while ago with NWebsec in Program.cs, right after builder.Build():\n\n```csharp\napp.UseCsp(o => o\n    .DefaultSources(s => s.Self())\n    .ScriptSources(s => s.Self().CustomSources(\"https://www.googletagmanager.com\"))\n    .StyleSources(s => s.Self())\n    .ImgSources(s => s.Self().CustomSources(\"data:\")));\napp.UseXfo(o => o.Deny());\n```\n\nOur front-end layout has one inline <script> for the GTM dataLayer, which we currently allow by adding a hash. A colleague's fix is to add 'unsafe-inline' to script-src everywhere. We also switched on Umbraco's website output caching last month to speed up the marketing pages, and Cloudflare sits in front adding its own X-Frame-Options header. What's the right fix? Please give me the Program.cs changes and any view changes, and tell me what else in this setup will bite us.",
+      "expected_output": "The agent rejects adding 'unsafe-inline' scripts site-wide. It keeps NWebsec and adds Umbraco's UseUmbracoCspNonceInjection() after UseCsp() so the backoffice's per-request nonce lands in the existing CSP header, instead of appending a second header. It allows what the backoffice needs (the documented image and frame sources, and unsafe-inline styles), ideally on a separate /umbraco policy. The dataLayer script moves to the asp-csp-nonce tag helper. It warns that a per-request nonce conflicts with cached HTML from output caching. It flags X-Frame-Options DENY (app) conflicting with Cloudflare's header, so there is one source and SAMEORIGIN, testing backoffice preview. Rollout starts with Report-Only.",
+      "files": [],
+      "expectations": [
+        "The agent advises against adding 'unsafe-inline' to script-src as the fix",
+        "The fix calls Umbraco's `UseUmbracoCspNonceInjection()` after NWebsec's `UseCsp()` (or otherwise puts the `ICspNonceService` nonce into the single existing CSP header), rather than appending a second Content-Security-Policy header",
+        "The backoffice gets the extra sources it needs, at least `blob:`/`data:` images or the Umbraco news-dashboard/marketplace hosts or `'unsafe-inline'` styles, scoped to `/umbraco` or explicitly called out as backoffice requirements",
+        "The inline dataLayer script is allowed without `'unsafe-inline'`: via Umbraco's `asp-csp-nonce` tag helper / `ICspNonceService` nonce on pages that are not output-cached, or via a hash or external script file where the page is output-cached, with the choice tied to the caching",
+        "The agent warns that a per-request CSP nonce conflicts with Umbraco's website output caching or any other HTML caching (a cached page carries a stale nonce), and says how to handle it",
+        "The agent flags that X-Frame-Options is set in two places (NWebsec `UseXfo` and Cloudflare) and recommends a single source, and/or warns that `DENY` can break backoffice preview, recommending `SAMEORIGIN`",
+        "The rollout advice uses `Content-Security-Policy-Report-Only` (or NWebsec's report-only CSP) before enforcing",
+        "If no buildable project is available, the agent does not claim the change was compiled or the backoffice was observed working"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "cors-spa-preview-and-members",
+      "prompt": "Umbraco 17 headless setup: a React SPA on https://app.contoso.com calls the Content Delivery API on https://cms.contoso.com straight from the browser. Three things:\n1. CORS errors on every call. A contractor told us to set `Umbraco:CMS:Security:BackOfficeHost` to `https://app.contoso.com` because 'that's the Umbraco CORS setting', and we've done that, but still nothing.\n2. Editors want a Preview button in the SPA to show unpublished drafts. The plan is to keep `PublicAccess: true` and have the SPA send the `Api-Key` header plus `Preview: true` when someone clicks Preview, with the key in the SPA's .env.\n3. Members will log in through the Delivery API member authorization so the SPA can show protected content; the SPA will send the access token as a bearer token.\nPlease give me the Umbraco-side code and config, and sanity-check the plan.",
+      "expected_output": "The agent explains that BackOfficeHost is not a front-end CORS setting: it configures where the backoffice client runs, and it makes Umbraco allow that origin to call the Management API. So it should be removed for this purpose. It adds an ASP.NET Core CORS policy with the exact SPA origin, applied in an UmbracoPipelineFilter PrePipeline (or before UseUmbraco) and scoped to the Delivery API path. The policy allows Accept-Language/Start-Item and Authorization headers (not Api-Key), without AllowAnyOrigin. It rejects putting the API key in the SPA because the key unlocks all drafts for anyone who opens dev tools, and proposes server-side preview instead (a backend-for-frontend or proxy). For member authorization, it configures AuthorizationCodeFlow with absolute LoginRedirectUrls, client_id umbraco-member and PKCE, notes the DeliveryApiContentIndex rebuild and restart, and points out the docs' warning about public clients.",
+      "files": [],
+      "expectations": [
+        "The agent states that `Security:BackOfficeHost` is not a front-end/Delivery API CORS setting (it relates to where the backoffice runs and Management API access), and recommends removing or not using it for this",
+        "The CORS policy is a named ASP.NET Core policy with the exact origin `https://app.contoso.com` (no `AllowAnyOrigin()`), applied via `UseCors` in an `UmbracoPipelineFilter` or before `app.UseUmbraco()`",
+        "The CORS policy is scoped to the Delivery API path (e.g. `UseWhen` on `/umbraco/delivery/api`) rather than every request",
+        "The CORS policy allows the `Authorization` header (for member access tokens), and the browser is not required to send `Api-Key`",
+        "The agent rejects shipping the Delivery API key in the SPA because anyone can extract it and read all unpublished/draft content",
+        "The agent proposes a server-side alternative for preview, such as a backend-for-frontend, proxy or server route that holds the key",
+        "Member authorization config uses `DeliveryApi:MemberAuthorization:AuthorizationCodeFlow` with absolute `LoginRedirectUrls`, and the client uses `client_id` `umbraco-member` with PKCE",
+        "The agent says the `DeliveryApiContentIndex` must be rebuilt after enabling member authorization",
+        "If no buildable project is available, the agent does not claim the configuration was tested"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "prelaunch-audit",
+      "prompt": "We go live next week with our Umbraco 17 site (Azure App Service behind Azure Front Door, Delivery API used by a partner app). Can you do a security review of the files in evals/files/prelaunch-audit/ (Program.cs, appsettings.json, Controllers/PartnerOrdersController.cs) before our pen test? List each problem with severity and the fix, and give me corrected versions of the files.",
+      "expected_output": "A prioritized findings list with corrected files, covering the planted issues.\n- AddSession is registered after builder.Build() (it throws; move it before Build()).\n- The security-header middleware sits after UseUmbraco() (it never runs; move it before), and its single CSP covers the backoffice with no nonce.\n- X-XSS-Protection should be removed.\n- AllowAnyOrigin with AllowCredentials is invalid, and the CORS policy is global.\n- Forwarded headers trust every proxy (KnownProxies and KnownIPNetworks are cleared).\n- Production mode with UseHttps false, no UmbracoApplicationUrl and ModelsMode InMemoryAuto will refuse to boot.\n- The Delivery API key and the SQL password are committed in appsettings.json, and the key also unlocks drafts.\n- UmbracoMemberAuthorize puts 'Partners' in the allowType (member type) slot instead of allowGroup.\n- The controller trusts a memberEmail query parameter instead of the logged-in member (IDOR).\n- The minimum password length of 6 is weak, and DisableFindContentByIdPath and DisableAlternativeTemplates are not set.",
+      "files": [
+        "evals/files/prelaunch-audit/Program.cs",
+        "evals/files/prelaunch-audit/appsettings.json",
+        "evals/files/prelaunch-audit/Controllers/PartnerOrdersController.cs"
+      ],
+      "expectations": [
+        "Flags that `builder.Services.AddSession(...)` is called after `builder.Build()` (services can no longer be registered) and moves it before `Build()`",
+        "Flags that the security-header `app.Use(...)` middleware is registered after `app.UseUmbraco()` and so never runs for Umbraco requests, and moves it before `UseUmbraco()` (or into an `UmbracoPipelineFilter`)",
+        "Flags that the CSP `script-src 'self'` without Umbraco's nonce would break the backoffice, and gives the backoffice its own policy or the `ICspNonceService` nonce",
+        "Flags `X-XSS-Protection: 1; mode=block` as harmful/deprecated and removes it or sets it to `0`",
+        "Flags `AllowAnyOrigin()` combined with `AllowCredentials()` as invalid/unsafe and replaces it with explicit origins scoped to the API",
+        "Flags that clearing `KnownProxies`/`KnownIPNetworks` trusts forwarded headers from any source, and fixes it by listing the proxy's ranges or by locking the origin to Front Door (`AzureFrontDoor.Backend` service tag plus `X-Azure-FDID`, at the platform or in the app)",
+        "Flags that Production runtime mode will refuse to start with `UseHttps: false`, a missing `UmbracoApplicationUrl`, and/or `ModelsMode: InMemoryAuto` (at least two of the three)",
+        "Flags the committed secrets (Delivery API key and/or SQL password) and moves them to environment variables, Key Vault or user secrets",
+        "Flags that `[UmbracoMemberAuthorize(\"Partners\", \"\", \"\")]` puts Partners in the member-type (allowType) argument, not the group argument, and corrects it to the second argument or `AllowGroup`",
+        "Flags that the orders endpoint trusts the `memberEmail` query parameter (any member can read anyone's orders) and uses the logged-in member from `IMemberManager` instead",
+        "Recommends setting `DisableFindContentByIdPath` and/or `DisableAlternativeTemplates` to true, or a stronger `UserPassword:RequiredLength`",
+        "The agent does not claim the corrected files were compiled or the site was run"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "production-behind-front-door",
+      "prompt": "We just moved our Umbraco 17 site to Azure App Service behind Azure Front Door (Front Door terminates TLS and forwards to the app). Three problems: (1) after adding app.UseHttpsRedirection() we get ERR_TOO_MANY_REDIRECTS, (2) password-reset emails from the backoffice contain http:// links to the *.azurewebsites.net hostname, (3) when we set Umbraco:CMS:Runtime:Mode to Production the site won't start at all. We also want to restrict /umbraco to our office IPs (Front Door has a WAF), and our Next.js app uses the Delivery API on the same host. What's going on and what exactly should we change?",
+      "expected_output": "The agent diagnoses that the app sees HTTP because Front Door terminates TLS, so UseHttpsRedirection loops. The fix is ForwardedHeaders restricted to Front Door (KnownProxies/KnownIPNetworks set to Front Door's ranges, or X-Azure-FDID validation), with app.UseForwardedHeaders() called first and redirection done in one layer. It sets WebRouting:UmbracoApplicationUrl to the public https URL, and explains that Production runtime mode refuses to boot without UseHttps=true and UmbracoApplicationUrl, plus a Release build, Models Builder mode Nothing and no runtime Razor compilation. For the IP restriction, it warns that /umbraco also hosts the Delivery API (/umbraco/delivery/api), which must be exempted.",
+      "files": [],
+      "expectations": [
+        "The agent explains the redirect loop (TLS terminated at Front Door, the app sees HTTP) and fixes it with `UseForwardedHeaders` (X-Forwarded-Proto) placed before `UseHttpsRedirection`/`app.UseUmbraco()`",
+        "Forwarded-header trust is restricted to Front Door: either `KnownProxies`/`KnownIPNetworks` hold Front Door's ranges, or they are cleared AND the origin only accepts Front Door traffic (App Service access restriction on the `AzureFrontDoor.Backend` service tag plus the `X-Azure-FDID` header, or an equivalent app-level `X-Azure-FDID` check). Clearing them with only a warning does not pass",
+        "The agent sets `Umbraco:CMS:WebRouting:UmbracoApplicationUrl` to the public https Front Door hostname to fix the http:// links in emails",
+        "The agent states that Production runtime mode refuses to start unless `Umbraco:CMS:Global:UseHttps` is true and `UmbracoApplicationUrl` is set",
+        "The agent mentions at least two of the other Production-mode boot requirements: Release build (JIT optimizer), Models Builder mode `Nothing`, Razor runtime compilation disabled",
+        "The agent warns that restricting `/umbraco` by IP would also block the Delivery API at `/umbraco/delivery/api` and says to exempt it",
+        "The agent does not claim the fix was deployed or verified"
+      ]
+    }
+  ]
+}
