@@ -1,0 +1,43 @@
+@* Member login with the two-factor step: Views/Partials/MemberLogin.cshtml.
+   Render it on the login page that public access shows: @await Html.PartialAsync("MemberLogin")
+
+   When the password is right but the member has 2FA, UmbLoginController renders the SAME page again with
+   the enabled provider names in ViewData. A login view without the first branch below just shows the
+   login form again, with no error, and the member can never get in. *@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Umbraco.Cms.Web.Common.Models
+@using Umbraco.Cms.Web.Website.Controllers
+@using Umbraco.Extensions
+@{
+    // The URL the visitor asked for. Public access serves this login page in place of the protected page,
+    // and Verify2FACode returns to the login page itself unless it is told where to go.
+    var returnUrl = Context.Request.Path + Context.Request.QueryString;
+}
+
+@if (ViewData.TryGetTwoFactorProviderNames(out var providerNames))
+{
+    @Html.ValidationSummary()
+    foreach (var providerName in providerNames)
+    {
+        using (Html.BeginUmbracoForm<UmbTwoFactorLoginController>(nameof(UmbTwoFactorLoginController.Verify2FACode)))
+        {
+            <input type="hidden" name="provider" value="@providerName" />
+            <input type="hidden" name="returnUrl" value="@returnUrl" />
+            <label for="code">Enter the code from your authenticator app</label>
+            <input id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" required />
+            <button type="submit">Verify</button>
+        }
+    }
+}
+else
+{
+    using (Html.BeginUmbracoForm<UmbLoginController>(nameof(UmbLoginController.HandleLogin)))
+    {
+        @Html.ValidationSummary()
+        <label for="loginModel_Username">Email</label>
+        <input id="loginModel_Username" name="loginModel.Username" type="text" autocomplete="username" required />
+        <label for="loginModel_Password">Password</label>
+        <input id="loginModel_Password" name="loginModel.Password" type="password" autocomplete="current-password" required />
+        <button type="submit">Log in</button>
+    }
+}

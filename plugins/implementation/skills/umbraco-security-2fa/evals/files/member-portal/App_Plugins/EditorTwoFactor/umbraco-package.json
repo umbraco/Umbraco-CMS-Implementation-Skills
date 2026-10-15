@@ -1,0 +1,13 @@
+{
+  "name": "Editor two-factor",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "mfaLoginProvider",
+      "alias": "Acme.EditorAuthenticator",
+      "name": "Editor authenticator",
+      "forProviderName": "EditorAuthenticator",
+      "meta": { "label": "Authenticator app" }
+    }
+  ]
+}

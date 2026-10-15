@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-security-2fa skill, Approach B (website members).
+    Not shipped to users.
+
+    Loaded by SITE 2 (Umbraco-CMS.Skills.Blank, no starter kit). The skill's provider and surface
+    controller are generated into obj/ at build time by plugins/Directory.Build.props and compiled
+    here. Its two partials are embedded, and this example's harness writes them to the host's
+    Views/Partials/, seeds a login page and a members-only account page that render them, and
+    protects the account page with public access. MemberTwoFactorBlankTests.cs then enrols a member
+    through the setup form and signs in with a code, over HTTP.
+
+    Razor SDK so the surface controller registers as an application part.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.TwoFactor.Members</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+    <!-- Only for the harness's stand-in backoffice provider (BackOfficeIdentityBuilder). -->
+    <PackageReference Include="Umbraco.Cms.Api.Management" />
+    <!-- The package the skill tells users to install. -->
+    <PackageReference Include="GoogleAuthenticator" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Static seeding helpers. Referenced as a PROJECT, not linked as source. -->
+    <ProjectReference Include="../../../../../../ExampleFixtures.Shared/ExampleFixtures.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Example-only schema: the login and account page types and their templates. -->
+    <EmbeddedResource Include="ExampleFixtureContent.xml" LogicalName="ExampleFixtureContent.xml" />
+  </ItemGroup>
+
+</Project>

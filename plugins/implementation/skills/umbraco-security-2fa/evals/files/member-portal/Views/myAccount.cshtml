@@ -1,0 +1,16 @@
+@* Template for /members/my-account/ (Document Type alias myAccount). Behind public access: any
+   signed-in member can see it. *@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Umbraco.Cms.Core.Security
+@inject IMemberManager MemberManager
+@{
+    Layout = "master.cshtml";
+    var member = await MemberManager.GetCurrentMemberAsync();
+}
+<h1>My account</h1>
+<p>Signed in as @member?.Email</p>
+
+<section class="account-security">
+    <h2>Security</h2>
+    @* TODO: two-factor authentication goes here *@
+</section>

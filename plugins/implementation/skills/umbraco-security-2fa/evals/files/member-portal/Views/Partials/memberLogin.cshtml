@@ -1,0 +1,21 @@
+@* Our member login box. Rendered by Views/login.cshtml, which is the login page that public access
+   shows for everything under /members/. *@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Umbraco.Cms.Web.Common.Models
+@using Umbraco.Cms.Web.Website.Controllers
+@{
+    var loginModel = new LoginModel();
+}
+<section class="member-login">
+    <h2>Sign in to the members area</h2>
+    @using (Html.BeginUmbracoForm<UmbLoginController>(nameof(UmbLoginController.HandleLogin)))
+    {
+        <div asp-validation-summary="ModelOnly" class="error"></div>
+        <label asp-for="@loginModel.Username">Email</label>
+        <input asp-for="@loginModel.Username" autocomplete="username" />
+        <label asp-for="@loginModel.Password">Password</label>
+        <input asp-for="@loginModel.Password" autocomplete="current-password" />
+        <label><input asp-for="@loginModel.RememberMe" /> Keep me signed in</label>
+        <button type="submit">Sign in</button>
+    }
+</section>

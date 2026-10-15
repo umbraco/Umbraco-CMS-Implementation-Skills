@@ -37,9 +37,10 @@
     failure surfaces much later as "Embedded resource not found" at runtime. BeforeBuild is early
     enough for everything; the other two are belt and braces for entry points that skip it.
 
-    Generated .cshtml/.xml are EmbeddedResource, not Razor/Content: a content-shaped approach
+    Generated .cshtml/.xml/.json are EmbeddedResource, not Razor/Content: a content-shaped approach
     installs its template through a package migration at boot, so the host writes the .cshtml
-    itself. (The SDK's default globs already ignore obj/, so they can't be double-counted.)
+    itself, and a backoffice manifest (umbraco-package.json) is written into App_Plugins the same way.
+    (The SDK's default globs already ignore obj/, so they can't be double-counted.)
   -->
   <Target Name="GenerateSkillAssets"
           BeforeTargets="BeforeBuild;PrepareResources;BeforeCompile"
@@ -63,7 +64,7 @@
         inherits the same LogicalName, and the build fails with a duplicate resource identifier that
         names an innocent file.
       -->
-      <SkillAssetResource Include="$(SkillAssetsDir)*.cshtml;$(SkillAssetsDir)*.xml" />
+      <SkillAssetResource Include="$(SkillAssetsDir)*.cshtml;$(SkillAssetsDir)*.xml;$(SkillAssetsDir)*.json" />
       <EmbeddedResource Include="@(SkillAssetResource)"
                         LogicalName="%(SkillAssetResource.Filename)%(SkillAssetResource.Extension)" />
     </ItemGroup>

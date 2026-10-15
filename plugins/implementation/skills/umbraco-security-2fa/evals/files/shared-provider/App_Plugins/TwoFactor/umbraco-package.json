@@ -1,0 +1,13 @@
+{
+  "name": "Acme two-factor",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "mfaLoginProvider",
+      "alias": "Acme.AppAuthenticator",
+      "name": "Authenticator app",
+      "forProviderName": "AppAuthenticator",
+      "meta": { "label": "Authenticator app" }
+    }
+  ]
+}

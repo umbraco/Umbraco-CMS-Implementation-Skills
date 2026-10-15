@@ -1,0 +1,16 @@
+{
+  "$schema": "../../umbraco-package-schema.json",
+  "name": "Two-factor providers",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "mfaLoginProvider",
+      "alias": "UmbracoUserAppAuthenticator",
+      "name": "Authenticator app",
+      "forProviderName": "UmbracoUserAppAuthenticator",
+      "meta": {
+        "label": "Authenticator app"
+      }
+    }
+  ]
+}

@@ -480,3 +480,7 @@ umbraco-package-schema.json
 
 # Media files
 /wwwroot/media/
+
+# Written at boot by the umbraco-security-2fa users example (examples/users/ExampleHostWiring.cs),
+# standing in for the manifest a user adds by hand.
+/App_Plugins/TwoFactorProviders/

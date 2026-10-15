@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  EXAMPLE-ONLY scaffolding for the umbraco-security-2fa skill, Approach B. Not shipped to users.
+
+  Two page types a real site already has in some form: a login page that public access shows, and a
+  members-only page that hosts the 2FA setup. The templates' <Design> is empty on purpose: the
+  harness (ExampleHostWiring.cs) splices in markup that renders the skill's two partials.
+
+  Content and public access are seeded in code, beneath site 2's single shared root.
+-->
+<umbPackage>
+  <info>
+    <package>
+      <name>Umbraco Security 2FA — example fixture content</name>
+    </package>
+  </info>
+  <DocumentTypes>
+    <DocumentType>
+      <Info>
+        <Name>Two-factor Login Page</Name>
+        <Alias>twoFactorLoginPage</Alias>
+        <Key>2fa00000-0000-4000-8000-000000000001</Key>
+        <Icon>icon-lock</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only member login page.</Description>
+        <AllowAtRoot>True</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Nothing</Variations>
+        <Compositions />
+        <AllowedTemplates>
+          <Template>twoFactorLoginPage</Template>
+        </AllowedTemplates>
+        <DefaultTemplate>twoFactorLoginPage</DefaultTemplate>
+      </Info>
+      <Structure />
+      <GenericProperties />
+      <Tabs />
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Two-factor Account Page</Name>
+        <Alias>twoFactorAccountPage</Alias>
+        <Key>2fa00000-0000-4000-8000-000000000002</Key>
+        <Icon>icon-user</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only members-only page hosting the 2FA setup.</Description>
+        <AllowAtRoot>True</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Nothing</Variations>
+        <Compositions />
+        <AllowedTemplates>
+          <Template>twoFactorAccountPage</Template>
+        </AllowedTemplates>
+        <DefaultTemplate>twoFactorAccountPage</DefaultTemplate>
+      </Info>
+      <Structure />
+      <GenericProperties />
+      <Tabs />
+    </DocumentType>
+  </DocumentTypes>
+  <Templates>
+    <Template>
+      <Name>Two-factor Login Page</Name>
+      <Alias>twoFactorLoginPage</Alias>
+      <Key>2fa00000-0000-4000-8000-000000000011</Key>
+      <Design></Design>
+    </Template>
+    <Template>
+      <Name>Two-factor Account Page</Name>
+      <Alias>twoFactorAccountPage</Alias>
+      <Key>2fa00000-0000-4000-8000-000000000012</Key>
+      <Design></Design>
+    </Template>
+  </Templates>
+  <Documents />
+  <MediaTypes />
+  <Stylesheets />
+  <Scripts />
+  <PartialViews />
+  <DictionaryItems />
+  <Languages />
+  <DataTypes />
+  <MediaItems />
+</umbPackage>

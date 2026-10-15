@@ -1,0 +1,56 @@
+@* Turn member 2FA on and off: Views/Partials/TwoFactorSetup.cshtml.
+   Render it on a members-only page (behind public access): @await Html.PartialAsync("TwoFactorSetup") *@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Options
+@using Umbraco.Cms.Core.Models
+@using Umbraco.Cms.Core.Security
+@using Umbraco.Cms.Core.Services
+@using <Namespace>
+@inject IMemberManager MemberManager
+@inject IMemberTwoFactorLoginService MemberTwoFactorLoginService
+@inject IOptions<IdentityOptions> MemberIdentityOptions
+@{
+    var member = await MemberManager.GetCurrentMemberAsync();
+    var providers = new List<UserTwoFactorProviderModel>();
+    if (member is not null)
+    {
+        // Users and members share one provider list. Keep only providers registered for members:
+        // a backoffice provider's setup would fail for a member key.
+        providers.AddRange((await MemberTwoFactorLoginService.GetProviderNamesAsync(member.Key)).Result
+            .Where(provider => MemberIdentityOptions.Value.Tokens.ProviderMap.ContainsKey(provider.ProviderName)));
+    }
+}
+
+@Html.ValidationSummary()
+@foreach (var provider in providers)
+{
+    if (provider.IsEnabledOnUser)
+    {
+        using (Html.BeginUmbracoForm<MemberTwoFactorController>(nameof(MemberTwoFactorController.Disable)))
+        {
+            <p>Two-factor authentication is on.</p>
+            <input type="hidden" name="providerName" value="@provider.ProviderName" />
+            <label for="disable-code">Enter a code from your app to turn it off</label>
+            <input id="disable-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" required />
+            <button type="submit">Turn off</button>
+        }
+        continue;
+    }
+
+    var setup = await MemberTwoFactorLoginService.GetSetupInfoAsync(member!.Key, provider.ProviderName);
+    if (setup.Success && setup.Result is QrCodeSetupData qrCode)
+    {
+        using (Html.BeginUmbracoForm<MemberTwoFactorController>(nameof(MemberTwoFactorController.Enable)))
+        {
+            <p>Scan this code with an authenticator app, then enter the code it shows.</p>
+            <img src="@qrCode.SetupCode.QrCodeSetupImageUrl" alt="QR code for your authenticator app" />
+            <p>Can't scan it? Enter this key instead: <code>@qrCode.SetupCode.ManualEntryKey</code></p>
+            <input type="hidden" name="providerName" value="@provider.ProviderName" />
+            <input type="hidden" name="secret" value="@qrCode.Secret" />
+            <label for="setup-code">Code from your app</label>
+            <input id="setup-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" required />
+            <button type="submit">Turn on</button>
+        }
+    }
+}
