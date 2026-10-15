@@ -1,0 +1,32 @@
+{
+  "expectations": [
+    {
+      "text": "The agent states that Umbraco already ships a built-in Vimeo provider",
+      "passed": true,
+      "evidence": "response.md line 3: 'You don't need to add one. Umbraco already ships a Vimeo embed provider and turns it on by default.' Also provides source code showing .Append<Vimeo>() in the default registration (lines 8-10)."
+    },
+    {
+      "text": "The agent does not write a new Vimeo provider as the primary answer",
+      "passed": true,
+      "evidence": "The primary answer clearly states 'You don't need to add one' and only provides optional code under 'Only if you really need player.vimeo.com URLs' (line 40). Response explicitly warns against adding a second provider (lines 23-24): 'If you added a second Vimeo provider, you would have two competing providers for the same URLs and twice the code to maintain. Don't do it.' Optional code uses Replace, not Append."
+    },
+    {
+      "text": "The agent suggests checking that the pasted URLs match the built-in provider's pattern (or troubleshooting why they don't) before adding code",
+      "passed": true,
+      "evidence": "response.md includes 'If it doesn't work, check these first' troubleshooting section (lines 31-38). First item addresses URL pattern matching: 'The built-in regex only matches vimeo.com/ and www.vimeo.com/, not player.vimeo.com.' Additional troubleshooting covers privacy settings, outbound HTTP, and whether the provider was removed. Only after troubleshooting does the agent offer optional code."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 63.3
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All three expectations are well-designed and substantive. They test critical behavior: recognizing built-in providers, avoiding unnecessary code as the primary answer, and troubleshooting before suggesting code modifications. The expectations accurately reflect a desired outcome and are unambiguously satisfied by the output. No issues found."
+  }
+}

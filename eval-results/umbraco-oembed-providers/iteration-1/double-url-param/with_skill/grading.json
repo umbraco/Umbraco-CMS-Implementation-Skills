@@ -1,0 +1,42 @@
+{
+  "expectations": [
+    {
+      "text": "The agent identifies that GetEmbedProviderUrl appends '?url=' plus the encoded URL itself",
+      "passed": true,
+      "evidence": "Response states: '`OEmbedProviderBase.GetEmbedProviderUrl(...)` adds `?url=<encoded pasted URL>` (then `RequestParams`, `maxwidth`, `maxheight`) to `ApiEndpoint` itself.'"
+    },
+    {
+      "text": "The agent explains that the resulting request URL contains '?url=?url=' and is malformed",
+      "passed": true,
+      "evidence": "Response shows exact malformed URL: 'https://partner.example.org/oembed?url=?url=https%3A%2F%2Fpartner.example.org%2Fmedia%2F...' and explains 'The partner's oEmbed endpoint gets `url` = `?url=https://...` (or a malformed query), so it answers with a 404/400 or no usable JSON.'"
+    },
+    {
+      "text": "The fix sets ApiEndpoint to the bare endpoint without '?url='",
+      "passed": true,
+      "evidence": "Response provides corrected code: `public override string ApiEndpoint => \"https://partner.example.org/oembed\";` with comment 'Bare endpoint: the base class appends \"?url=<encoded url>\" itself.'"
+    },
+    {
+      "text": "The agent recommends anchoring the UrlSchemeRegex (e.g. starting with ^https?://)",
+      "passed": true,
+      "evidence": "Response includes anchored regex in fix: `@\"^https?:\\/\\/(www\\.)?partner\\.example\\.org\\/media\\/\"` with comment 'Anchored so it only matches URLs on the partner's host, not that text inside another URL.' Also discusses regex issue separately: 'Anchor it as shown above.'"
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Response explicitly states: 'I haven't compiled or run this against your project, so it's unverified there.' and continues with caveat: 'The bare-endpoint pattern matches the skill's JSON oEmbed template, which compiles on 17.5.3 and 18.2.0... That template is also runtime-tested on 17.5.3...'"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 45.6
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations met with clear, well-grounded evidence. The response demonstrates strong diagnostic reasoning (identifying the root cause from the docs example), provides a correct fix with a clear explanation of why it works, offers a secondary best-practice improvement (regex anchoring), and appropriately qualifies its findings given the lack of a buildable project. The assertions are well-formulated and check genuine task completion, not superficial compliance."
+  }
+}

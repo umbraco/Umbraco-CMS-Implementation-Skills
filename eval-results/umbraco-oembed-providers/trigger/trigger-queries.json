@@ -1,0 +1,12 @@
+[
+ {"query": "Umbraco 17: editors want to paste links from our partner's video site into the Embed dialog. The partner supports oEmbed. How do I add that?", "expect": "umbraco-oembed-providers"},
+ {"query": "Our DPO wants all YouTube embeds on our Umbraco site to use youtube-nocookie.com. How do I change what the embed produces?", "expect": "umbraco-oembed-providers"},
+ {"query": "I added a custom embed provider in Umbraco 17 but it's ignored for some URLs, the built-in one answers instead. Why?", "expect": "umbraco-oembed-providers"},
+ {"query": "Umbraco: the embed provider example from the docs gives CS0115 GetMarkup no suitable method to override. Fix?", "expect": "umbraco-oembed-providers"},
+ {"query": "Umbraco 17: our internal video platform has no oEmbed API. Can editors still embed its videos?", "expect": "umbraco-oembed-providers"},
+ {"query": "Umbraco 17. Add the Embed button to the Rich Text Editor toolbar on our Article content type so editors can embed videos.", "expect": "none"},
+ {"query": "Umbraco 17 site. Add a partial view for the footer and render it from the master layout.", "expect": "umbraco-templating"},
+ {"query": "Our Umbraco 17 site gets slower every week until we restart it. Can you review what might be wrong?", "expect": "umbraco-common-pitfalls"},
+ {"query": "Add a second language (Danish) to our Umbraco 17 site with culture-specific URLs.", "expect": "umbraco-multilingual"},
+ {"query": "My React app re-renders a 5,000-item list slowly. How do I speed it up?", "expect": "none"}
+]

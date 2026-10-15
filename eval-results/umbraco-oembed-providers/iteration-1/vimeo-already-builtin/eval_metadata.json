@@ -1,0 +1,10 @@
+{
+  "eval_id": 5,
+  "eval_name": "vimeo-already-builtin",
+  "prompt": "Umbraco 17. Our editors want to embed Vimeo videos in the Embed dialog. Can you add a Vimeo embed provider?",
+  "expectations": [
+    "The agent states that Umbraco already ships a built-in Vimeo provider",
+    "The agent does not write a new Vimeo provider as the primary answer",
+    "The agent suggests checking that the pasted URLs match the built-in provider's pattern (or troubleshooting why they don't) before adding code"
+  ]
+}

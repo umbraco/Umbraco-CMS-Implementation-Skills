@@ -1,0 +1,13 @@
+{
+  "eval_id": 4,
+  "eval_name": "internal-video-no-oembed",
+  "prompt": "Umbraco 17. Editors want to embed videos from our internal video platform (https://video.intranet.example.com/watch/{id}). It has no oEmbed API; the player URL is https://video.intranet.example.com/player?src={encoded watch url}. Add support for it in the Embed dialog.",
+  "expectations": [
+    "The provider builds the markup from the pasted URL without calling an oEmbed endpoint",
+    "The pasted URL is encoded before being placed in the iframe (e.g. Uri.EscapeDataString and/or WebUtility.HtmlEncode)",
+    "The UrlSchemeRegex is anchored to the scheme and host (e.g. ^https?://video\\.intranet\\.example\\.com/watch/)",
+    "The provider overrides/implements GetMarkupAsync(string, int?, int?, CancellationToken)",
+    "The provider is registered in an IComposer via builder.EmbedProviders()",
+    "If no buildable project is available, the agent does not claim the code was compiled or run"
+  ]
+}

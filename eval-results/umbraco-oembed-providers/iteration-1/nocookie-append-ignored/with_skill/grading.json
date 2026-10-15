@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The agent explains that IOEmbedService uses the first registered provider whose UrlSchemeRegex matches the URL",
+      "passed": true,
+      "evidence": "Response states: 'When an editor pastes a URL into the Embed dialog, IOEmbedService goes through the registered providers in order. It uses the first one whose UrlSchemeRegex matches the URL, and the match ignores case.'"
+    },
+    {
+      "text": "The agent explains that Append places the custom provider after the built-in YouTube provider, so the built-in still handles YouTube URLs",
+      "passed": true,
+      "evidence": "Response clearly explains: 'Append<YouTubeNoCookieProvider>() puts your provider at the end, after the built-in. So for every YouTube URL: 1. The built-in YouTube provider matches first. 2. It calls YouTube's oEmbed API and returns the normal youtube.com/embed/… iframe. 3. Umbraco never asks your provider.'"
+    },
+    {
+      "text": "The fix uses Replace<YouTube, ...>() (InsertBefore/Insert, or Remove plus Append, also acceptable)",
+      "passed": true,
+      "evidence": "Response provides the Replace fix with code example: 'builder.EmbedProviders().Replace<YouTube, YouTubeNoCookieProvider>()'. Also lists alternative approaches in a table including InsertBefore, Insert, and Remove+Append, explaining when each is applicable."
+    },
+    {
+      "text": "The custom provider's regex covers the YouTube URL shapes editors paste (at least youtu.be and youtube.com/watch)",
+      "passed": true,
+      "evidence": "Response provides regex patterns covering both youtu.be ('^https?:\\/\\/(www\\.)?youtu\\.be\\/') and youtube.com/watch ('^https?:\\/\\/(www\\.)?youtube\\.com\\/watch'), plus additional patterns for shorts and live. Patterns are anchored and correctly formatted."
+    },
+    {
+      "text": "The agent does not claim that youtube-nocookie alone guarantees legal/GDPR compliance",
+      "passed": true,
+      "evidence": "Response explicitly states: 'youtube-nocookie.com isn't automatically GDPR-compliant. It reduces tracking until the visitor plays the video, but the player still loads from Google and contacts Google's servers. Whether that's enough, or whether you also need consent gating (for example a click-to-load placeholder), is for your DPO to decide. It isn't something the code can guarantee.'"
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Response states: 'I haven't verified this against a running site: it follows from the markup being saved at insert time.' regarding the existing embed behavior. Provides verification instructions but doesn't claim to have run them without a project. Transcript confirms no project was available."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 43.8
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations are substantive and appropriately test genuine understanding of the problem and solution. The response correctly identifies the root cause (first-match behavior of IOEmbedService), explains why Append fails, provides the correct fix (Replace) with alternatives, demonstrates understanding of URL patterns, and includes important legal/compliance caveats without overreaching. The agent appropriately acknowledges the lack of a buildable project and avoids false claims about runtime verification. The evaluation suite is well-designed and comprehensive."
+  }
+}

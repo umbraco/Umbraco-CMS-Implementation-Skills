@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "docs17-provider-wont-compile",
+  "prompt": "Umbraco 17.5. I copied the DeviantArt embed provider from the Umbraco 17 docs and it won't build:\n\n```csharp\npublic class DeviantArtEmbedProvider : OEmbedProviderBase\n{\n    public DeviantArtEmbedProvider(IJsonSerializer jsonSerializer) : base(jsonSerializer) { }\n\n    public override string ApiEndpoint => \"https://backend.deviantart.com/oembed?url=\";\n\n    public override string[] UrlSchemeRegex => new[] { @\"fav\\.me/*\", @\"\\w+\\.deviantart.com\\/art\\/*\" };\n\n    public override Dictionary<string, string> RequestParams => new();\n\n    public override string? GetMarkup(string url, int maxWidth = 0, int maxHeight = 0)\n    {\n        return GeOEmbedDataAsync(url, maxWidth, maxHeight, CancellationToken.None).GetAwaiter().GetResult();\n    }\n\n    public override async Task<string?> GeOEmbedDataAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)\n    {\n        var requestUrl = base.GetEmbedProviderUrl(url, maxWidth, maxHeight);\n        OEmbedResponseWithStringDimensions? oembed = await base.GetJsonResponseAsync<OEmbedResponseWithStringDimensions>(requestUrl, cancellationToken);\n        return oembed?.GetHtml();\n    }\n}\n```\n\nErrors: CS0115 'GetMarkup': no suitable method found to override, CS0115 'GeOEmbedDataAsync': no suitable method found to override, CS0534 does not implement inherited abstract member 'GetMarkupAsync'. How do I fix it?",
+  "expectations": [
+    "The agent states that GetMarkup and GeOEmbedDataAsync do not exist on Umbraco 17's OEmbedProviderBase, so the docs example cannot compile",
+    "The fix overrides GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)",
+    "The agent notices that ApiEndpoint ends in '?url=' while GetEmbedProviderUrl appends '?url=' itself, and changes it to the bare endpoint",
+    "The provider is registered in an IComposer via builder.EmbedProviders()",
+    "If no buildable project is available, the agent does not claim the code was compiled or run"
+  ]
+}

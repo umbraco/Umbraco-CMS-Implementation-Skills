@@ -1,0 +1,477 @@
+{
+  "metadata": {
+    "skill_name": "umbraco-oembed-providers",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-10-15T14:08:16Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "runs_per_configuration": 5
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "docs17-provider-wont-compile",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 61.0,
+        "tokens": 55236
+      },
+      "expectations": [
+        {
+          "text": "The agent states that GetMarkup and GeOEmbedDataAsync do not exist on Umbraco 17's OEmbedProviderBase, so the docs example cannot compile",
+          "passed": true,
+          "evidence": "Response clearly identifies both errors: 'The docs sample overrides two methods that don't exist in 17.5.3'. Explains CS0115 `GetMarkup`: 'There is no synchronous `GetMarkup(string, int, int)` on the base class any more'. Explains CS0115 `GeOEmbedDataAsync`: 'No such method exists (the name is also a typo of \"GetOEmbedData\")'. Verified against assembly: '(I checked against the `Umbraco.Cms.Core` 17.5.3 assembly: ... `GetMarkup` and `GeOEmbedDataAsync` are not.)'"
+        },
+        {
+          "text": "The fix overrides GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)",
+          "passed": true,
+          "evidence": "Fixed provider code contains exactly: 'public override async Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)'"
+        },
+        {
+          "text": "The agent notices that ApiEndpoint ends in '?url=' while GetEmbedProviderUrl appends '?url=' itself, and changes it to the bare endpoint",
+          "passed": true,
+          "evidence": "Response identifies runtime bug: 'There is also a second docs bug that compiles fine but breaks at runtime. `ApiEndpoint` ends in `?url=`, but `GetEmbedProviderUrl` adds `?url=<encoded url>` on its own'. Fixed code shows bare endpoint: 'public override string ApiEndpoint => \"https://backend.deviantart.com/oembed\";' (no ?url= suffix)"
+        },
+        {
+          "text": "The provider is registered in an IComposer via builder.EmbedProviders()",
+          "passed": true,
+          "evidence": "Registration code provided: 'public class EmbedProvidersComposer : IComposer' with 'public void Compose(IUmbracoBuilder builder) => builder.EmbedProviders().Append<DeviantArtEmbedProvider>();'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Response explicitly states: 'Not verified here: you didn't share a project, so I haven't compiled or run this exact class.' Agent correctly refrains from claiming compilation/execution success, properly acknowledging the limitation."
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "double-url-param",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 45.6,
+        "tokens": 52116
+      },
+      "expectations": [
+        {
+          "text": "The agent identifies that GetEmbedProviderUrl appends '?url=' plus the encoded URL itself",
+          "passed": true,
+          "evidence": "Response states: '`OEmbedProviderBase.GetEmbedProviderUrl(...)` adds `?url=<encoded pasted URL>` (then `RequestParams`, `maxwidth`, `maxheight`) to `ApiEndpoint` itself.'"
+        },
+        {
+          "text": "The agent explains that the resulting request URL contains '?url=?url=' and is malformed",
+          "passed": true,
+          "evidence": "Response shows exact malformed URL: 'https://partner.example.org/oembed?url=?url=https%3A%2F%2Fpartner.example.org%2Fmedia%2F...' and explains 'The partner's oEmbed endpoint gets `url` = `?url=https://...` (or a malformed query), so it answers with a 404/400 or no usable JSON.'"
+        },
+        {
+          "text": "The fix sets ApiEndpoint to the bare endpoint without '?url='",
+          "passed": true,
+          "evidence": "Response provides corrected code: `public override string ApiEndpoint => \"https://partner.example.org/oembed\";` with comment 'Bare endpoint: the base class appends \"?url=<encoded url>\" itself.'"
+        },
+        {
+          "text": "The agent recommends anchoring the UrlSchemeRegex (e.g. starting with ^https?://)",
+          "passed": true,
+          "evidence": "Response includes anchored regex in fix: `@\"^https?:\\/\\/(www\\.)?partner\\.example\\.org\\/media\\/\"` with comment 'Anchored so it only matches URLs on the partner's host, not that text inside another URL.' Also discusses regex issue separately: 'Anchor it as shown above.'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Response explicitly states: 'I haven't compiled or run this against your project, so it's unverified there.' and continues with caveat: 'The bare-endpoint pattern matches the skill's JSON oEmbed template, which compiles on 17.5.3 and 18.2.0... That template is also runtime-tested on 17.5.3...'"
+        }
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "internal-video-no-oembed",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 47.9,
+        "tokens": 53052
+      },
+      "expectations": [
+        {
+          "text": "The provider builds the markup from the pasted URL without calling an oEmbed endpoint",
+          "passed": true,
+          "evidence": "Response states: 'Implement `IEmbedProvider` directly and build the `<iframe>` from the pasted URL instead. There's **no outbound HTTP call** (`ApiEndpoint => string.Empty`)'. The code shows ApiEndpoint => string.Empty and GetMarkupAsync builds markup directly without HTTP calls."
+        },
+        {
+          "text": "The pasted URL is encoded before being placed in the iframe (e.g. Uri.EscapeDataString and/or WebUtility.HtmlEncode)",
+          "passed": true,
+          "evidence": "GetMarkupAsync uses both encodings: Uri.EscapeDataString(url) first, then WebUtility.HtmlEncode() on the entire src value (lines 48-49). Response explains: 'Escape it as a query value... then HTML-encode the whole src for the attribute.'"
+        },
+        {
+          "text": "The UrlSchemeRegex is anchored to the scheme and host (e.g. ^https?://video\\.intranet\\.example\\.com/watch/)",
+          "passed": true,
+          "evidence": "UrlSchemeRegex is [@\"^https?:\\/\\/video\\.intranet\\.example\\.com\\/watch\\/[^\\/?#]+\"]. It starts with ^, includes the scheme https?://, host video.intranet.example.com, and path /watch/, with comments noting it is anchored."
+        },
+        {
+          "text": "The provider overrides/implements GetMarkupAsync(string, int?, int?, CancellationToken)",
+          "passed": true,
+          "evidence": "Code implements public Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken) with full logic to validate input, compute dimensions, escape the URL, and build iframe markup."
+        },
+        {
+          "text": "The provider is registered in an IComposer via builder.EmbedProviders()",
+          "passed": true,
+          "evidence": "EmbedProvidersComposer implements IComposer and the Compose method calls builder.EmbedProviders().Append<IntranetVideoEmbedProvider>(). Response notes 'Umbraco discovers composers automatically'."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Response ends with '**Unverified:** I didn't build or run this against your project (none was provided)'. Verify section provides user instructions but does not claim verification was performed."
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "nocookie-append-ignored",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 43.8,
+        "tokens": 52128
+      },
+      "expectations": [
+        {
+          "text": "The agent explains that IOEmbedService uses the first registered provider whose UrlSchemeRegex matches the URL",
+          "passed": true,
+          "evidence": "Response states: 'When an editor pastes a URL into the Embed dialog, IOEmbedService goes through the registered providers in order. It uses the first one whose UrlSchemeRegex matches the URL, and the match ignores case.'"
+        },
+        {
+          "text": "The agent explains that Append places the custom provider after the built-in YouTube provider, so the built-in still handles YouTube URLs",
+          "passed": true,
+          "evidence": "Response clearly explains: 'Append<YouTubeNoCookieProvider>() puts your provider at the end, after the built-in. So for every YouTube URL: 1. The built-in YouTube provider matches first. 2. It calls YouTube's oEmbed API and returns the normal youtube.com/embed/\u2026 iframe. 3. Umbraco never asks your provider.'"
+        },
+        {
+          "text": "The fix uses Replace<YouTube, ...>() (InsertBefore/Insert, or Remove plus Append, also acceptable)",
+          "passed": true,
+          "evidence": "Response provides the Replace fix with code example: 'builder.EmbedProviders().Replace<YouTube, YouTubeNoCookieProvider>()'. Also lists alternative approaches in a table including InsertBefore, Insert, and Remove+Append, explaining when each is applicable."
+        },
+        {
+          "text": "The custom provider's regex covers the YouTube URL shapes editors paste (at least youtu.be and youtube.com/watch)",
+          "passed": true,
+          "evidence": "Response provides regex patterns covering both youtu.be ('^https?:\\/\\/(www\\.)?youtu\\.be\\/') and youtube.com/watch ('^https?:\\/\\/(www\\.)?youtube\\.com\\/watch'), plus additional patterns for shorts and live. Patterns are anchored and correctly formatted."
+        },
+        {
+          "text": "The agent does not claim that youtube-nocookie alone guarantees legal/GDPR compliance",
+          "passed": true,
+          "evidence": "Response explicitly states: 'youtube-nocookie.com isn't automatically GDPR-compliant. It reduces tracking until the visitor plays the video, but the player still loads from Google and contacts Google's servers. Whether that's enough, or whether you also need consent gating (for example a click-to-load placeholder), is for your DPO to decide. It isn't something the code can guarantee.'"
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Response states: 'I haven't verified this against a running site: it follows from the markup being saved at insert time.' regarding the existing embed behavior. Provides verification instructions but doesn't claim to have run them without a project. Transcript confirms no project was available."
+        }
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "vimeo-already-builtin",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 44.2,
+        "tokens": 51323
+      },
+      "expectations": [
+        {
+          "text": "The agent states that Umbraco already ships a built-in Vimeo provider",
+          "passed": true,
+          "evidence": "Response begins: 'You don't need to add anything. Umbraco 17 already ships a Vimeo provider, `Umbraco.Cms.Core.Media.EmbedProviders.Vimeo`, and registers it by default.' This explicitly states the built-in provider exists and is registered."
+        },
+        {
+          "text": "The agent does not write a new Vimeo provider as the primary answer",
+          "passed": true,
+          "evidence": "The entire response is focused on using the built-in provider. The agent explicitly states 'Please don't add a custom provider' and explains why custom code would be dead code. Writing code is only mentioned under the 'Only if you need different behaviour' section as a last resort. No custom provider code was generated."
+        },
+        {
+          "text": "The agent suggests checking that the pasted URLs match the built-in provider's pattern (or troubleshooting why they don't) before adding code",
+          "passed": true,
+          "evidence": "The section 'If it doesn't work for your editors' starts by asking editors to 'Check which URL they paste' and specifically advises using the normal page URL (https://vimeo.com/<id>) instead of player.vimeo.com URLs. The response includes a table showing which URL patterns work and which don't, explicitly noting that player.vimeo.com URLs do NOT match the built-in regex. This troubleshooting is presented before any suggestion of writing code."
+        }
+      ]
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "docs17-provider-wont-compile",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 86.1,
+        "tokens": 59999
+      },
+      "expectations": [
+        {
+          "text": "The agent states that GetMarkup and GeOEmbedDataAsync do not exist on Umbraco 17's OEmbedProviderBase, so the docs example cannot compile",
+          "passed": true,
+          "evidence": "Response states clearly in lines 9-10: 'The synchronous GetMarkup(string, int, int) no longer exists, so there is nothing to override (CS0115). GeOEmbedDataAsync (note the typo) also no longer exists on the base class, so you get a second CS0115.' Confirmed by fetching actual source code from release-17.5.3 tag."
+        },
+        {
+          "text": "The fix overrides GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)",
+          "passed": true,
+          "evidence": "Response lines 51-60 show the exact override signature: 'public override async Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)' with correct implementation calling GetJsonResponseAsync and returning the result."
+        },
+        {
+          "text": "The agent notices that ApiEndpoint ends in '?url=' while GetEmbedProviderUrl appends '?url=' itself, and changes it to the bare endpoint",
+          "passed": true,
+          "evidence": "Response has dedicated section (lines 80-88) explaining the double ?url= bug. Line 39 shows the fix: 'public override string ApiEndpoint => \"https://backend.deviantart.com/oembed\";' (bare endpoint without ?url=). Agent explicitly states: 'DeviantArt won't get a valid url parameter from that. The built-in providers...all use a bare endpoint...Do the same here.'"
+        },
+        {
+          "text": "The provider is registered in an IComposer via builder.EmbedProviders()",
+          "passed": true,
+          "evidence": "Response lines 64-77 show complete RegisterEmbedProvidersComposer class implementing IComposer with Compose method calling 'builder.EmbedProviders().Append<DeviantArtEmbedProvider>()'. Also shows alternative syntax with AddEmbedProvider on line 76."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Transcript line 8 explicitly states 'Nothing was compiled; there is no project.' Response never claims compilation was performed\u2014lines 97-100 present code as instructions to apply ('Run dotnet build', 'Paste a DeviantArt art URL') rather than as proof of execution. No execution claims anywhere in the output."
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "double-url-param",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.8,
+        "passed": 4,
+        "failed": 1,
+        "total": 5,
+        "time_seconds": 45.1,
+        "tokens": 48249
+      },
+      "expectations": [
+        {
+          "text": "The agent identifies that GetEmbedProviderUrl appends '?url=' plus the encoded URL itself",
+          "passed": true,
+          "evidence": "response.md lines 8-10 show the exact code from OEmbedProviderBase.cs: 'fullUrl.Append(\"?url=\" + WebUtility.UrlEncode(url));' This clearly identifies how the base class appends the url parameter."
+        },
+        {
+          "text": "The agent explains that the resulting request URL contains '?url=?url=' and is malformed",
+          "passed": true,
+          "evidence": "response.md lines 15-19 explicitly demonstrate the malformed URL: 'https://partner.example.org/oembed?url=?url=https%3A%2F%2Fpartner.example.org%2Fmedia%2F123&maxwidth=...' and explains 'That isn\\'t a valid URL, so it returns a 400 or 404.'"
+        },
+        {
+          "text": "The fix sets ApiEndpoint to the bare endpoint without '?url='",
+          "passed": true,
+          "evidence": "response.md line 32 shows the corrected code: 'public override string ApiEndpoint => \"https://partner.example.org/oembed\";' with no query string appended."
+        },
+        {
+          "text": "The agent recommends anchoring the UrlSchemeRegex (e.g. starting with ^https?://)",
+          "passed": false,
+          "evidence": "response.md line 34 shows the fixed regex as [@\"partner\\.example\\.org/media/\"] - a simple pattern with escaping but no ^https?:// anchoring. No recommendation for anchoring is mentioned in the response."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "The agent fetched source from GitHub to verify behavior (transcript line 5) but never ran or compiled code. response.md line 61 appropriately states 'I didn\\'t check the v18 tag specifically...I\\'m assuming v18 matches' - showing caution without claiming compilation/execution."
+        }
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "internal-video-no-oembed",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 87.1,
+        "tokens": 55221
+      },
+      "expectations": [
+        {
+          "text": "The provider builds the markup from the pasted URL without calling an oEmbed endpoint",
+          "passed": true,
+          "evidence": "Response.md line 8 explicitly states the provider should 'build the `<iframe>` markup itself' without using OEmbedProviderBase. Code line 41 shows ApiEndpoint is empty. Lines 52-76 in GetMarkupAsync build the iframe directly without any HTTP fetch or oEmbed API call."
+        },
+        {
+          "text": "The pasted URL is encoded before being placed in the iframe (e.g. Uri.EscapeDataString and/or WebUtility.HtmlEncode)",
+          "passed": true,
+          "evidence": "Code line 64 uses Uri.EscapeDataString to encode the watch URL before placing it in the player URL query string. Code line 69 uses WebUtility.HtmlEncode to escape the playerUrl before inserting it into the src attribute. Response.md lines 102-104 explicitly document both encoding steps."
+        },
+        {
+          "text": "The UrlSchemeRegex is anchored to the scheme and host (e.g. ^https?://video\\.intranet\\.example\\.com/watch/)",
+          "passed": true,
+          "evidence": "Code lines 36-38 define the WatchUrl regex starting with ^https://video\\.intranet\\.example\\.com/watch/. Code lines 44-46 define UrlSchemeRegex starting with ^https://video\\.intranet\\.example\\.com/watch/. Both patterns are anchored to the scheme (https) and the exact host, preventing arbitrary URL framing. Response.md line 107 confirms 'Keep it anchored to the exact host so the provider can't be used to frame arbitrary URLs.'"
+        },
+        {
+          "text": "The provider overrides/implements GetMarkupAsync(string, int?, int?, CancellationToken)",
+          "passed": true,
+          "evidence": "Code line 52 shows the method signature: public Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken). Response.md line 108 confirms 'GetMarkupAsync is the one method on the Umbraco 17 `IEmbedProvider` interface.'"
+        },
+        {
+          "text": "The provider is registered in an IComposer via builder.EmbedProviders()",
+          "passed": true,
+          "evidence": "Code lines 121-125 show InternalVideoEmbedComposer implementing IComposer with a Compose method. Line 124 calls builder.EmbedProviders().Append<InternalVideoEmbedProvider>(). Response.md lines 129-131 document the registration and explain that composers are discovered automatically."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "Transcript line 20 states 'Nothing was compiled; no buildable project was provided.' Response.md lines 136-151 provide instructions like 'Build and restart the site' and 'To test without the backoffice UI, you can call the Management API endpoint' without claiming the code was actually built or tested. Line 151 explicitly notes 'The route is from memory, so check it in Swagger' showing appropriate epistemic caution."
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "nocookie-append-ignored",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 48.0,
+        "tokens": 47634
+      },
+      "expectations": [
+        {
+          "text": "The agent explains that IOEmbedService uses the first registered provider whose UrlSchemeRegex matches the URL",
+          "passed": true,
+          "evidence": "In response.md: 'When an editor pastes a URL, Umbraco goes through the providers in order and uses the **first** one whose `UrlSchemeRegex` matches the URL.' This directly explains the order-based matching behavior."
+        },
+        {
+          "text": "The agent explains that Append places the custom provider after the built-in YouTube provider, so the built-in still handles YouTube URLs",
+          "passed": true,
+          "evidence": "In response.md: 'The built-in `YouTube` provider is already in the collection and matches every `youtube.com` and `youtu.be` URL. `Append<T>()` puts your provider **after** it, so your provider is never reached.' This explicitly connects Append placement to why the built-in provider wins."
+        },
+        {
+          "text": "The fix uses Replace<YouTube, ...>() (InsertBefore/Insert, or Remove plus Append, also acceptable)",
+          "passed": true,
+          "evidence": "In response.md: Primary fix shows `.Replace<YouTube, YouTubeNoCookieProvider>()`. Alternative fix provided: `.Remove<YouTube>().Append<YouTubeNoCookieProvider>()` Both acceptable solutions are documented."
+        },
+        {
+          "text": "The custom provider's regex covers the YouTube URL shapes editors paste (at least youtu.be and youtube.com/watch)",
+          "passed": true,
+          "evidence": "Regex provided: `@\"youtu(?:\\.be|be\\.com|be-nocookie\\.com)/(?:(.*)v(/|=)|(.*/)?)([a-zA-Z0-9-_]+)\"`. Includes `youtu\\.be` for youtu.be URLs, `be\\.com` for youtube.com, and captures both v= and /v/ formats covering youtube.com/watch?v=... patterns."
+        },
+        {
+          "text": "The agent does not claim that youtube-nocookie alone guarantees legal/GDPR compliance",
+          "passed": true,
+          "evidence": "In response.md section 'Not a full privacy guarantee': 'youtube-nocookie.com only delays cookies until playback starts... Don't treat the nocookie domain alone as compliant.' Agent explicitly recommends DPO review and suggests consent gates. Properly disclaims compliance guarantees."
+        },
+        {
+          "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+          "passed": true,
+          "evidence": "In response.md: '*Unverified:* check the exact base-class member names against your 17.x build...' and 'The method you need to override is whichever one your version's `IEmbedProvider` exposes.' Agent flags method names as unverified and explicitly tells user to verify composer execution. No claims of successful compilation or execution."
+        }
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "vimeo-already-builtin",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 63.3,
+        "tokens": 50670
+      },
+      "expectations": [
+        {
+          "text": "The agent states that Umbraco already ships a built-in Vimeo provider",
+          "passed": true,
+          "evidence": "response.md line 3: 'You don't need to add one. Umbraco already ships a Vimeo embed provider and turns it on by default.' Also provides source code showing .Append<Vimeo>() in the default registration (lines 8-10)."
+        },
+        {
+          "text": "The agent does not write a new Vimeo provider as the primary answer",
+          "passed": true,
+          "evidence": "The primary answer clearly states 'You don't need to add one' and only provides optional code under 'Only if you really need player.vimeo.com URLs' (line 40). Response explicitly warns against adding a second provider (lines 23-24): 'If you added a second Vimeo provider, you would have two competing providers for the same URLs and twice the code to maintain. Don't do it.' Optional code uses Replace, not Append."
+        },
+        {
+          "text": "The agent suggests checking that the pasted URLs match the built-in provider's pattern (or troubleshooting why they don't) before adding code",
+          "passed": true,
+          "evidence": "response.md includes 'If it doesn't work, check these first' troubleshooting section (lines 31-38). First item addresses URL pattern matching: 'The built-in regex only matches vimeo.com/ and www.vimeo.com/, not player.vimeo.com.' Additional troubleshooting covers privacy settings, outbound HTTP, and whether the provider was removed. Only after troubleshooting does the agent offer optional code."
+        }
+      ]
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 48.5,
+        "stddev": 7.1694,
+        "min": 43.8,
+        "max": 61.0
+      },
+      "tokens": {
+        "mean": 52771.0,
+        "stddev": 1507.8432,
+        "min": 51323,
+        "max": 55236
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.96,
+        "stddev": 0.0894,
+        "min": 0.8,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 65.92,
+        "stddev": 20.1078,
+        "min": 45.1,
+        "max": 87.1
+      },
+      "tokens": {
+        "mean": 52354.6,
+        "stddev": 5211.3097,
+        "min": 47634,
+        "max": 59999
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.04",
+      "time_seconds": "-17.4",
+      "tokens": "+416"
+    }
+  },
+  "notes": []
+}

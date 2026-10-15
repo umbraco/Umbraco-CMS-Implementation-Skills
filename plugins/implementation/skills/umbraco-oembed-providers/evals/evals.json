@@ -1,0 +1,79 @@
+{
+  "skill_name": "umbraco-oembed-providers",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Umbraco 17.5. I copied the DeviantArt embed provider from the Umbraco 17 docs and it won't build:\n\n```csharp\npublic class DeviantArtEmbedProvider : OEmbedProviderBase\n{\n    public DeviantArtEmbedProvider(IJsonSerializer jsonSerializer) : base(jsonSerializer) { }\n\n    public override string ApiEndpoint => \"https://backend.deviantart.com/oembed?url=\";\n\n    public override string[] UrlSchemeRegex => new[] { @\"fav\\.me/*\", @\"\\w+\\.deviantart.com\\/art\\/*\" };\n\n    public override Dictionary<string, string> RequestParams => new();\n\n    public override string? GetMarkup(string url, int maxWidth = 0, int maxHeight = 0)\n    {\n        return GeOEmbedDataAsync(url, maxWidth, maxHeight, CancellationToken.None).GetAwaiter().GetResult();\n    }\n\n    public override async Task<string?> GeOEmbedDataAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)\n    {\n        var requestUrl = base.GetEmbedProviderUrl(url, maxWidth, maxHeight);\n        OEmbedResponseWithStringDimensions? oembed = await base.GetJsonResponseAsync<OEmbedResponseWithStringDimensions>(requestUrl, cancellationToken);\n        return oembed?.GetHtml();\n    }\n}\n```\n\nErrors: CS0115 'GetMarkup': no suitable method found to override, CS0115 'GeOEmbedDataAsync': no suitable method found to override, CS0534 does not implement inherited abstract member 'GetMarkupAsync'. How do I fix it?",
+      "expected_output": "The agent explains that Umbraco 17's OEmbedProviderBase only has GetMarkupAsync(string, int?, int?, CancellationToken) (the docs example is wrong), rewrites the provider to override it (ideally via the base helper), and also fixes the ApiEndpoint that ends in ?url=.",
+      "files": [],
+      "expectations": [
+        "The agent states that GetMarkup and GeOEmbedDataAsync do not exist on Umbraco 17's OEmbedProviderBase, so the docs example cannot compile",
+        "The fix overrides GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)",
+        "The agent notices that ApiEndpoint ends in '?url=' while GetEmbedProviderUrl appends '?url=' itself, and changes it to the bare endpoint",
+        "The provider is registered in an IComposer via builder.EmbedProviders()",
+        "If no buildable project is available, the agent does not claim the code was compiled or run"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17. Our DPO wants all YouTube embeds to use youtube-nocookie.com. I wrote a provider that outputs a youtube-nocookie iframe and registered it with builder.EmbedProviders().Append<YouTubeNoCookieProvider>(), but editors still get normal youtube.com embeds. What's wrong?",
+      "expected_output": "The agent explains that the first provider whose regex matches wins and Append puts the custom provider after the built-in YouTube provider, so the built-in still answers; the fix is Replace<YouTube, YouTubeNoCookieProvider>() (or inserting before it).",
+      "files": [],
+      "expectations": [
+        "The agent explains that IOEmbedService uses the first registered provider whose UrlSchemeRegex matches the URL",
+        "The agent explains that Append places the custom provider after the built-in YouTube provider, so the built-in still handles YouTube URLs",
+        "The fix uses Replace<YouTube, ...>() (InsertBefore/Insert, or Remove plus Append, also acceptable)",
+        "The custom provider's regex covers the YouTube URL shapes editors paste (at least youtu.be and youtube.com/watch)",
+        "The agent does not claim that youtube-nocookie alone guarantees legal/GDPR compliance",
+        "If no buildable project is available, the agent does not claim the code was compiled or run"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco 18. We added an embed provider for our partner's site, which supports oEmbed (JSON). Pasting their URLs in the Embed dialog never returns anything. Here it is:\n\n```csharp\npublic class PartnerEmbedProvider : OEmbedProviderBase\n{\n    public PartnerEmbedProvider(IJsonSerializer jsonSerializer) : base(jsonSerializer) { }\n    public override string ApiEndpoint => \"https://partner.example.org/oembed?url=\";\n    public override string[] UrlSchemeRegex => [@\"partner\\.example\\.org/media/\"];\n    public override Dictionary<string, string> RequestParams => [];\n    public override async Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)\n        => await GetJsonBasedMarkupAsync(url, maxWidth, maxHeight, cancellationToken);\n}\n```\n\nIt's registered with Append in a composer. What's wrong?",
+      "expected_output": "The agent identifies that ApiEndpoint ends with ?url= while GetEmbedProviderUrl appends ?url=<encoded url> itself, producing ...oembed?url=?url=...; the fix is the bare endpoint. It also suggests anchoring the regex.",
+      "files": [],
+      "expectations": [
+        "The agent identifies that GetEmbedProviderUrl appends '?url=' plus the encoded URL itself",
+        "The agent explains that the resulting request URL contains '?url=?url=' and is malformed",
+        "The fix sets ApiEndpoint to the bare endpoint without '?url='",
+        "The agent recommends anchoring the UrlSchemeRegex (e.g. starting with ^https?://)",
+        "If no buildable project is available, the agent does not claim the code was compiled or run"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Umbraco 17. Editors want to embed videos from our internal video platform (https://video.intranet.example.com/watch/{id}). It has no oEmbed API; the player URL is https://video.intranet.example.com/player?src={encoded watch url}. Add support for it in the Embed dialog.",
+      "expected_output": "The agent writes a custom IEmbedProvider (or OEmbedProviderBase with empty ApiEndpoint) that builds the iframe from the URL without an outbound request, encodes the user-supplied URL, uses an anchored regex, and registers it in a composer.",
+      "files": [],
+      "expectations": [
+        "The provider builds the markup from the pasted URL without calling an oEmbed endpoint",
+        "The pasted URL is encoded before being placed in the iframe (e.g. Uri.EscapeDataString and/or WebUtility.HtmlEncode)",
+        "The UrlSchemeRegex is anchored to the scheme and host (e.g. ^https?://video\\.intranet\\.example\\.com/watch/)",
+        "The provider overrides/implements GetMarkupAsync(string, int?, int?, CancellationToken)",
+        "The provider is registered in an IComposer via builder.EmbedProviders()",
+        "If no buildable project is available, the agent does not claim the code was compiled or run"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Umbraco 17. Our editors want to embed Vimeo videos in the Embed dialog. Can you add a Vimeo embed provider?",
+      "expected_output": "The agent points out that Vimeo is a built-in provider and suggests checking the pasted URL format against the built-in pattern before writing any code.",
+      "files": [],
+      "expectations": [
+        "The agent states that Umbraco already ships a built-in Vimeo provider",
+        "The agent does not write a new Vimeo provider as the primary answer",
+        "The agent suggests checking that the pasted URLs match the built-in provider's pattern (or troubleshooting why they don't) before adding code"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Umbraco 17. Add the Embed button to the Rich Text Editor toolbar on our Article content type so editors can embed videos.",
+      "expected_output": "This is Data Type / content modelling configuration; the umbraco-oembed-providers skill should not be invoked.",
+      "files": [],
+      "expectations": [
+        "The umbraco-oembed-providers skill is not invoked"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "expectations": [
+    {
+      "text": "The agent states that GetMarkup and GeOEmbedDataAsync do not exist on Umbraco 17's OEmbedProviderBase, so the docs example cannot compile",
+      "passed": true,
+      "evidence": "Response clearly identifies both errors: 'The docs sample overrides two methods that don't exist in 17.5.3'. Explains CS0115 `GetMarkup`: 'There is no synchronous `GetMarkup(string, int, int)` on the base class any more'. Explains CS0115 `GeOEmbedDataAsync`: 'No such method exists (the name is also a typo of \"GetOEmbedData\")'. Verified against assembly: '(I checked against the `Umbraco.Cms.Core` 17.5.3 assembly: ... `GetMarkup` and `GeOEmbedDataAsync` are not.)'"
+    },
+    {
+      "text": "The fix overrides GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)",
+      "passed": true,
+      "evidence": "Fixed provider code contains exactly: 'public override async Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)'"
+    },
+    {
+      "text": "The agent notices that ApiEndpoint ends in '?url=' while GetEmbedProviderUrl appends '?url=' itself, and changes it to the bare endpoint",
+      "passed": true,
+      "evidence": "Response identifies runtime bug: 'There is also a second docs bug that compiles fine but breaks at runtime. `ApiEndpoint` ends in `?url=`, but `GetEmbedProviderUrl` adds `?url=<encoded url>` on its own'. Fixed code shows bare endpoint: 'public override string ApiEndpoint => \"https://backend.deviantart.com/oembed\";' (no ?url= suffix)"
+    },
+    {
+      "text": "The provider is registered in an IComposer via builder.EmbedProviders()",
+      "passed": true,
+      "evidence": "Registration code provided: 'public class EmbedProvidersComposer : IComposer' with 'public void Compose(IUmbracoBuilder builder) => builder.EmbedProviders().Append<DeviantArtEmbedProvider>();'"
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Response explicitly states: 'Not verified here: you didn't share a project, so I haven't compiled or run this exact class.' Agent correctly refrains from claiming compilation/execution success, properly acknowledging the limitation."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 61.0
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations are well-designed and pass. Each assertion checks substantive technical correctness rather than superficial compliance. The eval covers the key aspects of the fix: identifying the compile errors, implementing the correct async override, fixing the runtime bug with the endpoint URL, and registering the provider. The fifth expectation correctly validates that the agent responsibly avoids claiming compilation/execution without a buildable project. No gaps observed — the eval comprehensively validates the skill's core competencies."
+  }
+}

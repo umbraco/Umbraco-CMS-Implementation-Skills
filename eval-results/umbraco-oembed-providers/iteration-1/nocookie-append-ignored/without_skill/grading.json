@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The agent explains that IOEmbedService uses the first registered provider whose UrlSchemeRegex matches the URL",
+      "passed": true,
+      "evidence": "In response.md: 'When an editor pastes a URL, Umbraco goes through the providers in order and uses the **first** one whose `UrlSchemeRegex` matches the URL.' This directly explains the order-based matching behavior."
+    },
+    {
+      "text": "The agent explains that Append places the custom provider after the built-in YouTube provider, so the built-in still handles YouTube URLs",
+      "passed": true,
+      "evidence": "In response.md: 'The built-in `YouTube` provider is already in the collection and matches every `youtube.com` and `youtu.be` URL. `Append<T>()` puts your provider **after** it, so your provider is never reached.' This explicitly connects Append placement to why the built-in provider wins."
+    },
+    {
+      "text": "The fix uses Replace<YouTube, ...>() (InsertBefore/Insert, or Remove plus Append, also acceptable)",
+      "passed": true,
+      "evidence": "In response.md: Primary fix shows `.Replace<YouTube, YouTubeNoCookieProvider>()`. Alternative fix provided: `.Remove<YouTube>().Append<YouTubeNoCookieProvider>()` Both acceptable solutions are documented."
+    },
+    {
+      "text": "The custom provider's regex covers the YouTube URL shapes editors paste (at least youtu.be and youtube.com/watch)",
+      "passed": true,
+      "evidence": "Regex provided: `@\"youtu(?:\\.be|be\\.com|be-nocookie\\.com)/(?:(.*)v(/|=)|(.*/)?)([a-zA-Z0-9-_]+)\"`. Includes `youtu\\.be` for youtu.be URLs, `be\\.com` for youtube.com, and captures both v= and /v/ formats covering youtube.com/watch?v=... patterns."
+    },
+    {
+      "text": "The agent does not claim that youtube-nocookie alone guarantees legal/GDPR compliance",
+      "passed": true,
+      "evidence": "In response.md section 'Not a full privacy guarantee': 'youtube-nocookie.com only delays cookies until playback starts... Don't treat the nocookie domain alone as compliant.' Agent explicitly recommends DPO review and suggests consent gates. Properly disclaims compliance guarantees."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "In response.md: '*Unverified:* check the exact base-class member names against your 17.x build...' and 'The method you need to override is whichever one your version's `IEmbedProvider` exposes.' Agent flags method names as unverified and explicitly tells user to verify composer execution. No claims of successful compilation or execution."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 48.0
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations are well-grounded in substantive content. The response correctly diagnoses the problem (provider ordering), provides correct solutions (Replace or Remove+Append), includes working code with proper URL rewriting, and appropriately disclaims GDPR compliance. The agent properly flags unverified aspects (base-class method names for 17.x) rather than assuming. The eval is well-constructed with clear, verifiable criteria."
+  }
+}

@@ -22,6 +22,7 @@ All current skills are in `umbraco-cms-implementation-skills`; the content model
 | `umbraco-custom-maintenance-page` | Customises the page visitors see while Umbraco runs upgrade migrations |
 | `umbraco-common-pitfalls` | Reference guide to anti-patterns, performance traps and common mistakes |
 | `umbraco-templating` | Templates, partial views, view components, route hijacking and surface-controller forms, with runtime-tested code |
+| `umbraco-oembed-providers` | Embed (oEmbed) providers in C#: new oEmbed hosts, hosts without oEmbed, replacing a built-in (e.g. youtube-nocookie), registration order |
 
 ## Quick Start
 

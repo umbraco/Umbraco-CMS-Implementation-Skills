@@ -1,0 +1,42 @@
+{
+  "expectations": [
+    {
+      "text": "The agent identifies that GetEmbedProviderUrl appends '?url=' plus the encoded URL itself",
+      "passed": true,
+      "evidence": "response.md lines 8-10 show the exact code from OEmbedProviderBase.cs: 'fullUrl.Append(\"?url=\" + WebUtility.UrlEncode(url));' This clearly identifies how the base class appends the url parameter."
+    },
+    {
+      "text": "The agent explains that the resulting request URL contains '?url=?url=' and is malformed",
+      "passed": true,
+      "evidence": "response.md lines 15-19 explicitly demonstrate the malformed URL: 'https://partner.example.org/oembed?url=?url=https%3A%2F%2Fpartner.example.org%2Fmedia%2F123&maxwidth=...' and explains 'That isn\\'t a valid URL, so it returns a 400 or 404.'"
+    },
+    {
+      "text": "The fix sets ApiEndpoint to the bare endpoint without '?url='",
+      "passed": true,
+      "evidence": "response.md line 32 shows the corrected code: 'public override string ApiEndpoint => \"https://partner.example.org/oembed\";' with no query string appended."
+    },
+    {
+      "text": "The agent recommends anchoring the UrlSchemeRegex (e.g. starting with ^https?://)",
+      "passed": false,
+      "evidence": "response.md line 34 shows the fixed regex as [@\"partner\\.example\\.org/media/\"] - a simple pattern with escaping but no ^https?:// anchoring. No recommendation for anchoring is mentioned in the response."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "The agent fetched source from GitHub to verify behavior (transcript line 5) but never ran or compiled code. response.md line 61 appropriately states 'I didn\\'t check the v18 tag specifically...I\\'m assuming v18 matches' - showing caution without claiming compilation/execution."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 1,
+    "total": 5,
+    "pass_rate": 0.8
+  },
+  "timing": {
+    "total_duration_seconds": 45.1
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "The expectations are well-targeted. Four of five pass cleanly. The regex-anchoring expectation is reasonable but represents an important secondary hardening that the baseline agent missed — good signal of where a skill could add value."
+  }
+}

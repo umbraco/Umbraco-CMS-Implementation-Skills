@@ -1,0 +1,32 @@
+{
+  "expectations": [
+    {
+      "text": "The agent states that Umbraco already ships a built-in Vimeo provider",
+      "passed": true,
+      "evidence": "Response begins: 'You don't need to add anything. Umbraco 17 already ships a Vimeo provider, `Umbraco.Cms.Core.Media.EmbedProviders.Vimeo`, and registers it by default.' This explicitly states the built-in provider exists and is registered."
+    },
+    {
+      "text": "The agent does not write a new Vimeo provider as the primary answer",
+      "passed": true,
+      "evidence": "The entire response is focused on using the built-in provider. The agent explicitly states 'Please don't add a custom provider' and explains why custom code would be dead code. Writing code is only mentioned under the 'Only if you need different behaviour' section as a last resort. No custom provider code was generated."
+    },
+    {
+      "text": "The agent suggests checking that the pasted URLs match the built-in provider's pattern (or troubleshooting why they don't) before adding code",
+      "passed": true,
+      "evidence": "The section 'If it doesn't work for your editors' starts by asking editors to 'Check which URL they paste' and specifically advises using the normal page URL (https://vimeo.com/<id>) instead of player.vimeo.com URLs. The response includes a table showing which URL patterns work and which don't, explicitly noting that player.vimeo.com URLs do NOT match the built-in regex. This troubleshooting is presented before any suggestion of writing code."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 44.2
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "Excellent eval design and execution. All expectations are grounded in objective, verifiable output. The expectations test the right things: (1) the agent recognizes built-in functionality, (2) the agent avoids unnecessary code generation, (3) the agent provides troubleshooting before proposing a solution. The response demonstrates strong knowledge of Umbraco's embed provider system and gives editors actionable guidance. No weaknesses in the assertions."
+  }
+}

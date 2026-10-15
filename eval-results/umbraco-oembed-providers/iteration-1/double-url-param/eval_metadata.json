@@ -1,0 +1,12 @@
+{
+  "eval_id": 3,
+  "eval_name": "double-url-param",
+  "prompt": "Umbraco 18. We added an embed provider for our partner's site, which supports oEmbed (JSON). Pasting their URLs in the Embed dialog never returns anything. Here it is:\n\n```csharp\npublic class PartnerEmbedProvider : OEmbedProviderBase\n{\n    public PartnerEmbedProvider(IJsonSerializer jsonSerializer) : base(jsonSerializer) { }\n    public override string ApiEndpoint => \"https://partner.example.org/oembed?url=\";\n    public override string[] UrlSchemeRegex => [@\"partner\\.example\\.org/media/\"];\n    public override Dictionary<string, string> RequestParams => [];\n    public override async Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken)\n        => await GetJsonBasedMarkupAsync(url, maxWidth, maxHeight, cancellationToken);\n}\n```\n\nIt's registered with Append in a composer. What's wrong?",
+  "expectations": [
+    "The agent identifies that GetEmbedProviderUrl appends '?url=' plus the encoded URL itself",
+    "The agent explains that the resulting request URL contains '?url=?url=' and is malformed",
+    "The fix sets ApiEndpoint to the bare endpoint without '?url='",
+    "The agent recommends anchoring the UrlSchemeRegex (e.g. starting with ^https?://)",
+    "If no buildable project is available, the agent does not claim the code was compiled or run"
+  ]
+}

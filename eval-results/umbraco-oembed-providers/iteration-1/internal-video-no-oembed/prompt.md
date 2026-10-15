@@ -1,0 +1,1 @@
+Umbraco 17. Editors want to embed videos from our internal video platform (https://video.intranet.example.com/watch/{id}). It has no oEmbed API; the player URL is https://video.intranet.example.com/player?src={encoded watch url}. Add support for it in the Embed dialog.

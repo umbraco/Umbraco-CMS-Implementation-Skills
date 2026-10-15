@@ -1,0 +1,1 @@
+Umbraco 17. Our DPO wants all YouTube embeds to use youtube-nocookie.com. I wrote a provider that outputs a youtube-nocookie iframe and registered it with builder.EmbedProviders().Append<YouTubeNoCookieProvider>(), but editors still get normal youtube.com embeds. What's wrong?

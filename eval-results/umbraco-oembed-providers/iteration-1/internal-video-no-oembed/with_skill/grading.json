@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The provider builds the markup from the pasted URL without calling an oEmbed endpoint",
+      "passed": true,
+      "evidence": "Response states: 'Implement `IEmbedProvider` directly and build the `<iframe>` from the pasted URL instead. There's **no outbound HTTP call** (`ApiEndpoint => string.Empty`)'. The code shows ApiEndpoint => string.Empty and GetMarkupAsync builds markup directly without HTTP calls."
+    },
+    {
+      "text": "The pasted URL is encoded before being placed in the iframe (e.g. Uri.EscapeDataString and/or WebUtility.HtmlEncode)",
+      "passed": true,
+      "evidence": "GetMarkupAsync uses both encodings: Uri.EscapeDataString(url) first, then WebUtility.HtmlEncode() on the entire src value (lines 48-49). Response explains: 'Escape it as a query value... then HTML-encode the whole src for the attribute.'"
+    },
+    {
+      "text": "The UrlSchemeRegex is anchored to the scheme and host (e.g. ^https?://video\\.intranet\\.example\\.com/watch/)",
+      "passed": true,
+      "evidence": "UrlSchemeRegex is [@\"^https?:\\/\\/video\\.intranet\\.example\\.com\\/watch\\/[^\\/?#]+\"]. It starts with ^, includes the scheme https?://, host video.intranet.example.com, and path /watch/, with comments noting it is anchored."
+    },
+    {
+      "text": "The provider overrides/implements GetMarkupAsync(string, int?, int?, CancellationToken)",
+      "passed": true,
+      "evidence": "Code implements public Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken) with full logic to validate input, compute dimensions, escape the URL, and build iframe markup."
+    },
+    {
+      "text": "The provider is registered in an IComposer via builder.EmbedProviders()",
+      "passed": true,
+      "evidence": "EmbedProvidersComposer implements IComposer and the Compose method calls builder.EmbedProviders().Append<IntranetVideoEmbedProvider>(). Response notes 'Umbraco discovers composers automatically'."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Response ends with '**Unverified:** I didn't build or run this against your project (none was provided)'. Verify section provides user instructions but does not claim verification was performed."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 47.9
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations pass with clear evidence. The provider correctly implements IEmbedProvider (not OEmbedProviderBase), encodes the URL with both Uri.EscapeDataString and WebUtility.HtmlEncode, anchors the regex properly, implements GetMarkupAsync with the correct signature, registers via IComposer with builder.EmbedProviders(), and appropriately disclaims verification when no project was provided. The response is comprehensive, includes security considerations, and provides a worked example matching the skill's asset pattern."
+  }
+}

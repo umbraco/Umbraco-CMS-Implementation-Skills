@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "The provider builds the markup from the pasted URL without calling an oEmbed endpoint",
+      "passed": true,
+      "evidence": "Response.md line 8 explicitly states the provider should 'build the `<iframe>` markup itself' without using OEmbedProviderBase. Code line 41 shows ApiEndpoint is empty. Lines 52-76 in GetMarkupAsync build the iframe directly without any HTTP fetch or oEmbed API call."
+    },
+    {
+      "text": "The pasted URL is encoded before being placed in the iframe (e.g. Uri.EscapeDataString and/or WebUtility.HtmlEncode)",
+      "passed": true,
+      "evidence": "Code line 64 uses Uri.EscapeDataString to encode the watch URL before placing it in the player URL query string. Code line 69 uses WebUtility.HtmlEncode to escape the playerUrl before inserting it into the src attribute. Response.md lines 102-104 explicitly document both encoding steps."
+    },
+    {
+      "text": "The UrlSchemeRegex is anchored to the scheme and host (e.g. ^https?://video\\.intranet\\.example\\.com/watch/)",
+      "passed": true,
+      "evidence": "Code lines 36-38 define the WatchUrl regex starting with ^https://video\\.intranet\\.example\\.com/watch/. Code lines 44-46 define UrlSchemeRegex starting with ^https://video\\.intranet\\.example\\.com/watch/. Both patterns are anchored to the scheme (https) and the exact host, preventing arbitrary URL framing. Response.md line 107 confirms 'Keep it anchored to the exact host so the provider can't be used to frame arbitrary URLs.'"
+    },
+    {
+      "text": "The provider overrides/implements GetMarkupAsync(string, int?, int?, CancellationToken)",
+      "passed": true,
+      "evidence": "Code line 52 shows the method signature: public Task<string?> GetMarkupAsync(string url, int? maxWidth, int? maxHeight, CancellationToken cancellationToken). Response.md line 108 confirms 'GetMarkupAsync is the one method on the Umbraco 17 `IEmbedProvider` interface.'"
+    },
+    {
+      "text": "The provider is registered in an IComposer via builder.EmbedProviders()",
+      "passed": true,
+      "evidence": "Code lines 121-125 show InternalVideoEmbedComposer implementing IComposer with a Compose method. Line 124 calls builder.EmbedProviders().Append<InternalVideoEmbedProvider>(). Response.md lines 129-131 document the registration and explain that composers are discovered automatically."
+    },
+    {
+      "text": "If no buildable project is available, the agent does not claim the code was compiled or run",
+      "passed": true,
+      "evidence": "Transcript line 20 states 'Nothing was compiled; no buildable project was provided.' Response.md lines 136-151 provide instructions like 'Build and restart the site' and 'To test without the backoffice UI, you can call the Management API endpoint' without claiming the code was actually built or tested. Line 151 explicitly notes 'The route is from memory, so check it in Swagger' showing appropriate epistemic caution."
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  },
+  "timing": {
+    "total_duration_seconds": 87.1
+  },
+  "eval_feedback": {
+    "suggestions": [],
+    "overall": "All expectations are met with strong evidence. The response provides clean, production-ready code with correct encoding strategies, proper regex anchoring, and accurate Umbraco 17 API usage. The agent correctly recognized that no oEmbed call was needed and properly documented limitations (Management API route from memory, no compilation proof). The encoder signature and composer registration are both correct for Umbraco 17. No concerns found with the evaluation criteria."
+  }
+}
