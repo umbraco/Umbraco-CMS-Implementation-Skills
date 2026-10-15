@@ -87,7 +87,7 @@ Don't paste doc links here that already live in a reference file. Push per-appro
 - **Razor assets:**
   - type every view with `@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<T>`, never a bare
     `@model T`. A bare `@model` fails to compile (CS1061) in any project whose `_ViewImports.cshtml`
-    declares a non-generic base page, and the blank host now does.
+    declares a non-generic base page, which many real projects do.
   - wrap generic calls in `@(...)`, e.g. `@(Model.Value<string>("alias"))`. Razor reads a bare
     `@Model.Value<T>(...)` as an HTML tag.
 
@@ -96,9 +96,17 @@ Don't paste doc links here that already live in a reference file. Push per-appro
 - Realistic, multi-step prompts (see `umbraco-skill-evaluator` for what makes a good prompt).
 - One prompt per meaningful scenario: each approach, plus edge cases (headless, MCP-absent, …).
 - `expectations[]` are **objective, checkable assertions** — not "the output is good".
-- Include a **build-honesty** expectation. If the skill ships views, verify with
-  `dotnet build -p:RazorCompileOnBuild=true`: the stock Umbraco csproj sets
-  `RazorCompileOnBuild=false`, so a plain build never compiles a view and passes when they're broken.
+- Include a **build-honesty** expectation. If the skill ships views, how to verify depends on
+  `Umbraco:CMS:ModelsBuilder:ModelsMode`:
+  - **`Nothing` or `SourceCode*`:** build with `dotnet build -p:RazorCompileOnBuild=true`. The
+    stock Umbraco csproj sets `RazorCompileOnBuild=false`, so a plain build never compiles a view
+    and passes when they're broken.
+  - **`InMemoryAuto` (the default):** that build fails with CS0246 on a healthy site, because the
+    generated models exist only at runtime. Verify with a plain build and a request to a page that
+    renders the view.
+
+  The skill itself should tell the agent the same, including never changing `ModelsMode` or
+  rewriting views to make the Razor build pass.
 - Write expectations as **outcomes, not one implementation**. If there are two valid fixes (a
   `[NonAction]` override or a template-named action; renaming the method or `[ActionName]`), accept
   both, or the grader fails correct work.

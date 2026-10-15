@@ -149,8 +149,12 @@ Compare contents before writing, so runtime compilation isn't invalidated on eve
   entry for any new folder you write to, or every test run leaves untracked files behind.
 - **Views compile at request time.** The blank host compiles Razor at runtime, so a broken view
   passes the build and fails only when a page renders it. Assert on rendered markup, not a status
-  code alone. The blank host's `_ViewImports.cshtml` also declares a non-generic base page, so a view
-  typed with a bare `@model` fails here as it would in many real projects.
+  code alone.
+- **Reproduce real-project view setup inside your example, not the shared host.** A bare `@model`
+  only fails (CS1061) under a `_ViewImports.cshtml` that declares a non-generic base page.
+  `umbraco-templating`'s harness writes a folder-scoped `_ViewImports.cshtml` with one into
+  `Views/Partials` and `Views/Shared`, beside the views it installs. Leave the blank host's shared
+  `Views/_ViewImports.cshtml` stock; a change there alters how every other example renders.
 
 ## Writing the fixture
 

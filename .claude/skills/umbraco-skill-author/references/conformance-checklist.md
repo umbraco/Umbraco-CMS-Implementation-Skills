@@ -41,7 +41,8 @@ fix anything that fails. A skill is ready only when every applicable item passes
 **evals/**
 - [ ] `evals/evals.json` present with realistic, multi-step prompts (one per meaningful scenario)
 - [ ] `expectations[]` are objective/checkable, including a build-honesty expectation
-  (`dotnet build -p:RazorCompileOnBuild=true` when the skill ships views)
+  (for views: `dotnet build -p:RazorCompileOnBuild=true` under ModelsMode `Nothing`/`SourceCode*`,
+  a page request under `InMemoryAuto`)
 - [ ] Expectations accept every valid fix, not one implementation, and check the feature is wired in
 
 **Approaches (count is NOT the constraint — coverage is)**

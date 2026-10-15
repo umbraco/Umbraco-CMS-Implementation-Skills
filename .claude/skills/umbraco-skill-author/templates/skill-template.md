@@ -74,8 +74,9 @@ Objective assertions live in [`evals/evals.json`](evals/evals.json); run them wi
 ## Steps
 1. Discover project context (namespace, version, folder conventions).
 2. Write files, substituting <Placeholder> tokens.
-3. Build/verify (`dotnet build -p:RazorCompileOnBuild=true` if views are involved), or state
-   honestly that no buildable project exists.
+3. Build/verify. For views, check ModelsBuilder's `ModelsMode` first:
+   `dotnet build -p:RazorCompileOnBuild=true` under `Nothing`/`SourceCode*`, a page request under
+   `InMemoryAuto`. If no buildable project exists, say so honestly.
 
 ## Done
 Tell the user: <where it lives, how to use it, any config to add>.
