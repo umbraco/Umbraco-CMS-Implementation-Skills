@@ -1,0 +1,13 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. Approach A (composer) compiles all three assets. The template names the user's own handler and content finder <Feature>PublishedHandler / <Feature>ContentFinder; ExampleTypes.cs supplies those two types for <Feature> = ComposingExample. Approach B reuses these same assets plus one Program.cs line, which the shared host cannot carry, so it has no example of its own.",
+  "host": "clean",
+  "namespace": "Umbraco.Skills.Examples.Composing",
+  "placeholders": {
+    "<Feature>": "ComposingExample"
+  },
+  "assets": [
+    "FeatureBuilderExtensions.cs",
+    "FeatureComposer.cs",
+    "FeatureComponent.cs"
+  ]
+}

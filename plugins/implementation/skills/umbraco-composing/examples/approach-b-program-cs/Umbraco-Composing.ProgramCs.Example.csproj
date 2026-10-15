@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    COMPILE-ONLY example project for the umbraco-composing skill's Approach B (Program.cs).
+
+    The skill's builder extension and component are projected from assets/ at build time;
+    ExampleProgram.cs is this example's own file and calls the extension after .AddComposers()
+    in a full CreateUmbracoBuilder() chain. ExampleTypes.cs supplies the stand-in handler and
+    content finder the template registers.
+
+    Deliberately NOT referenced by any host: the shared reference host already has its own
+    Program.cs, and a second Umbraco host can't run in the same process. It is in the solution,
+    so the build compiles it, which catches API breaks in the wiring the skill teaches.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.ComposingProgramCs</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Umbraco.Cms (not just Web.Website) because the chain calls AddBackOffice and AddDeliveryApi. -->
+    <PackageReference Include="Umbraco.Cms" />
+  </ItemGroup>
+
+</Project>
