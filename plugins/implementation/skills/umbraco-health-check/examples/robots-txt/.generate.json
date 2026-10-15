@@ -1,0 +1,7 @@
+{
+  "_comment": "Validation-only projection of the RobotsTxtHealthCheck asset.",
+  "namespace": "Umbraco.Skills.Examples.HealthCheck",
+  "assets": [
+    "RobotsTxtHealthCheck.cs"
+  ]
+}

@@ -14,11 +14,18 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="config\lang\en-US.xml"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Skill example projects: compiled and loaded in-process so Umbraco-CMS.Skills.TestHost can
          assert their HTTP behaviour. Add one line per validated skill (mirrors the backoffice
          reference instance referencing its example extensions). -->
     <ProjectReference Include="../plugins/implementation/skills/umbraco-sitemap/examples/approach-a-cached-controller/Umbraco-Sitemap.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-custom-error-pages/examples/approach-a-content-finder/Umbraco-CustomErrorPages.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-health-check/examples/robots-txt/Umbraco-HealthCheck.Example.csproj" />
     <!-- Compile-only examples are NOT referenced here — they would collide with the above (e.g.
          two controllers on GET /sitemap.xml). They're in the solution instead, so the build still
          compiles them. See each project's header. -->
