@@ -41,10 +41,18 @@ the other.
 ## Core principles (what the checklist enforces)
 
 - **Thin SKILL.md.** It routes; it doesn't teach everything. Push detail, per-approach steps, and
-  `if/else`-style branching into `references/` or `assets/` — separate files, not inline.
-- **Docs are the source of truth.** Don't reproduce Umbraco API code from memory; link the docs
-  and tell the agent to fetch them first. Ship verbatim code in `assets/` only when it's genuinely
-  not in the docs (and say so).
+  `if/else`-style branching into `references/` or `assets/`, in separate files, not inline. A router
+  only works if the agent follows it, so SKILL.md must tell the agent to open the reference and
+  start from its asset **before writing code**. Weaker models otherwise read SKILL.md alone and
+  never see the traps the references cover. Adding that one line took Haiku from 56% to 100% on
+  `umbraco-templating`'s evals.
+- **Docs are the source of truth, but verify them.** Don't reproduce Umbraco API code from memory;
+  link the docs and tell the agent to fetch them first. Ship verbatim code in `assets/` only when
+  it's genuinely not in the docs (and say so). The docs pages also carry snippets that don't
+  compile or throw on the pinned version (v8-era types, missing `using`s, overloads that are
+  ambiguous at runtime). When a build or the gate disproves one, record it in the reference's
+  *Docs corrections* table and ship the working version in `assets/`. Never forward a snippet
+  you haven't checked.
 - **`.md` doc links.** Fetch-me doc links point at the `.md` page (e.g. `.../composing.md`), or link
   a sibling skill instead of raw docs — the `.md` endpoint is what the agent can actually fetch as
   source, and a sibling-skill link keeps discovery progressive (lazy-loading) rather than dumping

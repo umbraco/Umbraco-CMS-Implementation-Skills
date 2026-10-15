@@ -11,10 +11,12 @@ fix anything that fails. A skill is ready only when every applicable item passes
 **Description (triggering)**
 - [ ] `description` has concrete **trigger phrases** (real user wordings, not just "use for X")
 - [ ] `description` has explicit **SKIP** conditions
+- [ ] `description` is at most 1024 characters (`validate-skills.mjs` fails above that)
 - [ ] Doesn't collide with an existing skill's triggers (or the overlap is intentional and noted)
 
 **SKILL.md body**
 - [ ] Thin/routing — doesn't inline detail or `if/else` branching that belongs in references/assets
+- [ ] Tells the agent to open the reference and start from its asset **before writing code**
 - [ ] Decision table + "how to decide" present when there's more than one approach
 - [ ] Version compatibility stated
 - [ ] Best-practices section is domain guidance, not just restated code
@@ -25,10 +27,13 @@ fix anything that fails. A skill is ready only when every applicable item passes
 - [ ] One file per approach, each with "when to choose" + cross-link to the alternative
 - [ ] All fetch-me doc links use the `.md` version (or link a sibling skill instead of raw docs)
 - [ ] Says "fetch the docs first" wherever the code isn't verbatim in `assets/`
+- [ ] Every docs snippet a build or the gate disproved is in a *Docs corrections* table
 
 **assets/ (if present)**
 - [ ] Templates use `<Placeholder>` tokens with optional/removable lines marked
 - [ ] Template code follows the skill's own best-practices section
+- [ ] Views use `@inherits UmbracoViewPage<T>` (never a bare `@model`) and wrap generic calls in `@(...)`
+- [ ] Assets that install to a nested path carry their install path in a first-line comment
 
 **scripts/ (if present)**
 - [ ] Deterministic, repeatable work lives in a script the skill points at, not re-derived in prose
@@ -36,6 +41,8 @@ fix anything that fails. A skill is ready only when every applicable item passes
 **evals/**
 - [ ] `evals/evals.json` present with realistic, multi-step prompts (one per meaningful scenario)
 - [ ] `expectations[]` are objective/checkable, including a build-honesty expectation
+  (`dotnet build -p:RazorCompileOnBuild=true` when the skill ships views)
+- [ ] Expectations accept every valid fix, not one implementation, and check the feature is wired in
 
 **Approaches (count is NOT the constraint — coverage is)**
 - [ ] **At most two approaches per skill.** This is load-bearing, not editorial: one host exists per
@@ -50,6 +57,7 @@ fix anything that fails. A skill is ready only when every applicable item passes
 - [ ] At least one approach is **Asserted**. A skill where nothing runs isn't gated.
 - [ ] **Documented** is only legal when the approach ships no code at all. "Committed but ungated" is
   not a tier.
+- [ ] Complementary building blocks sharing one example are counted as one approach, not several.
 - [ ] Variants *inside* an approach carry their own tier. The two-host split does not fix
   intra-approach collisions — sitemap's split-index controller still maps the same `/sitemap.xml` as
   the single-file one, so it stays **Compiled**.
@@ -83,5 +91,7 @@ fix anything that fails. A skill is ready only when every applicable item passes
 - [ ] The test was **proven able to fail** — broken deliberately, seen red, reverted.
 
 **Before shipping**
-- [ ] Passes `umbraco-skill-validator` and `umbraco-skill-code-analyzer` (if available)
+- [ ] `node scripts/validate-skills.mjs --check-index` passes (run `--write-index` first)
+- [ ] README *Available skills* table has the skill's row
+- [ ] No `.claude/.cc-writes` leftovers under `plugins/*/skills/`
 - [ ] Eval'd against a baseline with `umbraco-skill-evaluator`

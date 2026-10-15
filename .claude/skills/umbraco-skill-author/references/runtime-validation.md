@@ -133,6 +133,25 @@ Two behaviours worth knowing: an asset listed in `assets` but missing from disk 
 an unknown top-level key (a typo'd `requires`, say) is silently ignored — so if a precondition
 never seems to run, check the spelling first.
 
+## Views that aren't templates (blank host)
+
+A package migration can only register **templates**. A skill's partials and view-component views
+aren't templates, so the example installs them as the user would: by writing the file. The
+harness embeds the projected asset and writes it to the host's content root on
+`UmbracoApplicationStartedNotification`, at the path the skill's reference gives:
+- `Views/Partials/<name>.cshtml` for a partial;
+- `Views/Shared/Components/<Name>/Default.cshtml` for a view component.
+
+Compare contents before writing, so runtime compilation isn't invalidated on every boot.
+`umbraco-templating`'s `examples/render-pipeline/` does this. Two things go with it:
+
+- **Ignore what you write.** The blank host's `.gitignore` covers runtime-written views. Add an
+  entry for any new folder you write to, or every test run leaves untracked files behind.
+- **Views compile at request time.** The blank host compiles Razor at runtime, so a broken view
+  passes the build and fails only when a page renders it. Assert on rendered markup, not a status
+  code alone. The blank host's `_ViewImports.cshtml` also declares a non-generic base page, so a view
+  typed with a bare `@model` fails here as it would in many real projects.
+
 ## Writing the fixture
 
 Model it on `SitemapTests.cs` or `CustomErrorPagesTests.cs`. The essentials:
@@ -149,6 +168,22 @@ Model it on `SitemapTests.cs` or `CustomErrorPagesTests.cs`. The essentials:
   can rebuild stale output *and cache it*. `SitemapCacheInvalidationTests` documents this trap in
   detail; the short version is that a key lookup or the Delivery API are not stand-ins for the
   traversal your code performs.
+
+- **Form posts** (surface controllers):
+  - create a second client with `AllowAutoRedirect = false` from the shared factory, so cookies
+    persist and the redirect stays observable;
+  - GET the page and read the `__RequestVerificationToken` and `ufprt` hidden inputs from the
+    rendered form;
+  - POST them with the fields;
+  - assert both paths: invalid → 200 with inline errors and the typed values kept; valid → 302 to
+    the page, then a GET shows the success message once and a second GET doesn't.
+
+  `TemplatingBlankTests.cs` is a worked example.
+- **Content seeded at startup is indexed asynchronously.** On a fresh database, the content
+  preconditions read the Delivery API's query endpoint, which reads Examine. That can run before
+  the newest example's nodes are indexed, so the first run fails a precondition that passes on
+  every rerun. Front-end routing reads the published cache and isn't affected. If you see this,
+  it's the shared harness, not your example.
 
 **Then prove the test can fail.** Break the thing it checks — point a `requires` alias at a
 nonexistent Document Type, or change a cache key — confirm it goes red, and revert. A test that

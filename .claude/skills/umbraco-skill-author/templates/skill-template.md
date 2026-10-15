@@ -37,6 +37,9 @@ description: >
 | Source | <custom code / official docs> | <...> |
 | Best for | <...> | <...> |
 
+**Before writing any code, open the reference for the approach you choose and start from its
+asset.** <Name one or two traps it covers, e.g. "the docs' X snippet throws Y on Umbraco Z.">
+
 ### How to decide
 Default to A. Choose B when <condition>. Prefer the Umbraco Developer MCP; if unavailable, walk
 the user through it manually — only fall back when <condition>.
@@ -62,10 +65,17 @@ Objective assertions live in [`evals/evals.json`](evals/evals.json); run them wi
 ## Building blocks (fetch the docs before implementing)
 - **<concept>** — <role>: [<title>](https://docs.umbraco.com/.../<page>.md)
 
+<!-- Only if a linked page carries snippets a build or the gate disproved: -->
+## Docs corrections (Umbraco <version>)
+| Docs snippet | Problem | Use instead |
+|---|---|---|
+| <snippet> | <what fails, verified> | <the working version> |
+
 ## Steps
 1. Discover project context (namespace, version, folder conventions).
 2. Write files, substituting <Placeholder> tokens.
-3. Build/verify (or state honestly if no buildable project exists).
+3. Build/verify (`dotnet build -p:RazorCompileOnBuild=true` if views are involved), or state
+   honestly that no buildable project exists.
 
 ## Done
 Tell the user: <where it lives, how to use it, any config to add>.
