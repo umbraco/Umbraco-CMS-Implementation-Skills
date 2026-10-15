@@ -174,7 +174,7 @@ fails loudly here instead of being dropped silently by a consuming tool. Every
 script has tests, which run on Node's built-in runner:
 
 ```bash
-node --test scripts/*.test.mjs
+node --test scripts/*.test.mjs .claude/skills/*/*/*.test.mjs
 ```
 
 Skills that ship runnable code are additionally gated at runtime: their `assets/` are

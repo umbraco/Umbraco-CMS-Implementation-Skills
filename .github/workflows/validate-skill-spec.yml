@@ -39,7 +39,7 @@ jobs:
           node-version: "22"
 
       - name: Test the validator
-        run: node --test scripts/*.test.mjs
+        run: node --test scripts/*.test.mjs .claude/skills/*/*/*.test.mjs
 
       - name: Validate skills and check index freshness
         run: node scripts/validate-skills.mjs --check-index

@@ -92,7 +92,7 @@ If `{outputs_dir}/../timing.json` exists, copy `total_duration_seconds` into the
 }
 ```
 
-**Field names matter.** The viewer and `aggregate_benchmark.py` read `expectations[].text`, `expectations[].passed`, `expectations[].evidence` — don't rename them to `name`/`met`/`details` or anything else.
+**Field names matter.** The viewer and `aggregate_benchmark.mjs` read `expectations[].text`, `expectations[].passed`, `expectations[].evidence` — don't rename them to `name`/`met`/`details` or anything else.
 
 ## Guidelines
 
