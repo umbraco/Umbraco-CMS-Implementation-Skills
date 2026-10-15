@@ -262,10 +262,12 @@ For iteration 2+, also pass `--previous-workspace <workspace>/iteration-<N-1>` s
 Leave out `bin/`, `obj/` and generated schema files. The viewer only lists files directly inside
 `outputs/`, so otherwise a reviewer sees only the final answer.
 
-**The static file is a JavaScript page.** Preview panes that show a local file as a static
-snapshot, including the desktop app's for files outside the project folder, display it as raw
-text. Serve the workspace over HTTP (`python3 -m http.server --bind 127.0.0.1 <port>`) and open
-it there. If an earlier copy was cached, add a query string to bust it.
+**Prefer the viewer's server mode.** The launch command above (no `--static`) serves the page at
+`http://localhost:3117` and saves feedback straight to `feedback.json`. A `--static` file is a
+JavaScript page: preview panes that show a local file as a static snapshot, including the desktop
+app's for files outside the project folder, display it as raw text. Use `--static` only where no
+local server can run, and open the file in a browser that runs its scripts. If the browser shows
+an earlier copy, add a query string to the URL to bust the cache.
 
 Tell the user: "I've opened the results. The 'Outputs' tab lets you click through each test case and leave feedback; the 'Benchmark' tab shows the quantitative comparison. Tell me when you're done."
 
