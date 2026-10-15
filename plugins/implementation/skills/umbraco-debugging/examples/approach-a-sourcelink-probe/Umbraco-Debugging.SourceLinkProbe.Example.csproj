@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    VALIDATION-ONLY example project for umbraco-debugging — Approach A's Source Link probe.
+
+    Loaded by SITE 1 (Umbraco-CMS.Skills, Clean): SourceLinkProbeComposer is C# that registers into
+    DI and is picked up by the host's composer scan. The skill's SourceLinkProbe.cs is generated into
+    obj/ at build time by plugins/Directory.Build.props, with <Namespace> substituted.
+    SourceLinkProbeTests.cs sits beside it but is compiled by Umbraco-CMS.Skills.TestHost.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.Debugging.SourceLinkProbe</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+</Project>

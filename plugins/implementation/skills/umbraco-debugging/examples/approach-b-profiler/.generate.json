@@ -1,0 +1,8 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'clean' (site 1): the controller is attribute-routed C#, and the counts it returns need installed content, which Clean brings with its install.",
+  "host": "clean",
+  "namespace": "Umbraco.Skills.Examples.Debugging.Profiler",
+  "assets": [
+    "ProfiledController.cs"
+  ]
+}
