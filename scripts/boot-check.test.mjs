@@ -23,6 +23,7 @@ import {
   buildArgs,
   classify,
   findDll,
+  isWebProject,
   probeTargets,
   readLog,
   resolveProject,
@@ -241,7 +242,7 @@ test("a probe that can't be read fails the check, so graders never silently lack
 
 test("--probe needs a build, because that is how the probe gets compiled in", async () => {
   const dir = tmp("boot-check-probe-nobuild-");
-  fs.writeFileSync(path.join(dir, "Site.csproj"), "<Project/>");
+  fs.writeFileSync(path.join(dir, "Site.csproj"), '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>');
   await assert.rejects(bootCheck({ project: dir, probe: true, build: false }), /--no-build/);
 });
 
@@ -298,6 +299,15 @@ test("findDll reads AssemblyName and TargetFramework, falling back to the projec
   const named = path.join(dir, "Other.csproj");
   fs.writeFileSync(named, "<Project><PropertyGroup><AssemblyName>Site</AssemblyName><TargetFrameworks>net10.0;net9.0</TargetFrameworks></PropertyGroup></Project>");
   assert.equal(findDll(named), path.join(dir, "bin", "Debug", "net10.0", "Site.dll"));
+});
+
+test("a class library is refused with a clear reason, since it has no site to boot", async () => {
+  const dir = tmp("boot-check-lib-");
+  fs.writeFileSync(path.join(dir, "Lib.csproj"), '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net10.0</TargetFramework></PropertyGroup></Project>');
+  assert.equal(isWebProject(path.join(dir, "Lib.csproj")), false);
+  await assert.rejects(bootCheck({ project: dir }), /is not a web project/);
+  fs.writeFileSync(path.join(dir, "Lib.csproj"), '<Project Sdk="Microsoft.NET.Sdk.Web"></Project>');
+  assert.equal(isWebProject(path.join(dir, "Lib.csproj")), true);
 });
 
 test("resolveProject accepts a .csproj or a directory with exactly one", () => {

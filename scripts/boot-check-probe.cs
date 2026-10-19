@@ -6,7 +6,14 @@
 // come from the solution's own projects (NuGet packages are left out), with lifetimes and counts.
 // Evals grade runtime expectations from this instead of reading the code.
 
+// Explicit System usings, so it compiles whether or not the project enables ImplicitUsings.
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -119,7 +126,7 @@ internal static class BootCheckProbeReport
         // entry assembly's own <name>.deps.json beside it is read as well.
         var depsFiles = (AppContext.GetData("APP_CONTEXT_DEPS_FILES") as string ?? string.Empty)
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries)
-            .Append(Path.Combine(AppContext.BaseDirectory, $"{System.Reflection.Assembly.GetEntryAssembly()?.GetName().Name}.deps.json"))
+            .Append(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetEntryAssembly()?.GetName().Name}.deps.json"))
             .Distinct(StringComparer.OrdinalIgnoreCase);
         foreach (var file in depsFiles.Where(File.Exists))
         {

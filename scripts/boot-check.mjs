@@ -68,6 +68,11 @@ export function resolveProject(target) {
   return path.join(full, candidates[0]);
 }
 
+/** Only a web project (Microsoft.NET.Sdk.Web) has a host to boot; a class library has no entry point. */
+export function isWebProject(csprojPath) {
+  return /<Project\s[^>]*Sdk="Microsoft\.NET\.Sdk\.Web"/.test(fs.readFileSync(csprojPath, "utf8"));
+}
+
 /** Path of the built DLL for a .csproj: bin/Debug/<TargetFramework>/<AssemblyName>.dll. */
 export function findDll(csprojPath) {
   const xml = fs.readFileSync(csprojPath, "utf8");
@@ -316,6 +321,9 @@ export async function bootCheck({
   args = null,
 }) {
   const csproj = command ? null : resolveProject(project);
+  if (csproj && !isWebProject(csproj)) {
+    throw new Error(`${path.basename(csproj)} is not a web project (Sdk="Microsoft.NET.Sdk.Web"), so there is no site to boot`);
+  }
   const cwd = csproj ? path.dirname(csproj) : path.resolve(project);
   const work = workDir ?? fs.mkdtempSync(path.join(os.tmpdir(), "boot-check-"));
   fs.mkdirSync(work, { recursive: true });
