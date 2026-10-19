@@ -18,6 +18,7 @@ Each of these answers a different question, and none of them covers for another:
 | `umbraco-skill-author` | How should this skill be **shaped**? House conventions, authoring steps, templates, and the conformance checklist. Start here. |
 | `umbraco-reference-instance` | Does the skill's code **compile and serve** in a real Umbraco? The `dotnet test` gate, plus a manual boot/`try` harness. |
 | `umbraco-skill-evaluator` | Does Claude actually **write** that code when the skill is loaded? The with-skill vs. baseline eval loop. |
+| `umbraco-skill-reviewer` | Is a skill PR **ready to merge**? Reviews it against the others, fixes it on the PR branch, verifies, and summarises. Works through the `for-ai-review` queue. |
 
 ```
 .claude/skills/
@@ -28,12 +29,16 @@ Each of these answers a different question, and none of them covers for another:
 ├── umbraco-reference-instance/
 │   ├── SKILL.md
 │   └── scripts/
-└── umbraco-skill-evaluator/
+├── umbraco-skill-evaluator/
+│   ├── SKILL.md
+│   ├── agents/              # grader
+│   ├── references/
+│   ├── scripts/
+│   └── eval-viewer/
+└── umbraco-skill-reviewer/
     ├── SKILL.md
-    ├── agents/              # grader
-    ├── references/
-    ├── scripts/
-    └── eval-viewer/
+    ├── references/          # review, fix-and-push, verify, batch
+    └── scripts/             # review-queue
 ```
 
 The contribution bar these enforce is summarised in [`AGENTS.md`](../../AGENTS.md#contributing-a-skill).

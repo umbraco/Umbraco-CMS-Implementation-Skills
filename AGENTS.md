@@ -87,7 +87,8 @@ Plugin **versions are kept in sync** between `marketplace.json` and each plugin'
 - **Authoring skills** live in `.claude/skills/` and are not part of any plugin —
   they exist to help maintain this repo (`umbraco-skill-author` for scaffolding and
   writing a skill, `umbraco-skill-evaluator` for the eval loop,
-  `umbraco-reference-instance` for booting the reference site).
+  `umbraco-reference-instance` for booting the reference site, `umbraco-skill-reviewer` for
+  reviewing and fixing skill PRs).
 
 Don't put authoring tooling in a plugin's `skills/` folder, and don't put
 user-facing skills in `.claude/skills/`.
@@ -123,7 +124,7 @@ description; use a `>` block scalar.
 
 ### Contributing a skill
 
-**Read first.** The three authoring skills each answer a different question, and none
+**Read first.** The authoring skills each answer a different question, and none
 covers for another — a skill can pass one and fail the next. They are plain markdown, so
 read them directly if your agent does not load `.claude/skills/`:
 
@@ -133,6 +134,9 @@ read them directly if your agent does not load `.claude/skills/`:
    does the skill's code **compile and serve** in a real Umbraco.
 3. [`umbraco-skill-evaluator`](.claude/skills/umbraco-skill-evaluator/SKILL.md) — does an
    agent actually **write** that code with the skill loaded, compared with a baseline.
+4. [`umbraco-skill-reviewer`](.claude/skills/umbraco-skill-reviewer/SKILL.md) — is a skill
+   PR **ready to merge**: reviews it against the other three, fixes it on the branch, and
+   verifies the result. Runs over every open PR labelled `for-ai-review`.
 
 [`umbraco-sitemap`](plugins/implementation/skills/umbraco-sitemap/SKILL.md) is the
 golden-standard published skill; when in doubt, copy its shape.
