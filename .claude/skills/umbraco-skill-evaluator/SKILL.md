@@ -150,6 +150,18 @@ Once a run's outputs and transcript are on disk, spawn a **Haiku grader subagent
 
 For deterministic assertions ("file X exists with mime type Y", "transcript contains string Z"), prefer writing a tiny Python script over having the grader eyeball it — scripts are faster, free, and reusable across iterations. The grader can call the script and record the result.
 
+### Boot the run's project (skills whose evals edit an Umbraco project)
+
+A compile check misses the Umbraco mistakes that only fail at startup: a collection anchor that isn't registered, a strong `[ComposeAfter]` on a disabled composer, a component that throws. When a run leaves an Umbraco web project behind, boot it before grading and save the report beside the run as `boot.txt`:
+
+```bash
+node scripts/boot-check.mjs <run>/outputs/project/<WebProject> --out <run>/boot.txt
+```
+
+It builds the project, boots it as a fresh unattended SQLite install in a temp directory (the project's own files are left alone), and stops it again. `RESULT: PASS` means the process answered `GET /` below 500, logged runtime level `Run`, and logged no errors; anything else is `FAIL` with the reason, and the exception and stack frames when it crashed. Grade a boot expectation from `boot.txt`, as the compile expectation is graded from `build.txt`. If the code under test reads tables a fresh install doesn't have, give the eval a SQL file and pass `--seed-sql <file>`. The skill's `evals/README.md` says which evals need that, or need a second boot with a variant applied.
+
+Boot baseline runs too: a baseline that falls into a boot-time trap still compiles, so this is often the check that separates the two sides.
+
 The grader writes `grading.json` into each run directory. The viewer and aggregator depend on the exact field names `expectations[].text`, `expectations[].passed`, `expectations[].evidence` — don't accept renamed variants from the grader.
 
 ---

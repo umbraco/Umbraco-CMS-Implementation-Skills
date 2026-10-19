@@ -190,6 +190,10 @@ dotnet test Umbraco-CMS.Skills.TestHost/Umbraco-CMS.Skills.TestHost.csproj --no-
 dotnet test Umbraco-CMS.Skills.TestHost.Blank/Umbraco-CMS.Skills.TestHost.Blank.csproj --no-build
 ```
 
+Eval runs that leave an edited Umbraco project behind are also booted, with
+`node scripts/boot-check.mjs <project>`, because some mistakes compile and only fail at startup. How
+evals use it is in [`umbraco-skill-evaluator`](.claude/skills/umbraco-skill-evaluator/SKILL.md).
+
 ### Reference instances
 
 `Umbraco-CMS.Skills/` (**Clean** starter kit) and `Umbraco-CMS.Skills.Blank/` (no starter

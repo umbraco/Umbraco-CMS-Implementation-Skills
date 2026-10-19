@@ -53,6 +53,20 @@ After each run, build `outputs/project/MySite.Web` yourself with
 prints no CS warnings, so eval 3's "no CS0618" expectation would pass on missing evidence. Grade the compile expectation (and eval 3's CS0618 expectation) from that file, not
 from the transcript. The build-honesty expectation is separate, so a broken build isn't failed twice.
 
+Then boot it, because the traps these evals test fail at startup, not at compile time:
+
+```bash
+node scripts/boot-check.mjs <run>/outputs/project/MySite.Web --out <run>/boot.txt
+```
+
+| Eval | Boot |
+|---|---|
+| 1 | Add `--seed-sql plugins/implementation/skills/umbraco-composing/evals/files/boot/legacy-products-seed.sql`. `MySite.Core`'s SKU repository reads a `legacySku` table a fresh install doesn't have, so an unseeded warm-up throws and takes the site down. That's a fixture gap, not the run's mistake. |
+| 2 | As above. |
+| 3 | Boot twice. First as above. Then copy the project, add `files/boot/DisableAnalytics.cs` to its `MySite.Web/Infrastructure/`, and boot the copy with `--out <run>/boot-disabled.txt`. A strong `[ComposeAfter]` on `AnalyticsComposer` builds, then fails that second boot with `Broken composer dependency`. |
+
+Grade the boot expectation from those files only: `RESULT: PASS` passes it, anything else fails it.
+
 Grade code expectations from the files under `outputs/project/`, not from `final-answer.md` alone.
 Before generating the viewer, copy each file the run created or changed under `outputs/project/` up
 into `outputs/`, because the viewer lists only the files directly inside `outputs/`.
