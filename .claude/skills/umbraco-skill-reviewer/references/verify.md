@@ -56,9 +56,24 @@ Otherwise the author's reported results stand, and the summary says you didn't r
 
 When you do run them, keep it cheap: with `umbraco-skill-evaluator`, run **with-skill only**, on the
 evals your change touches, Haiku first (weak models expose a router that isn't followed). Run
-baselines only if the PR has none. Grade compile and boot expectations from the evaluator's own
-`build.txt` and `boot.txt`, and check anything the grader couldn't (a file left unchanged, for
-example) yourself, with a diff.
+baselines only if the PR has none.
+
+- **Which evals a change touches.** An eval whose expectations or fixture you changed; every eval a
+  changed reference or asset is used in; and **every** eval when you changed what `SKILL.md` tells
+  the agent to open, since all of them go through it.
+- **Follow the skill's own `evals/README.md`** for the fixture, the run prompt and the grading
+  artefacts. They differ between skills (`build.txt` or `razor-build.txt`, `final-answer.md` or
+  `answer.md`, a seeded boot or none), and the expectations name them.
+- **Tell each run that the snapshot's `references/` and `assets/` are part of the skill.** A run told
+  only "don't read anything else" decided the references were off limits, never opened them, and
+  answered from memory.
+- **Check every `grading.json` before you believe it**: the number of graded expectations equals the
+  number in `evals.json`, and the summary matches the individual verdicts (a grader has reported
+  9/9 over ten passes). Check anything the grader couldn't (a file left unchanged, for example)
+  yourself, with a diff.
+- **A single failed expectation is not yet a regression.** Read the run: if it comes from your
+  harness, fix the harness and re-run; if it's behaviour, re-run that eval once and compare with
+  the PR's reported results. Report both runs.
 
 ## Traps
 

@@ -11,8 +11,9 @@ cd ../<repo>-pr-<n>
 gh pr checkout <n> --branch review/pr-<n>
 ```
 
-`gh pr checkout` points the branch's push target at the PR's real branch, including a contributor's
-fork, so a plain `git push` later updates the PR. Before you start, check
+`gh pr checkout` records where the PR's branch lives (the contributor's fork, for a fork PR) as the
+local branch's push remote. The local branch is named `review/pr-<n>`, not the PR's branch name, so
+a plain `git push` refuses to push: always push explicitly (step 2 below). Before you start, check
 `gh pr view <n> --json maintainerCanModify`. If it's `false` you can't push to a fork: post your
 findings as a review comment instead, and say so in your report.
 
@@ -58,13 +59,20 @@ authors often fix the same things in parallel. Drop your change where theirs is 
 keep what still adds something, and re-run [verify.md](verify.md) on the result. If nothing of yours
 is left, don't push. Validate their commit and say so instead.
 
-### 2. Push
+### 2. Push, then prove it landed
 
 ```bash
-git push
+branch=$(git branch --show-current)
+remote=$(git config --get "branch.$branch.pushRemote" || echo origin)
+git push "$remote" HEAD:$(gh pr view <n> --json headRefName --jq .headRefName)
+gh pr view <n> --json headRefOid --jq .headRefOid    # must equal: git rev-parse HEAD
 ```
 
-Never `--force`. If the push is rejected, the head moved: go back to step 1.
+- Read the push's own output and exit status; don't pipe it through `tail` or `grep`, which hides a
+  refusal (that happened on #51: the push failed, and the summary comment went up anyway).
+- **Don't comment or relabel until the PR head equals your commit.** The comment says the fixes are
+  on the branch; make sure they are.
+- Never `--force`. If the push is rejected because the branch moved, go back to step 1.
 
 ### 3. One summary comment
 
