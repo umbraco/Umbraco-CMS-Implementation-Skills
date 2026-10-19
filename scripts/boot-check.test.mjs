@@ -18,7 +18,16 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { bootCheck, classify, findDll, readLog, resolveProject, summariseException } from "./boot-check.mjs";
+import {
+  bootCheck,
+  buildArgs,
+  classify,
+  findDll,
+  probeTargets,
+  readLog,
+  resolveProject,
+  summariseException,
+} from "./boot-check.mjs";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const CLI = path.join(HERE, "boot-check.mjs");
@@ -66,6 +75,14 @@ if (mode === "crash") {
   const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
   fs.writeFileSync(process.env.FAKE_PIDFILE, String(child.pid));
   level("Run"); serve();
+} else if (mode === "probe") {
+  level("Run");
+  http.createServer((req, res) => {
+    if (req.url === "/__boot-check/probe") {
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ runtimeLevel: "Run", contentFinders: ["My.Finder", "Umbraco.Cms.Core.Routing.ContentFinderByUrlNew"] }));
+    } else res.end("ok");
+  }).listen(port, "127.0.0.1");
 } else if (mode === "seeded") {
   const { DatabaseSync } = require("node:sqlite");
   const db = new DatabaseSync(dbPath);
@@ -210,6 +227,24 @@ test("each boot gets a fresh work directory, so earlier databases and logs can't
   assert.notEqual(first.workDir, second.workDir);
 });
 
+test("--probe captures what the running app reports at /__boot-check/probe", async () => {
+  const report = await bootFake("probe", { probe: true });
+  assert.equal(report.result, "PASS", report.reason);
+  assert.deepEqual(report.probe.contentFinders, ["My.Finder", "Umbraco.Cms.Core.Routing.ContentFinderByUrlNew"]);
+});
+
+test("a probe that can't be read fails the check, so graders never silently lack the evidence", async () => {
+  const report = await bootFake("ok", { probe: true }); // answers "ok" on every path, not JSON
+  assert.equal(report.result, "FAIL");
+  assert.match(report.reason, /^probe failed: .*did not return JSON/);
+});
+
+test("--probe needs a build, because that is how the probe gets compiled in", async () => {
+  const dir = tmp("boot-check-probe-nobuild-");
+  fs.writeFileSync(path.join(dir, "Site.csproj"), "<Project/>");
+  await assert.rejects(bootCheck({ project: dir, probe: true, build: false }), /--no-build/);
+});
+
 // ---- the pieces ------------------------------------------------------------------------------
 
 test("readLog only counts entries from the booted process", () => {
@@ -237,6 +272,19 @@ test("classify applies the checks in order of severity", () => {
   assert.match(classify({ ...ok, errors: ["x", "y"] }).reason, /2 error/);
 });
 
+test("probeTargets compiles the probe into the web project only, with paths XML-escaped", () => {
+  const xml = probeTargets("/sites/R&D/Site.csproj", "/tools/boot-check-probe.cs");
+  assert.match(xml, /Condition="'\$\(MSBuildProjectFullPath\)' == '\/sites\/R&amp;D\/Site\.csproj'"/);
+  assert.match(xml, /<Compile Include="\/tools\/boot-check-probe\.cs" \/>/);
+});
+
+test("buildArgs adds the probe targets and a separate output dir only when probing", () => {
+  assert.deepEqual(buildArgs("/s/Site.csproj"), ["build", "/s/Site.csproj", "--nologo", "-v", "quiet"]);
+  const probing = buildArgs("/s/Site.csproj", { targets: "/w/probe.targets", outDir: "/w/bin" });
+  assert.ok(probing.includes("-p:CustomAfterMicrosoftCommonTargets=/w/probe.targets"));
+  assert.ok(probing.includes(`-p:OutDir=/w/bin${path.sep}`));
+});
+
 test("summariseException returns null when there was no unhandled exception", () => {
   assert.equal(summariseException("info: started\n"), null);
 });
@@ -260,6 +308,18 @@ test("resolveProject accepts a .csproj or a directory with exactly one", () => {
   fs.writeFileSync(path.join(dir, "B.csproj"), "<Project/>");
   assert.throws(() => resolveProject(dir), /found 2/);
   assert.equal(resolveProject(path.join(dir, "B.csproj")), path.join(dir, "B.csproj"));
+});
+
+test("an error inside the check still writes a FAIL report to --out", () => {
+  const out = path.join(tmp("boot-check-out-"), "boot.txt");
+  let code = 0;
+  try {
+    execFileSync(process.execPath, [CLI, path.join(tmp("boot-check-empty-"), "missing"), "--out", out], { stdio: "pipe" });
+  } catch (error) {
+    code = error.status;
+  }
+  assert.equal(code, 2);
+  assert.match(fs.readFileSync(out, "utf8"), /^RESULT: FAIL — boot-check error: project not found/);
 });
 
 test("the CLI rejects bad arguments with exit code 2", () => {

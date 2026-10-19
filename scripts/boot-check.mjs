@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // boot-check.mjs <project> [--port N] [--timeout SEC] [--settle SEC] [--no-build] [--seed-sql FILE]
-//                          [--out FILE] [--json]
+//                          [--probe FILE] [--out FILE] [--json]
 //
 // Builds an Umbraco web project and boots it once, to prove code that compiles also STARTS. Some
 // Umbraco mistakes only surface at boot: a collection anchor that isn't registered (InsertBefore
@@ -26,6 +26,15 @@
 // (node:sqlite), and then does the checked boot. Use it when the code under test reads tables a fresh
 // install doesn't have.
 //
+// --probe FILE compiles scripts/boot-check-probe.cs into the web project for this check only (through
+// an MSBuild targets file on the command line, building into the work directory, so the project's
+// source and bin/ are untouched), then saves what GET /__boot-check/probe reports to FILE: the content
+// finder, URL provider, health check and component collections in their real order, and the
+// notification handlers and services registered from the solution's own projects, with lifetimes and
+// counts. That is runtime evidence for "the finder sits before ContentFinderByUrlNew" or "exactly one
+// Scoped registration remains", where a grader would otherwise only read the code. A probe that can't
+// be read fails the check.
+//
 // The app is started in its own process group and the whole group is stopped afterwards, so nothing
 // outlives the check. A port that is already in use fails the check up front instead of answering
 // for us.
@@ -41,6 +50,9 @@ import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+
+const PROBE_SOURCE = path.join(path.dirname(fileURLToPath(import.meta.url)), "boot-check-probe.cs");
+const PROBE_PATH = "/__boot-check/probe";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -64,6 +76,29 @@ export function findDll(csprojPath) {
   const framework = tag("TargetFramework") ?? tag("TargetFrameworks")?.split(";")[0];
   if (!framework) throw new Error(`no TargetFramework in ${csprojPath}`);
   return path.join(path.dirname(csprojPath), "bin", "Debug", framework, `${assembly}.dll`);
+}
+
+/**
+ * MSBuild targets that compile the probe into one project. Global properties flow to project
+ * references, so the condition keeps it out of the libraries the web project references.
+ */
+export function probeTargets(csprojPath, probeSource = PROBE_SOURCE) {
+  const xml = (value) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  return [
+    "<Project>",
+    `  <ItemGroup Condition="'$(MSBuildProjectFullPath)' == '${xml(csprojPath)}'">`,
+    `    <Compile Include="${xml(probeSource)}" />`,
+    "  </ItemGroup>",
+    "</Project>",
+    "",
+  ].join("\n");
+}
+
+/** Arguments for `dotnet build`: plain, or with the probe compiled in and output to the work dir. */
+export function buildArgs(csprojPath, probe = null) {
+  const args = ["build", csprojPath, "--nologo", "-v", "quiet"];
+  if (probe) args.push(`-p:CustomAfterMicrosoftCommonTargets=${probe.targets}`, `-p:OutDir=${probe.outDir}${path.sep}`);
+  return args;
 }
 
 /** Environment that makes Umbraco install unattended into workDir and log there. */
@@ -147,6 +182,7 @@ export function classify(obs) {
     return fail(`runtime level ${obs.runtimeLevel ?? "not logged"}, expected Run`);
   }
   if (obs.errors.length > 0) return fail(`${obs.errors.length} error(s) logged during boot`);
+  if (obs.probeError) return fail(`probe failed: ${obs.probeError}`);
   return { result: "PASS", reason: `booted to Run, GET / returned ${obs.httpStatus}` };
 }
 
@@ -169,15 +205,33 @@ function freePort() {
   });
 }
 
-function httpStatus(port) {
+function httpGet(port, urlPath = "/") {
   return new Promise((resolve) => {
-    const request = http.get({ host: "127.0.0.1", port, path: "/", timeout: 5000 }, (response) => {
-      response.resume();
-      resolve(response.statusCode);
+    const request = http.get({ host: "127.0.0.1", port, path: urlPath, timeout: 5000 }, (response) => {
+      let body = "";
+      response.setEncoding("utf8");
+      response.on("data", (chunk) => {
+        body += chunk;
+      });
+      response.on("end", () => resolve({ status: response.statusCode, body }));
     });
     request.on("timeout", () => request.destroy());
     request.on("error", () => resolve(null));
   });
+}
+
+const httpStatus = async (port) => (await httpGet(port))?.status ?? null;
+
+/** Fetch and parse the probe report, or explain why it couldn't be read. */
+async function readProbe(port) {
+  const response = await httpGet(port, PROBE_PATH);
+  if (!response) return { probeError: `no answer from ${PROBE_PATH}` };
+  if (response.status !== 200) return { probeError: `${PROBE_PATH} returned ${response.status}` };
+  try {
+    return { probe: JSON.parse(response.body) };
+  } catch {
+    return { probeError: `${PROBE_PATH} did not return JSON` };
+  }
 }
 
 /** Start the app in its own process group, with console output going to consolePath. */
@@ -256,6 +310,7 @@ export async function bootCheck({
   settleSec = 3,
   build = true,
   seedSql = null,
+  probe = false,
   workDir = null,
   command = null,
   args = null,
@@ -269,8 +324,15 @@ export async function bootCheck({
 
   const finish = (obs) => Object.assign(report, obs, classify({ errors: [], ...obs }));
 
+  let probeBuild = null;
+  if (probe && csproj) {
+    if (!build) throw new Error("--probe compiles the probe in, so it can't be combined with --no-build");
+    probeBuild = { targets: path.join(work, "boot-check-probe.targets"), outDir: path.join(work, "bin") };
+    fs.writeFileSync(probeBuild.targets, probeTargets(csproj));
+  }
+
   if (build && csproj) {
-    const result = spawnSync("dotnet", ["build", csproj, "--nologo", "-v", "quiet"], { encoding: "utf8" });
+    const result = spawnSync("dotnet", buildArgs(csproj, probeBuild), { encoding: "utf8" });
     if (result.status !== 0) {
       const tail = `${result.stdout}${result.stderr}`.trim().split("\n").slice(-15).join("\n");
       return finish({ outcome: "build-failed", buildOutput: tail });
@@ -283,7 +345,7 @@ export async function bootCheck({
 
   const launch = {
     command: command ?? "dotnet",
-    args: args ?? [findDll(csproj)],
+    args: args ?? [probeBuild ? path.join(probeBuild.outDir, path.basename(findDll(csproj))) : findDll(csproj)],
     cwd,
     env: bootEnv(chosenPort, work),
     consolePath,
@@ -303,7 +365,11 @@ export async function bootCheck({
 
   const app = startApp(launch);
   const answer = await waitForAnswer(app, chosenPort, timeoutSec * 1000);
-  if (answer.outcome === "responded") await sleep(settleSec * 1000); // let Started handlers run
+  let probeResult = {};
+  if (answer.outcome === "responded") {
+    await sleep(settleSec * 1000); // let Started handlers run
+    if (probe) probeResult = await readProbe(chosenPort);
+  }
   await stopApp(app);
 
   const log = readLog(report.logDir, app.child.pid);
@@ -315,6 +381,7 @@ export async function bootCheck({
     runtimeLevel: log.runtimeLevel,
     errors: log.errors,
     exception: answer.outcome === "exited" ? summariseException(consoleText) : null,
+    ...probeResult,
   });
 }
 
@@ -329,6 +396,8 @@ export function formatReport(r) {
   ].filter(Boolean);
   if (facts.length) lines.push(facts.join(" · "));
   if (r.seeded) lines.push(`seeded with: ${r.seeded}`);
+  if (r.probeFile) lines.push(`probe: ${r.probeFile}`);
+  if (r.probeError) lines.push(`probe error: ${r.probeError}`);
   if (r.exception) lines.push("exception:", r.exception);
   if (r.errors?.length) lines.push("errors logged by this process:", ...r.errors.slice(0, 10).map((e) => `  ${e}`));
   if (r.buildOutput) lines.push("build output (tail):", r.buildOutput);
@@ -338,7 +407,7 @@ export function formatReport(r) {
 
 const USAGE =
   "Usage: node scripts/boot-check.mjs <project> [--port N] [--timeout SEC] [--settle SEC]\n" +
-  "                                   [--no-build] [--seed-sql FILE] [--out FILE] [--json]";
+  "                                   [--no-build] [--seed-sql FILE] [--probe FILE] [--out FILE] [--json]";
 
 function parseArgs(argv) {
   const options = { build: true, json: false };
@@ -352,7 +421,7 @@ function parseArgs(argv) {
       options.json = true;
       continue;
     }
-    const match = /^--(port|timeout|settle|seed-sql|out)(?:=(.*))?$/.exec(arg);
+    const match = /^--(port|timeout|settle|seed-sql|probe|out)(?:=(.*))?$/.exec(arg);
     if (match) {
       const value = match[2] !== undefined ? match[2] : argv[(i += 1)];
       if (value === undefined) return { error: `--${match[1]} needs a value` };
@@ -386,9 +455,18 @@ async function main(argv) {
       settleSec: options.settle ? Number(options.settle) : undefined,
       build: options.build,
       seedSql: options["seed-sql"] ?? null,
+      probe: Boolean(options.probe),
     });
+    if (options.probe && report.probe) {
+      fs.writeFileSync(options.probe, `${JSON.stringify(report.probe, null, 2)}\n`);
+      report.probeFile = path.resolve(options.probe);
+    }
   } catch (error) {
-    console.error(`ERROR: ${error.message}`);
+    // Still leave a report behind, so a grader reading --out never finds the evidence just missing.
+    const text = `RESULT: FAIL — boot-check error: ${error.message}\nproject: ${options.project}\n`;
+    if (options.out) fs.writeFileSync(options.out, text);
+    process.stdout.write(text);
+    console.error(error.stack);
     return 2;
   }
   const text = options.json ? `${JSON.stringify(report, null, 2)}\n` : formatReport(report);

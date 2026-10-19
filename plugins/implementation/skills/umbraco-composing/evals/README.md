@@ -53,10 +53,11 @@ After each run, build `outputs/project/MySite.Web` yourself with
 prints no CS warnings, so eval 3's "no CS0618" expectation would pass on missing evidence. Grade the compile expectation (and eval 3's CS0618 expectation) from that file, not
 from the transcript. The build-honesty expectation is separate, so a broken build isn't failed twice.
 
-Then boot it, because the traps these evals test fail at startup, not at compile time:
+Then boot it, because the traps these evals test fail at startup, not at compile time, and probe it,
+so registrations are graded from the running site rather than from reading the code:
 
 ```bash
-node scripts/boot-check.mjs <run>/outputs/project/MySite.Web --out <run>/boot.txt
+node scripts/boot-check.mjs <run>/outputs/project/MySite.Web --out <run>/boot.txt --probe <run>/probe.json
 ```
 
 | Eval | Boot |
@@ -66,6 +67,9 @@ node scripts/boot-check.mjs <run>/outputs/project/MySite.Web --out <run>/boot.tx
 | 3 | Boot twice. First as above. Then copy the project, add `files/boot/DisableAnalytics.cs` to its `MySite.Web/Infrastructure/`, and boot the copy with `--out <run>/boot-disabled.txt`. A strong `[ComposeAfter]` on `AnalyticsComposer` builds, then fails that second boot with `Broken composer dependency`. |
 
 Grade the boot expectation from those files only: `RESULT: PASS` passes it, anything else fails it.
+Grade the runtime expectation from `probe.json`: the content finder order, the components, the
+notification handlers and service registrations (with lifetimes) from the solution's own projects,
+and the health checks, all as the booted site has them.
 
 Grade code expectations from the files under `outputs/project/`, not from `final-answer.md` alone.
 Before generating the viewer, copy each file the run created or changed under `outputs/project/` up

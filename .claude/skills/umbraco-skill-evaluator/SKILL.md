@@ -160,6 +160,8 @@ node scripts/boot-check.mjs <run>/outputs/project/<WebProject> --out <run>/boot.
 
 It builds the project, boots it as a fresh unattended SQLite install in a temp directory (the project's own files are left alone), and stops it again. `RESULT: PASS` means the process answered `GET /` below 500, logged runtime level `Run`, and logged no errors; anything else is `FAIL` with the reason, and the exception and stack frames when it crashed. Grade a boot expectation from `boot.txt`, as the compile expectation is graded from `build.txt`. If the code under test reads tables a fresh install doesn't have, give the eval a SQL file and pass `--seed-sql <file>`. The skill's `evals/README.md` says which evals need that, or need a second boot with a variant applied.
 
+Add `--probe <run>/probe.json` to grade registrations from the running site rather than from reading the code. The probe is compiled into the project for that check only (the run's source is left alone), and reports the content finder, URL provider, health check and component collections in their real order, plus the notification handlers and services registered from the solution's own projects, with lifetimes and counts. A probe that can't be read fails the check.
+
 Boot baseline runs too: a baseline that falls into a boot-time trap still compiles, so this is often the check that separates the two sides.
 
 The grader writes `grading.json` into each run directory. The viewer and aggregator depend on the exact field names `expectations[].text`, `expectations[].passed`, `expectations[].evidence` — don't accept renamed variants from the grader.

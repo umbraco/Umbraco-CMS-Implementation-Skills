@@ -19,6 +19,7 @@
         "The warm-up still loads straight after an attended install or upgrade (when Umbraco restarts the runtime in-process with isRestarting = true, re-running components and re-publishing the Starting/Started notifications): either it is gated on RuntimeLevel.Run without skipping restarts, or the response explicitly tells the user that the chosen mechanism skips that restart, so the table stays empty until the next process start",
         "The edited project compiles: build.txt beside the run (produced by the evaluator with `dotnet build` of outputs/project/MySite.Web) reports 0 errors",
         "The edited site boots: boot.txt beside the run (produced by the evaluator with `node scripts/boot-check.mjs` on outputs/project/MySite.Web, seeded with evals/files/boot/legacy-products-seed.sql) reports RESULT: PASS",
+        "Runtime registrations are right in probe.json beside the run (the evaluator's `boot-check.mjs --probe`): LegacyProductUrlContentFinder appears in contentFinders ahead of Umbraco.Cms.Core.Routing.ContentFinderByUrlNew; notificationHandlers lists exactly one async ContentPublishedNotification handler with registrations = 1; and the warm-up is registered, either as a component in components or as an UmbracoApplicationStarting/StartedNotification handler with registrations = 1",
         "The agent does not claim a build, boot or test result it did not actually run, and if it did not build, it says so"
       ]
     },
@@ -39,6 +40,7 @@
         "The existing CreateUmbracoBuilder() chain (AddBackOffice, AddWebsite, AddDeliveryApi, AddComposers, Build) is preserved apart from the inserted call",
         "The edited project compiles: build.txt beside the run (produced by the evaluator with `dotnet build` of outputs/project/MySite.Web) reports 0 errors",
         "The edited site boots: boot.txt beside the run (produced by the evaluator with `node scripts/boot-check.mjs` on outputs/project/MySite.Web) reports RESULT: PASS",
+        "Runtime registrations are right in probe.json beside the run (the evaluator's `boot-check.mjs --probe`): services lists Acme.Umbraco.Media.IAcmeMediaUrlResolver with exactly one registration, MySite.Web.Media.CdnMediaUrlResolver (or the run's resolver type) with lifetime Scoped; and Acme.Umbraco.Media.AcmeHealthCheck is absent from healthChecks while Umbraco's own checks remain",
         "The agent does not claim a build, boot or test result it did not actually run, and if it did not build, it says so"
       ]
     },
@@ -61,6 +63,7 @@
         "The CS0618 warnings are gone: build.txt shows no CS0618 for IComponent or ContentFinderByUrl in the project's own files",
         "The edited project compiles: build.txt beside the run (produced by the evaluator with `dotnet build` of outputs/project/MySite.Web) reports 0 errors",
         "The edited site boots both as delivered and with AnalyticsComposer disabled: boot.txt and boot-disabled.txt beside the run (produced by the evaluator with `node scripts/boot-check.mjs`, the second after adding evals/files/boot/DisableAnalytics.cs) both report RESULT: PASS",
+        "Runtime registrations are right in probe.json beside the run (the evaluator's `boot-check.mjs --probe`): CampaignContentFinder appears in contentFinders ahead of Umbraco.Cms.Core.Routing.ContentFinderByUrlNew, and the redirect cache start/stop work is registered, either as RedirectCacheComponent in components or as UmbracoApplicationStarting/StoppingNotification handlers with registrations = 1 each",
         "The agent does not claim a build, boot or test result it did not actually run, and if it did not build, it says so"
       ]
     }
