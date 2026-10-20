@@ -22,6 +22,8 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { canPush } from "./setup-review-worktree.mjs";
+
 const FIELDS = "number,title,author,createdAt,headRefName,headRefOid,isCrossRepository,maintainerCanModify,url";
 
 const git = (...args) => execFileSync("git", args, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
@@ -57,8 +59,7 @@ export function summarise(prs) {
         head: pr.headRefOid,
         branch: pr.headRefName,
         skills,
-        // A branch in this repo is always pushable; a fork only when the author allowed maintainer edits.
-        canPush: !pr.isCrossRepository || pr.maintainerCanModify,
+        canPush: canPush(pr),
         conflicts: pr.conflicts,
         evalProjects: paths.filter((p) => /\/evals\/files\/.*\.csproj$/.test(p)),
         strays: [...new Set(paths.map((p) => /^(.*?(?:^|\/)(?:eval-results|[^/]+-workspace))\//.exec(p)?.[1]).filter(Boolean))],
@@ -116,7 +117,7 @@ function followUps() {
     const numbers = ghJson(["pr", "list", "--state", "open", "--label", label, "--limit", "100", "--json", "number"]);
     for (const { number } of numbers) {
       const pr = ghJson(["pr", "view", String(number), "--json", fields]);
-      const facts = { label, canPush: !pr.isCrossRepository || pr.maintainerCanModify };
+      const facts = { label, canPush: canPush(pr) };
       if (label === "ai-review-pending-edits") {
         const ref = `refs/review-queue/${pr.number}`;
         git("fetch", "--quiet", "origin", `+pull/${pr.number}/head:${ref}`);

@@ -3,7 +3,7 @@
 ## Get the context first
 
 ```bash
-gh pr view <n> --json title,body,author,headRefName,headRefOid,maintainerCanModify,files
+gh pr view <n> --json title,body,author,headRefName,headRefOid,isCrossRepository,maintainerCanModify,files
 gh pr view <n> --comments                                      # earlier reviews and replies
 gh api repos/umbraco/Umbraco-CMS-Implementation-Skills/pulls/<n>/comments   # inline threads
 ```

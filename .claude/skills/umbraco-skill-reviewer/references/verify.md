@@ -1,6 +1,7 @@
 # Stage 3 — Verify
 
-Run these in the PR worktree after your fixes (and after merging `main`, if you did). Report each as
+Run these from the PR worktree's root after your fixes (and after merging `main`, if you did); `scripts/`
+below is the repo's, not this skill's. Report each as
 run and passed, run and failed (with the output), or not run (and why). Never in between.
 
 ## Always
@@ -14,6 +15,8 @@ dotnet test Umbraco-CMS.Skills.TestHost/Umbraco-CMS.Skills.TestHost.csproj --no-
 dotnet test Umbraco-CMS.Skills.TestHost.Blank/Umbraco-CMS.Skills.TestHost.Blank.csproj --no-build
 ```
 
+- **If the gate fails and the cause isn't obvious**, [`umbraco-reference-instance`](../../umbraco-reference-instance/SKILL.md)
+  covers running and debugging it.
 - **Run it in your fresh worktree; don't rely on the author's pass.** A new worktree has no
   `umbraco/Data`, so the hosts install from scratch, and some failures only show there (on #50 a
   `requires` precondition passed on the author's machine and failed on every fresh install).
@@ -91,8 +94,7 @@ baselines only if the PR has none.
 ## Traps
 
 - **zsh isn't bash.** It doesn't split unquoted variables (`${seed:+--seed-sql $seed}` arrives as one
-  argument, and `for a in "x 1"; do set -- $a` doesn't split either), it reads `$T:src` as a `:s`
-  modifier (write `"${T}:src"`), and `echo =====` fails (`=` expansion). Write anything with loops
+  argument, and `for a in "x 1"; do set -- $a` doesn't split either), and `echo =====` fails (`=` expansion). Write anything with loops
   or argument lists as a `bash` script, with arguments in arrays.
 - **Two builds of one project at once** race. Parallel boots each need their own copy.
 - **Never trust a pass without process evidence.** `boot-check` requires runtime level `Run` from the

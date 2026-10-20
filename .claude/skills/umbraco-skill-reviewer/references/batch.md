@@ -19,17 +19,16 @@ and review it again, reading our earlier comment first.
 
 ## Set up every worktree first, one at a time
 
-Worktrees share one `.git/config`, and `gh pr checkout` run in parallel fails to lock it, which can
-leave a fork PR's branch with no push remote. So the orchestrator creates all the worktrees before
-starting any reviewer, one after another, and checks each:
+Worktrees share one `.git/config`, and `gh pr checkout` run in parallel can fail to lock it, leaving
+a fork PR's branch with no push remote. So the orchestrator creates all the worktrees before starting
+any reviewer, in one call that handles them one after another:
 
 ```bash
-for n in <numbers>; do
-  git worktree add ../<repo>-pr-$n origin/main --detach
-  (cd ../<repo>-pr-$n && gh pr checkout $n --branch review/pr-$n)
-  git -C ../<repo>-pr-$n config --get branch.review/pr-$n.pushRemote   # fork PRs: must print the fork URL
-done
+node .claude/skills/umbraco-skill-reviewer/scripts/setup-review-worktree.mjs <n> <n> ...
 ```
+
+Don't start a reviewer for a PR it reports as `FAILED`; give each reviewer the start head the script
+printed for its PR.
 
 ## One reviewer per PR
 
@@ -54,10 +53,7 @@ Check each reviewer's claims before reporting them: the PR head equals the revie
 fork PR exists), nothing new appeared on `origin` except `review/pr-<n>` branches, and each PR has one
 new summary comment and the right label.
 
-Then report one table, a row per PR, and the queue's state:
-
-| PR | Skill | Fixed | Verified | Left for a human |
-|---|---|---|---|---|
+Then report the table from [SKILL.md's Report back](../SKILL.md#report-back), plus the queue's state.
 
 Clean up each worktree once its fixes are on GitHub (`git worktree remove ../<repo>-pr-<n>`), and
 delete the local `review/pr-<n>` branches. Remove anything the boots left in the system temp
