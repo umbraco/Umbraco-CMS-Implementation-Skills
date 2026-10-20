@@ -124,14 +124,31 @@ async function bootFake(mode, extra = {}) {
   }
 }
 
+// A killed process can linger on Linux as a zombie until its parent reaps it, and in a CI container
+// that can take a while; `kill(pid, 0)` still succeeds for one. It's dead for our purposes, so read
+// its state from /proc where there is one.
 const pidAlive = (pid) => {
   try {
     process.kill(pid, 0);
-    return true;
   } catch {
     return false;
   }
+  try {
+    return !/^\d+ \(.*\) Z/.test(fs.readFileSync(`/proc/${pid}/stat`, "utf8"));
+  } catch {
+    return true; // no /proc (macOS): the signal check is all there is
+  }
 };
+
+/** Signals land asynchronously: give a stopped process a moment to actually go. */
+async function goneWithin(pid, ms = 3000) {
+  const deadline = Date.now() + ms;
+  while (pidAlive(pid)) {
+    if (Date.now() > deadline) return false;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  return true;
+}
 
 // ---- the end-to-end behaviour, against the stand-in app --------------------------------------
 
@@ -155,7 +172,7 @@ test("an app that never answers fails on the timeout and is stopped", async () =
   const report = await bootFake("hang", { timeoutSec: 2 });
   assert.equal(report.result, "FAIL");
   assert.equal(report.outcome, "timeout");
-  assert.equal(pidAlive(report.pid), false);
+  assert.equal(await goneWithin(report.pid), true, "app still running");
 });
 
 test("answering HTTP is not enough: a runtime level other than Run fails", async () => {
@@ -183,8 +200,8 @@ test("the whole process group is stopped, including children the app started", a
     const report = await bootFake("grandchild");
     assert.equal(report.result, "PASS", report.reason);
     const grandchild = Number(fs.readFileSync(pidFile, "utf8"));
-    assert.equal(pidAlive(report.pid), false, "app still running");
-    assert.equal(pidAlive(grandchild), false, "app's child outlived the check");
+    assert.equal(await goneWithin(report.pid), true, "app still running");
+    assert.equal(await goneWithin(grandchild), true, "app's child outlived the check");
   } finally {
     delete process.env.FAKE_PIDFILE;
   }
