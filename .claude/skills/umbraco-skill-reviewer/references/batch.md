@@ -10,16 +10,12 @@ node .claude/skills/umbraco-skill-reviewer/scripts/review-queue.mjs --json      
 
 The default lists every open PR labelled `for-ai-review`, oldest first, with what each needs: the
 skills it touches, whether you can push to it, whether it conflicts with `main`, and committed eval
-workspaces. PRs you can't push to (`push: NO`) still get the full review; their fixes go out as a
-pull request into the author's branch ([fix-and-push.md](fix-and-push.md#cant-push-open-a-pull-request-into-the-authors-branch)).
+workspaces. `push: NO` PRs get the same review; only the last step differs.
 
-`--follow-ups` lists PRs already reviewed that need something more:
-
-| Action | Means | Do |
-|---|---|---|
-| `relabel` | An `ai-review-pending-edits` PR now contains the `review/pr-<n>` commit (the author merged the fork PR) | Swap the label to `ai-review-done`, delete `review/pr-<n>` from `origin` |
-| `push` | An `ai-review-pending-edits` PR became pushable (the author enabled maintainer edits) | Push `review/pr-<n>` to the PR branch as in fix-and-push step 2, then as `relabel` |
-| `re-review` | An `ai-review-done` PR has commits newer than our last summary comment | Swap the label back to `for-ai-review` and review it again, reading our earlier comment first |
+`--follow-ups` lists PRs already reviewed that need something more. `relabel` and `push` finish a
+pending PR as [fix-and-push.md](fix-and-push.md#finishing) describes. `re-review` means an
+`ai-review-done` PR has commits newer than our last summary: swap its label back to `for-ai-review`
+and review it again, reading our earlier comment first.
 
 ## Set up every worktree first, one at a time
 
@@ -42,9 +38,9 @@ each reviewer this skill, the PR number and its worktree:
 
 > Review PR #<n> with the `umbraco-skill-reviewer` skill (`.claude/skills/umbraco-skill-reviewer/SKILL.md`).
 > Your worktree is `../<repo>-pr-<n>`, already on the PR branch: don't create another. The
-> Umbraco-CMS source is at <path>; read tag `release-<version>` without changing its checkout. Fix
-> and push (or open the fork PR if you can't push), leave the summary comment, set the label, and
-> report back one row: what you fixed, what you verified, what's left for a human.
+> Umbraco-CMS source is at <path>; read tag `release-<version>` without changing its checkout.
+> Follow the skill through to the summary comment and label, and report back one row: what you
+> fixed, what you verified, what's left for a human.
 
 - **How many at once.** Every reviewer builds the solution and boots sites, so run two or three at a
   time, not the whole queue. They don't share files, so the limit is CPU and memory.

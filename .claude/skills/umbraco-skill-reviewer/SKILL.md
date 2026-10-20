@@ -22,14 +22,14 @@ runtime proof comes from [`umbraco-reference-instance`](../umbraco-reference-ins
 
 ## Ground rules (decided by the maintainers)
 
-- **Reviews and updates run on their own.** Fix it yourself and push to the PR branch; post the
-  summary comment and set the labels without asking first. Don't leave suggestions: they bounce
-  back and forth. One short summary comment (a paragraph and a few bullets at most).
-- **If you can't push** (maintainer edits off), don't wait on the author: open the fixes as a pull
-  request into their branch, so they land in one click.
+- **Reviews and updates run on their own.** Fix it yourself and push to the PR branch (or, when you
+  can't push, open the fixes as a pull request into the author's branch, as
+  [fix-and-push.md](references/fix-and-push.md#cant-push-open-a-pull-request-into-the-authors-branch) describes).
+  Post the summary comment and set the labels without asking first. Don't leave suggestions: they
+  bounce back and forth. One short summary comment (a paragraph and a few bullets at most).
 - **Evals run only when something looks off.** The red flags are in [verify.md](references/verify.md#when-to-run-evals).
-- **The labels are decorative**, so swap them freely: `for-ai-review` (to review), `ai-review-done`,
-  and `ai-review-pending-edits` (fixes waiting in a pull request into the author's branch).
+- **The labels are decorative**, so swap them freely: `for-ai-review`, `ai-review-done` and
+  `ai-review-pending-edits`.
 - **Never approve or merge.** A human merges.
 - **Never claim a check you didn't run.** Not in the comment, not in your report.
 
@@ -45,9 +45,8 @@ Open each reference as you reach its stage. The traps they list are why this ski
 | 4. Push and summarise | [fix-and-push.md](references/fix-and-push.md#push-comment-relabel) | Pushed commits, one summary comment, labels swapped |
 
 For more than one PR, start from [batch.md](references/batch.md): it lists the queue with
-`scripts/review-queue.mjs` and runs one reviewer per PR. `review-queue.mjs --follow-ups` lists PRs
-already reviewed that need finishing: fork PRs the author merged, PRs that became pushable, and PRs
-with new commits since our review.
+`scripts/review-queue.mjs` and runs one reviewer per PR, then finishes PRs reviewed earlier
+(`--follow-ups`).
 
 ## Report back
 

@@ -1,8 +1,5 @@
 # Stages 2 and 4 — Fix on the PR branch, push, summarise
 
-The aim is that the fixes reach the PR without anyone having to do anything: pushed to its branch
-when we can, offered as a one-click pull request into the author's branch when we can't.
-
 ## Set up a worktree on the PR branch
 
 Work in a worktree, never in the user's checkout:
@@ -24,7 +21,7 @@ local branch's push remote. Two things to check before you start:
   push step would then fall back to `origin`, the wrong repository. If it's empty, run
   `gh pr checkout` again. In a batch, set up the worktrees one after another (see [batch.md](batch.md)).
 - **Whether you can push**: a branch in this repo always; a fork only when `maintainerCanModify` is
-  `true`. If you can't, do everything else the same and follow [Can't push](#cant-push-open-a-pull-request-into-the-authors-branch) at the end.
+  `true`. If you can't, everything is the same until the end: see [Can't push](#cant-push-open-a-pull-request-into-the-authors-branch).
 
 Note the PR head you started from (`git rev-parse HEAD`). You'll need it before pushing.
 
@@ -145,7 +142,12 @@ Label it `ai-review-pending-edits` instead of `ai-review-done`
 your red flags call for on the local branch as usual: the fork PR is what lands, so it's what they
 should prove.
 
-Once the author merges the fork PR (or enables maintainer edits, and you push `review/pr-<n>` to
-their branch as in step 2), check the PR head contains your commit, swap the label to
-`ai-review-done`, and delete `review/pr-<n>` from `origin`. `review-queue.mjs --follow-ups` lists
-the PRs where that has happened.
+### Finishing
+
+`review-queue.mjs --follow-ups` reports when a pending PR can be finished:
+
+- `relabel`: the author merged the fork PR, so the PR head contains your commit.
+- `push`: the author enabled maintainer edits. Push `review/pr-<n>` to their branch as in step 2.
+
+Either way, then swap the label to `ai-review-done` and delete `review/pr-<n>` from `origin`
+(`git push origin --delete review/pr-<n>`).
