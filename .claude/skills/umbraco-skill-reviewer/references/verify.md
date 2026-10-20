@@ -8,6 +8,8 @@ run and passed, run and failed (with the output), or not run (and why). Never in
 
 ```bash
 node scripts/validate-skills.mjs --check-index     # run --write-index first if the index is stale
+node scripts/check-skill-links.mjs                 # relative links and #anchors under plugins/
+node scripts/check-skill-frontmatter.mjs
 node scripts/generate-examples.mjs --lint
 node --test scripts/*.test.mjs
 dotnet build Umbraco-CMS.Skills.sln
@@ -69,7 +71,9 @@ discriminate.
 
 When you do run them, keep it cheap: with `umbraco-skill-evaluator`, run **with-skill only**, on the
 evals your change touches, Haiku first (weak models expose a router that isn't followed). Run
-baselines only if the PR has none.
+baselines only if the PR has none, which doubles the runs on a first review. Use `evals.json` as it
+is: don't stop to ask about the prompts, as the evaluator's step 1 suggests, since reviews run on
+their own. With no baseline, ignore the benchmark's delta: it compares against nothing.
 
 - **Which evals a change touches.** An eval whose expectations or fixture you changed; every eval a
   changed reference or asset is used in; and **every** eval when you changed what `SKILL.md`
@@ -95,6 +99,8 @@ baselines only if the PR has none.
   skill's README says to put it at the repo root.
 - **An interrupted run counts as not run.** Don't grade partial output; start it again or report it
   as not run.
+- **Give each grader the exact path to write `grading.json` to.** Without it, graders have saved it in
+  the eval's folder instead of the run's.
 - **Check every `grading.json` before you believe it**: it parses (a grader has written invalid
   JSON), the number of graded expectations equals the number in `evals.json`, the texts match, and
   the summary matches the individual verdicts (graders have reported 9/9 over ten passes, and saved
