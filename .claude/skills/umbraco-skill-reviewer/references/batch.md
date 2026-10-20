@@ -32,8 +32,11 @@ printed for its PR.
 
 ## One reviewer per PR
 
-Each PR gets its own reviewer in its ready worktree, so builds, ports and branches never collide. Give
-each reviewer this skill, the PR number and its worktree:
+Each PR gets its own reviewer in its ready worktree, so builds, ports and branches never collide. A
+worktree is on the PR's branch, which may predate this skill, so point every reviewer at a snapshot of
+the skill taken from `main` (`git archive HEAD .claude/skills | tar -x -C <scratch>`); that also keeps
+your own edits to it from changing under a running reviewer. Give each reviewer the skill, the PR
+number, its worktree and its start head:
 
 > Review PR #<n> with the `umbraco-skill-reviewer` skill (`.claude/skills/umbraco-skill-reviewer/SKILL.md`).
 > Your worktree is `../<repo>-pr-<n>`, already on the PR branch: don't create another. The

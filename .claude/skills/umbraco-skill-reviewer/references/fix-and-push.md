@@ -13,13 +13,15 @@ fork PR we can push to pushes to the fork (never to `origin`), and prints the **
 whether you can push. Note the start head: you'll need it before pushing. If it says `push: NO`,
 everything is the same until the end: see [Can't push](#cant-push-open-a-pull-request-into-the-authors-branch).
 
-## If the PR conflicts with `main`, merge `main` in
+## Merge `main` in
 
-Many skill PRs conflict with `main` in the same few shared files once other skills land. Fix that as
-part of the review, so the PR is actually mergeable:
+Merge `origin/main` whenever the PR is behind it, conflicts or not: you then verify the tree that
+will actually land, and get repo scripts added since (like `scripts/boot-check.mjs`). Many skill PRs
+also conflict with `main` in the same few shared files once other skills land; fixing that is part
+of the review.
 
 ```bash
-git merge origin/main
+git merge origin/main -m "Merge main into <headRefName>"
 ```
 
 - **`AGENTS.md` skills index**: don't hand-merge the generated table. Take either side, then run
@@ -27,8 +29,16 @@ git merge origin/main
 - **`Umbraco-CMS.Skills.sln`, `Umbraco-CMS.Skills/*.csproj`**: these are lists (projects,
   `<ProjectReference>`s). Keep both sides' entries.
 - **Prose in `AGENTS.md` or READMEs**: both sides usually added a paragraph in the same spot. Keep both.
+- **`.sln` blocks**: keeping both sides mechanically can drop an `EndProject`, because the shared one
+  sits outside the conflict hunk. After resolving, every `Project(` line needs its own `EndProject`
+  (count them).
 - **A whole-file conflict** usually means the PR changed the file's line endings (CRLF to LF or back).
   Keep `main`'s line endings and re-apply the PR's actual change on top.
+- **Line endings survive only with care**: resolve with tools that keep them (a text-mode script
+  rewrite turned a CRLF `.csproj` into LF), then check with `file <path>`.
+- **A file `main` deleted** (modify/delete conflict): keep the deletion, and move anything the PR
+  added there to wherever `main` now keeps it (on #20, the PR's note in a `CLAUDE.md` that `main` had
+  removed).
 
 Use a merge, never a rebase: the branch is shared, and a rebase needs a force-push.
 
@@ -61,6 +71,8 @@ It never force-pushes and won't push a fork PR to `origin`.
 
 - **Only comment and relabel after `LANDED` or `FORK PR`.** On #51 a push failed silently and the
   summary comment went up anyway; the script's result line is what prevents that now.
+- **`NOTHING`** with no commits of yours: there was nothing to fix. Still comment (say what you checked)
+  and swap the label to `ai-review-done`.
 - **`MOVED`**: the author pushed while you worked. `git pull` (merge, not rebase), then compare:
 authors often fix the same things in parallel. Drop your change where theirs is equivalent; only
 keep what still adds something, and re-run [verify.md](verify.md) on the result, then run the script
