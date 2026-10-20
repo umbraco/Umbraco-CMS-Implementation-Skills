@@ -1,8 +1,7 @@
 # Backend C# Health Check (Umbraco 17)
 
-Fetch the official
-[Health Check documentation](https://docs.umbraco.com/umbraco-cms/run-in-production/infrastructure-and-ops/health-check.md)
-first, then start from [`assets/RobotsTxtHealthCheck.cs`](../assets/RobotsTxtHealthCheck.cs) and
+Fetch the official Health Check documentation linked from [SKILL.md](../SKILL.md#backend-c) first,
+then start from [`assets/RobotsTxtHealthCheck.cs`](../assets/RobotsTxtHealthCheck.cs) and
 [`assets/en-US.xml`](../assets/en-US.xml). The docs' sample doesn't compile on 17 as written; the
 corrections are at the end of this page.
 

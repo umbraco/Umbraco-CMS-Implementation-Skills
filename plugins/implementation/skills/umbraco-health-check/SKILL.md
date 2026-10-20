@@ -36,6 +36,10 @@ Kubernetes, load-balancer, liveness, or readiness probes, skip this skill and us
 
 ## Backend C#
 
+Fetch the official
+[Health Check documentation](https://docs.umbraco.com/umbraco-cms/run-in-production/infrastructure-and-ops/health-check.md),
+and link the official pages you relied on in your answer.
+
 **Before writing any code, open [references/backend-health-check.md](references/backend-health-check.md)
 and start from [`assets/RobotsTxtHealthCheck.cs`](assets/RobotsTxtHealthCheck.cs) and its language
 file [`assets/en-US.xml`](assets/en-US.xml).** The reference covers choosing between
