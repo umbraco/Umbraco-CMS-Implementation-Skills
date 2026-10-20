@@ -1,5 +1,5 @@
 {
-  "_comment": "How scripts/generate-examples.py builds this example from the skill's assets/. host = which reference site loads it: 'blank' is the Clean-less host, because the maintenance view is a template + config approach and Clean ships its own competing views. namespace = the example's identity. assets = the chosen-approach files. requires is omitted because this approach needs no particular content node.",
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = which reference site loads it: 'blank' is the Clean-less host, because the maintenance view is a template + config approach and Clean ships its own competing views. namespace = the example's identity. assets = the chosen-approach files. requires is omitted because this approach needs no particular content node.",
   "host": "blank",
   "namespace": "Umbraco.Skills.Examples.CustomMaintenancePage",
   "assets": [

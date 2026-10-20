@@ -30,17 +30,12 @@ public abstract class ContentPreconditionsTestsBase
     /// <summary>Direct children of the site root, as (name, contentTypeAlias) pairs.</summary>
     private async Task<List<(string Name, string ContentType)>> GetRootChildrenAsync()
     {
-        HttpResponseMessage response =
-            await Client.GetAsync("/umbraco/delivery/api/v2/content?fetch=children:/&take=100");
+        HttpResponseMessage response = await Client.GetAsync(RootChildrenQuery);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK),
             "the Delivery API must answer — it's how these preconditions are read");
 
         using JsonDocument doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-        return doc.RootElement.GetProperty("items").EnumerateArray()
-            .Select(item => (
-                Name: item.GetProperty("name").GetString() ?? string.Empty,
-                ContentType: item.GetProperty("contentType").GetString() ?? string.Empty))
-            .ToList();
+        return ParseRootChildren(doc.RootElement);
     }
 
     [Test]

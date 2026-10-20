@@ -21,6 +21,20 @@ public static class ContentPreconditions
 
     public static readonly string[] KnownHosts = [CleanHost, BlankHost];
 
+    /// <summary>
+    /// The Delivery API query for the site root's direct children. Shared by the preconditions and by
+    /// any host fixture that waits for them, so the wait and the assertion always read the same thing.
+    /// </summary>
+    public const string RootChildrenQuery = "/umbraco/delivery/api/v2/content?fetch=children:/&take=100";
+
+    /// <summary>Parses a <see cref="RootChildrenQuery"/> response into (name, contentTypeAlias) pairs.</summary>
+    public static List<(string Name, string ContentType)> ParseRootChildren(JsonElement root) =>
+        root.GetProperty("items").EnumerateArray()
+            .Select(item => (
+                Name: item.GetProperty("name").GetString() ?? string.Empty,
+                ContentType: item.GetProperty("contentType").GetString() ?? string.Empty))
+            .ToList();
+
     /// <summary>A content precondition one skill's example declared.</summary>
     public record ContentRequirement(string Skill, string Kind, string Value)
     {

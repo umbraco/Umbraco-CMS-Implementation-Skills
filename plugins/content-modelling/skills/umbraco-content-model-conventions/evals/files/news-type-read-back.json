@@ -1,0 +1,63 @@
+{
+  "id": "5d1f6f0a-3b0e-4a57-9c1d-6a2b8e4f7c10",
+  "alias": "news",
+  "name": "News",
+  "description": null,
+  "icon": "icon-document",
+  "allowedAsRoot": true,
+  "variesByCulture": false,
+  "variesBySegment": false,
+  "collection": null,
+  "isElement": false,
+  "allowedTemplates": [],
+  "defaultTemplate": null,
+  "allowedDocumentTypes": [],
+  "compositions": [],
+  "containers": [
+    { "id": "0b6d7a51-0c1e-4f7e-8f55-1d5a2c9e0a01", "parent": null, "name": "Content", "type": "Tab", "sortOrder": 0 },
+    { "id": "0b6d7a51-0c1e-4f7e-8f55-1d5a2c9e0a02", "parent": null, "name": "SEO", "type": "Tab", "sortOrder": 1 }
+  ],
+  "properties": [
+    {
+      "id": "7a9c2f10-51d4-4d0b-9b0a-3e1f5c7d9a01",
+      "container": { "id": "0b6d7a51-0c1e-4f7e-8f55-1d5a2c9e0a01" },
+      "sortOrder": 0,
+      "alias": "title",
+      "name": "Title",
+      "description": null,
+      "dataType": { "id": "0cc0eba1-9960-42c9-bf9b-60e150b429ae" },
+      "validation": { "mandatory": false, "mandatoryMessage": null, "regEx": null, "regExMessage": null }
+    },
+    {
+      "id": "7a9c2f10-51d4-4d0b-9b0a-3e1f5c7d9a02",
+      "container": { "id": "0b6d7a51-0c1e-4f7e-8f55-1d5a2c9e0a01" },
+      "sortOrder": 1,
+      "alias": "bodyText",
+      "name": "Body Text",
+      "description": null,
+      "dataType": { "id": "ca90c950-0aff-4e72-b976-a30b1ac57dad" },
+      "validation": { "mandatory": false, "mandatoryMessage": null, "regEx": null, "regExMessage": null }
+    },
+    {
+      "id": "7a9c2f10-51d4-4d0b-9b0a-3e1f5c7d9a03",
+      "container": { "id": "0b6d7a51-0c1e-4f7e-8f55-1d5a2c9e0a02" },
+      "sortOrder": 2,
+      "alias": "sEOTitle",
+      "name": "SEO Title",
+      "description": null,
+      "dataType": { "id": "0cc0eba1-9960-42c9-bf9b-60e150b429ae" },
+      "validation": { "mandatory": false, "mandatoryMessage": null, "regEx": null, "regExMessage": null }
+    },
+    {
+      "id": "7a9c2f10-51d4-4d0b-9b0a-3e1f5c7d9a04",
+      "container": { "id": "0b6d7a51-0c1e-4f7e-8f55-1d5a2c9e0a02" },
+      "sortOrder": 3,
+      "alias": "searchEngines",
+      "name": "Search Engines",
+      "description": null,
+      "dataType": { "id": "92897bc6-a5f3-4ffe-ae27-f2e7e33dda49" },
+      "validation": { "mandatory": false, "mandatoryMessage": null, "regEx": null, "regExMessage": null }
+    }
+  ],
+  "cleanup": { "preventCleanup": false, "keepAllVersionsNewerThanDays": null, "keepLatestVersionPerDayForDays": null }
+}

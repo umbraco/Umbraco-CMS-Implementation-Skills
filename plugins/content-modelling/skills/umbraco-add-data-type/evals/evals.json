@@ -1,0 +1,51 @@
+{
+  "skill_name": "umbraco-add-data-type",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). The article summary on Article Page needs a 200 character limit because it gets truncated on listing cards. Easiest is to just set maxChars to 200 on the Textarea data type it uses. Can you sort that out?",
+      "expected_output": "The agent refuses to change the built-in Textarea, because five properties use it, and specifies a purpose-built Text Area data type with a 200-character limit in Text Area/, then an Update of articlePage pointing summary at it. It notes the value format is the same so content is kept, but warns that existing summaries over 200 characters will fail validation when next saved. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The agent does not change the built-in `Textarea` data type, and says it is used by other properties (e.g. eventPage.summary, author.bio) that would change too",
+        "A data type requirements page exists under docs/umbraco-schema/Data-Types/Text-Area/ for a new data type using `Umbraco.TextArea`, named `<Subject> Text Area` (e.g. `Summary Text Area` or `Article Summary Text Area`), with a maximum of 200 characters in its Configuration",
+        "The limit is set in the data type's configuration, not as property-level validation on the summary property",
+        "The change moves `articlePage`'s `summary` property to the new data type (an Update requirements page or a changeset checklist item), and the agent says the stored text is kept because the value format does not change",
+        "The agent warns that existing summaries longer than 200 characters will fail validation (or need shortening) the next time they are saved",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created, changed or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17, no MCP here and the site isn't running, so go on what I tell you. On our Event Page (eventPage) I want two things. First, a new Event Type field where editors pick exactly one of Conference, Webinar or Workshop. Second, there's an existing Location field (alias location, a Textstring) where editors have typed venue names on about 80 events; switch it to a content picker that points at our Venue data items instead. The data types we have are just Umbraco's built-in ones. One language. Requirements docs go in docs/umbraco-schema/ (only a README there). Write it up with the backoffice steps.",
+      "expected_output": "The agent specifies a purpose-built data type for the event type (Dropdown or Radio Button List) holding the three values, named `Event Type <Editor kind>` in its editor-kind folder, used by a new eventType property. It refuses to switch location in place from text to a picker, because the 80 typed values cannot be read by a picker, and proposes a new picker property alongside (with migration as a separate code task). The existing types are the user's word; the apply is a manual walkthrough after approval; nothing is claimed as done.",
+      "files": [],
+      "expectations": [
+        "A data type requirements page exists under docs/umbraco-schema/Data-Types/ using `Umbraco.DropDown.Flexible` (single) or `Umbraco.RadioButtonList`, whose configuration lists Conference, Webinar and Workshop, named `Event Type <Editor kind>` (e.g. `Event Type Dropdown` or `Event Type Radio Button List`) and filed in a folder named after its editor kind",
+        "The new property on eventPage has a camelCase alias such as `eventType` and uses that data type",
+        "The agent says changing `location` from a Textstring to a content picker would leave the existing typed values unreadable, and does not plan to change that property's data type in place",
+        "The agent proposes a new picker property alongside `location` (or a separate migration step) for the venue link, rather than converting the existing one",
+        "eventPage and the Venue items are referenced as existing on the user's word (plain text or flagged Exists), and the agent says they were not read from the site",
+        "Every requirements page and the changeset have the status `proposed`; the agent asks for approval, says the apply is a manual backoffice walkthrough, and produces no uSync, package.xml or C# files",
+        "The agent does not claim anything was created, applied or verified; if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. Two new fields: a 'Read more' link on the Hero block, and a Published Date on Article Page (just the date, no time). Make whatever data types they need. For the link, just use a Textstring for the URL, it's simpler.",
+      "expected_output": "The agent reuses the existing Multi URL Picker (single) for the hero link rather than a Textstring or a new data type, explaining why a link picker is better. For the date it chooses a date-only editor (a new data type in Date Picker/ using Umbraco.DateOnly) or reuses the existing Date Picker with a reason. The hero property goes in the Content group with a hundreds sort, the article property on the Content tab. Everything is proposed and nothing is claimed as done.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The hero link property uses the existing `Multi URL Picker (single)` data type, and no new link data type requirements page is written",
+        "The agent does not use Textstring for the link and explains why a URL picker is better (e.g. it follows moved pages, stores link text and target)",
+        "The published date property uses a date editor, either a new data type using `Umbraco.DateOnly` filed under Data-Types/Date-Picker/ and named by the conventions (a purpose name such as `Published Date Picker`, or a qualified generic name such as `Date Picker (date only)`), or the existing `Date Picker` with a stated reason; not a Textstring",
+        "The new hero property is on the hero element with Tab —, Group `Content`, Group Sort 0 and a sort in hundreds (e.g. 300); the new article property is on the `Content` tab (Tab Sort 100) with a sort in hundreds",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    }
+  ]
+}

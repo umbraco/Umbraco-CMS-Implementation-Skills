@@ -38,11 +38,49 @@ public class BlankSiteFixture
         // that query — the content preconditions — sees an empty site and fails. Front-end routing goes
         // through the published cache instead and is already consistent, which is exactly why the
         // symptom looked so selective: every rendering test passed while the preconditions failed.
+        //
+        // "Any child is queryable" is not enough: several examples seed and publish on the same startup
+        // signal, and the index can answer with some of their children before others. So wait for every
+        // Document Type alias the manifests DECLARE at root — exactly what the preconditions then assert.
+        //
+        // That second wait is BEST-EFFORT. A declared alias that never appears (a typo, an unresolved
+        // <Placeholder>, a node one level too deep) must not stall the boot and fail every test in the
+        // assembly: after a bounded wait we carry on, and the precondition tests then fail for that one
+        // skill, naming it and listing the root children that do exist.
         await Factory.WaitUntilInstalledAsync(
             Client,
-            root => root.TryGetProperty("total", out System.Text.Json.JsonElement total)
-                    && total.GetInt32() > 0,
-            url: "/umbraco/delivery/api/v2/content?fetch=children:/&take=1");
+            root => ContentPreconditions.ParseRootChildren(root).Count > 0,
+            url: ContentPreconditions.RootChildrenQuery);
+
+        string[] declaredAliases = ContentPreconditions.DeclaredRequirements(ContentPreconditions.BlankHost)
+            .Where(requirement => requirement.Kind == "documentTypeAliasAtRoot")
+            .Select(requirement => requirement.Value)
+            .Where(alias => !alias.StartsWith('<')) // unresolved; its precondition test reports it
+            .ToArray();
+        string[] missing = declaredAliases;
+
+        try
+        {
+            await Factory.WaitUntilInstalledAsync(
+                Client,
+                root =>
+                {
+                    var indexed = ContentPreconditions.ParseRootChildren(root)
+                        .Select(child => child.ContentType)
+                        .ToHashSet();
+                    missing = declaredAliases.Where(alias => !indexed.Contains(alias)).ToArray();
+                    return missing.Length == 0;
+                },
+                timeout: TimeSpan.FromSeconds(60),
+                url: ContentPreconditions.RootChildrenQuery);
+        }
+        catch (TimeoutException)
+        {
+            TestContext.Progress.WriteLine(
+                $"{HostName}: declared root Document Types never became queryable: "
+                + $"{string.Join(", ", missing)}. Continuing; the content precondition tests report "
+                + "which skill declared them.");
+        }
     }
 
     [OneTimeTearDown]

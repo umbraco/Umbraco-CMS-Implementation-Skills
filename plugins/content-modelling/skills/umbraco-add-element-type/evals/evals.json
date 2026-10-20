@@ -1,0 +1,69 @@
+{
+  "skill_name": "umbraco-add-element-type",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). I need a Testimonial element: a quote, the person's name, their job title and a photo. No style options, we style it in CSS, so don't bother with any settings. Call it TestimonialElement and give it two tabs, Content and Meta, with the name and job title under Meta. Go ahead and create it.",
+      "expected_output": "The agent specifies one content element `testimonial` (plain noun, no Element or Block suffix) in Elements/ with no tabs and one Content group at sort 0, holding the four fields with short generic aliases (quote, fullName, jobTitle, image or photo; never the reserved `name`) on existing data types. It creates no settings model or settings composition, does not register the element anywhere and names registration as a follow-up. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "An element requirements page exists at docs/umbraco-schema/Document-Types/Elements/Testimonial.md with the alias `testimonial` (not `testimonialElement`, `testimonialBlock` or `TestimonialElement`)",
+        "Every property row on the element has Tab — and Group `Content` with Group Sort 0; there is no Meta tab or second group, and the agent explains that an element has no tabs",
+        "The element's property aliases are short and generic (e.g. `quote`, `fullName`, `jobTitle`, `image` or `photo`), not prefixed with testimonial and never a reserved alias such as `name`, with sorts in hundreds, using existing data types such as Textarea, Textstring and Image Media Picker",
+        "No settings model or settings composition requirements page is written, and no colour, spacing or alignment field appears on the element",
+        "The element is not registered in the Main Content Block Grid in this change; the agent names that registration (umbraco-configure-block-editor or an equivalent step) as a follow-up",
+        "The apply plan creates the element and then moves it into Elements/, because create-element-type has no folder parameter",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. Add a Video element: a video URL, a caption, and a true/false for autoplay. Just the element for now, we'll sort out where it goes later. Alias it `video` to keep it simple.",
+      "expected_output": "The agent names the element `videoBlock`, explaining that `video` clashes with the site's Video media type, and keeps everything else plain: Elements/, one Content group, short aliases, the URL as a Multi URL Picker (max 1) or Textstring with a reason, and the boolean with a predicate alias such as `autoplays` or `isAutoplay`. It creates no settings model, registers nothing, and stops for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The element's alias is `videoBlock` (file docs/umbraco-schema/Document-Types/Elements/VideoBlock.md), not `video`, and the agent explains that `video` clashes with the existing Video media type",
+        "Every property row has Tab — and Group `Content` with Group Sort 0, and the element sits in Elements/ (not Elements/Settings/ or Elements/Compositions/)",
+        "The autoplay property has a predicate alias (e.g. `autoplays`, `isAutoplay` or `shouldAutoplay`) on the True/false data type, not a noun alias such as `autoplay`",
+        "The video URL field uses a picker or URL editor that exists on the site (e.g. the Multi URL Picker or Single URL Picker) or the agent gives a reason for a Textstring; the caption is a Textstring or Textarea",
+        "No settings model, settings composition or Block Grid change is part of this changeset; registration is named as a later step",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md has the read results (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. Our designers want a spacing option for blocks: none, small, medium or large padding above and below. Add it as a settings composition only, don't touch the settings models yet. Put the dropdown on a Content tab of the composition so editors see it first. Just do it.",
+      "expected_output": "The agent specifies `spacingSettingsComposition` in Elements/Compositions/ with its one field on the Style tab (sort 50) and no group, not on a Content tab, backed by a purpose-built dropdown data type (e.g. Spacing Dropdown in a Dropdown/ folder) holding the four values that joins the changeset first. It does not change blockSettings or titledBlockSettings, and names composing it into them as the follow-up for umbraco-add-block or umbraco-change-document-type. It explains the Style tab and stops for approval; nothing is claimed as done.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A settings composition requirements page exists under docs/umbraco-schema/Document-Types/Elements/Compositions/ with an alias ending in SettingsComposition (e.g. `spacingSettingsComposition`), Kind Element Type, and Compositions —",
+        "Its spacing property sits on the tab `Style` with Tab Sort 50 and no group (Group — and Group Sort —), not on a `Content` tab, and the agent explains that settings compositions use the Style or Settings tab",
+        "The four spacing choices are held in a purpose-built data type with its own requirements page under docs/umbraco-schema/Data-Types/ in a folder named after its editor kind (e.g. Dropdown/), ordered before the settings composition in the changeset",
+        "No Update page or checklist item is written for `blockSettings` or `titledBlockSettings`, and the agent names composing the new settings composition into the settings models as a follow-up (umbraco-add-block or umbraco-change-document-type)",
+        "No spacing field is added to any content element (hero, richText) and no new settings model is created",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Umbraco 17. No MCP on this machine and the site isn't running, so work from what I tell you. We have an Elements folder with a Rich Text element (richText), a Main Content Block Grid that registers richText, and the built-in data types. Media types are Image, File and Folder. Requirements docs go in docs/umbraco-schema/ (only a README there). Create an element type for a statistic: a big number, a short label and an optional icon. Then it's a block editors can use, right? Write it up and give me the backoffice steps.",
+      "expected_output": "The agent specifies one content element `statistic` in Elements/ with one Content group sorted 0 and short generic aliases, reusing built-in data types, and no settings model. It explains that an element type on its own is not a block: it becomes one only when it is registered in a block area such as the Main Content Block Grid, which it names as the follow-up (umbraco-add-block or umbraco-configure-block-editor) rather than claiming editors can use it. Existing parts are flagged Exists on the user's word. The apply is a manual walkthrough after approval.",
+      "files": [],
+      "expectations": [
+        "An element requirements page exists at docs/umbraco-schema/Document-Types/Elements/ with a plain-noun alias such as `statistic` (no Block suffix, since nothing clashes), every property on Group `Content`, Group Sort 0, Tab —",
+        "The property aliases are short and generic (e.g. `number` or `value`, `label`, `icon`), not prefixed with statistic, and the icon field is not mandatory",
+        "The agent explains that an element type alone is not a block, and that editors can use it only once it is registered in a block area (the Main Content Block Grid); it names that registration as the follow-up (umbraco-add-block or umbraco-configure-block-editor) and does not claim the element is already usable as a block",
+        "No settings model or settings composition is created, because no style options were asked for",
+        "The Elements folder, Rich Text and the Main Content Block Grid are flagged Exists or left unchanged, and the agent says these come from the user's description, not a read of the site",
+        "The agent gives or offers a manual backoffice walkthrough to follow after approval that creates the element and then moves it into Elements, and produces no uSync, package.xml, C# or Razor files",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site; if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    }
+  ]
+}

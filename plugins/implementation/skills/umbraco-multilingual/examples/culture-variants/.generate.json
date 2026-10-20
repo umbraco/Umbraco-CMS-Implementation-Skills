@@ -1,0 +1,10 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'blank' (site 2): languages, culture-variant Document Types, domains and templates are content/config, and site 2 has no starter kit whose own templates could satisfy the assertions. namespace is unused by these assets (a manifest, two partials — no .cs) but is how every manifest declares its example's identity. assets = the language + dictionary manifest and both partials, installed verbatim by ExampleMigrations.cs. No `requires`: this example seeds a SUBTREE under site 2's shared root (see ExampleHostWiring.cs), so there is no root-level alias to assert.",
+  "host": "blank",
+  "namespace": "Umbraco.Skills.Examples.Multilingual.CultureVariants",
+  "assets": [
+    "multilingual-package.xml",
+    "languageSwitcher.cshtml",
+    "hreflangLinks.cshtml"
+  ]
+}

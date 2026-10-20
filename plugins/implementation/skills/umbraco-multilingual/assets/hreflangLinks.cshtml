@@ -1,0 +1,53 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using System.Globalization
+@using Umbraco.Cms.Core.Models
+@using Umbraco.Cms.Core.PublishedCache
+@inject IDefaultCultureAccessor DefaultCultureAccessor
+@*
+    hreflang alternates for the current page. Render inside <head>:
+        @await Html.PartialAsync("hreflangLinks")
+
+    - One <link rel="alternate"> per culture this page is PUBLISHED in, the current one included.
+    - Absolute URLs, as search engines require. With relative domains (/en, /da) the host comes from
+      the current request.
+    - x-default points at the default language's version; omitted if this page isn't published in it.
+    - Culture codes are normalised through CultureInfo (da-DK), not emitted in whatever case the
+      cache stored them. A code the runtime can't resolve (e.g. InvariantGlobalization) is emitted
+      as stored rather than failing the page.
+    - Renders nothing for invariant pages or pages published in only one culture.
+*@
+@functions {
+    private static string Normalise(string culture)
+    {
+        try
+        {
+            return CultureInfo.GetCultureInfo(culture).Name;
+        }
+        catch (CultureNotFoundException)
+        {
+            return culture;
+        }
+    }
+}
+@{
+    var alternates = Model.Cultures.Keys
+        .Where(culture => !string.IsNullOrEmpty(culture))
+        .Select(culture => (Culture: Normalise(culture), Url: Model.Url(culture, UrlMode.Absolute)))
+        .Where(alternate => !string.IsNullOrEmpty(alternate.Url) && alternate.Url != "#")
+        .ToList();
+
+    string defaultCulture = DefaultCultureAccessor.DefaultCulture;
+    var xDefault = alternates.FirstOrDefault(alternate =>
+        string.Equals(alternate.Culture, defaultCulture, StringComparison.OrdinalIgnoreCase));
+}
+@if (alternates.Count > 1)
+{
+    foreach (var alternate in alternates)
+    {
+        <link rel="alternate" hreflang="@alternate.Culture" href="@alternate.Url" />
+    }
+    if (xDefault.Url is not null)
+    {
+        <link rel="alternate" hreflang="x-default" href="@xDefault.Url" />
+    }
+}

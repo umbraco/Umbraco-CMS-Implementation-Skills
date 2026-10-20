@@ -1,0 +1,85 @@
+{
+  "skill_name": "umbraco-add-block",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). Add an FAQ block: a heading, then question/answer pairs editors can add and reorder, at least one required. It needs the usual background colour option like our other blocks. Call it FAQBlock, give it two tabs (Content and Settings) so editors aren't overwhelmed, and put the background colour straight on the FAQ element so it's all in one place. Go ahead and create it.",
+      "expected_output": "The agent specifies a plain-noun element `faq` (no Block suffix, acronym collapsed) in Elements/ with no tabs and one Content group, a child element `faqItem` with short generic aliases, and a Block List data type `FAQ Items` in Block List/ with a minimum of one, ordered child then Block List then parent. It puts no colour field on the element and reuses the existing titledBlockSettings settings model rather than creating a new one. Registration in the Main Content Block Grid is left as a follow-up. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "An element requirements page exists at docs/umbraco-schema/Document-Types/Elements/ with the alias `faq` (not `fAQBlock`, `faqBlock` or `FAQBlock`), and every one of its property rows has Tab — and Group `Content` with Group Sort 0 (no Content/Settings tabs)",
+        "A child element requirements page exists in docs/umbraco-schema/Document-Types/Elements/ with an alias ending in Item (e.g. `faqItem`), whose property aliases are short and generic (e.g. `question`/`answer` or `title`/`content`), not prefixed with faq",
+        "A Block List data type requirements page exists under docs/umbraco-schema/Data-Types/Block-List/ named as the plural of the child (e.g. `FAQ Items`), registering the child element, with a minimum of 1 in its amount configuration",
+        "No background colour property appears on the faq element; the agent reuses an existing settings model (`titledBlockSettings` or `blockSettings`) instead of creating a new settings model or settings composition",
+        "The changeset's apply order creates the child element before the Block List data type, and the Block List before the faq element, and includes moving each element into Elements/",
+        "The agent does not add the block to the Main Content Block Grid in this change and names that registration as a follow-up step",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17. No MCP on this machine and the site's not running, so work from what I tell you. We want an Image block: an image, an optional caption, and an alignment option (left, centre, right). It should also get the background colour and anchor options every block has. On the site we already have: an Elements folder with Compositions and Settings sub-folders; settings compositions backgroundColourSettingsComposition (Style tab, sort 50) and anchorSettingsComposition (Settings tab, sort 100); a shared settings model blockSettings made of those two; and the built-in data types. There's also a media type called Image. Requirements docs go in docs/umbraco-schema/ (only a README there). Write it up and give me the backoffice steps.",
+      "expected_output": "The agent names the element `imageBlock` because `image` clashes with the Image media type. The content element holds only the image and caption. Alignment is a style option the shared model lacks, so it adds a new alignment settings composition (Elements/Compositions/, Style tab 50, no group) with its own dropdown-style data type, and a bespoke settings model imageBlockSettings (Elements/Settings/, no own properties) composing the two existing settings compositions plus the new one. Existing parts are the user's word. The apply is a manual walkthrough after approval; nothing is claimed as done.",
+      "files": [],
+      "expectations": [
+        "The content element's alias is `imageBlock` (not `image`), and the agent explains this is to avoid a clash with the Image media type",
+        "The content element's own properties are the image and caption only (no alignment or colour field), each with Tab —, Group `Content` and Group Sort 0",
+        "A new settings composition requirements page exists under docs/umbraco-schema/Document-Types/Elements/Compositions/ with an alias ending in SettingsComposition (e.g. `alignmentSettingsComposition`), its field on the `Style` tab with Tab Sort 50 and no group",
+        "A settings model requirements page exists under docs/umbraco-schema/Document-Types/Elements/Settings/ with an alias ending in Settings (e.g. `imageBlockSettings`), no own properties, and Compositions listing backgroundColourSettingsComposition, anchorSettingsComposition and the new alignment settings composition",
+        "The alignment choices (left, centre, right) are held in a purpose-built data type with its own requirements page under docs/umbraco-schema/Data-Types/ in a folder named after its editor kind",
+        "The existing settings compositions and settings model are flagged Exists and the agent says they come from the user's description, not a read of the site; the agent says the apply will be a manual backoffice walkthrough and produces no uSync, package.xml, C# or Razor files",
+        "Every requirements page and the changeset have the status `proposed`, the agent asks for approval, and it does not claim anything was created or verified; if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Keep requirements docs in docs/umbraco-schema/. We need a Team block for the About page: a heading, then up to 6 team members, each with a photo, name, job title and LinkedIn link. To keep it simple, just give the block fixed fields for 6 members (member1Photo, member1Name and so on). Then add the block to the Main Content Block Grid so editors can use it straight away.",
+      "expected_output": "The agent rejects numbered fields in favour of a repeater: a parent element (e.g. `team`) with `title` and `items`, a child element ending Item with short aliases (image, fullName, jobTitle, link; never the reserved `name`), and a Block List named as the child's plural with a maximum of 6. It reuses a shared settings model (titledBlockSettings, since the block has a title). Because the user named the Main Content Block Grid, the block is registered there in the same changeset as an Update of that data type that keeps hero and richText. Everything is proposed, the create-then-move for elements is planned, and nothing is claimed as done.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The agent does not specify numbered fields (no `member1Photo`-style aliases) and explains that repeated members belong in a Block List of child elements",
+        "A child element requirements page exists in docs/umbraco-schema/Document-Types/Elements/ with an alias ending in Item (or Row), whose property aliases are short and generic (e.g. `image`, `fullName`, `jobTitle`, `link`), not prefixed with member or team and never a reserved alias such as `name`",
+        "A Block List data type requirements page exists under docs/umbraco-schema/Data-Types/Block-List/, named as the plural of the child element, with a maximum of 6 in its amount configuration",
+        "The parent element has short generic aliases for its own fields (e.g. `title` and `items`) and one `Content` group with Group Sort 0 and no tab",
+        "The Main Content Block Grid requirements page under docs/umbraco-schema/Data-Types/Block-Grid/ is an Update in the same changeset that adds the team block with its settings model (`titledBlockSettings` or `blockSettings`) and keeps the existing `hero` and `richText` registrations with their settings elements; it is ordered after the team element and the agent does not create a second Block Grid",
+        "The apply plan (changeset checklist or apply notes) creates each element and then moves it into Elements/, because create-element-type has no folder parameter",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/no-settings-site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). Add a Call to Action block: a heading, a short text and a button link. Editors need to pick a background colour for it. Put it in the Main Content Block Grid.",
+      "expected_output": "The site has no settings models, so the agent creates a shared settings model (e.g. `blockSettings`) rather than a bespoke callToActionSettings, built from a new background colour settings composition (Style tab 50) backed by a purpose-built colour picker data type, and says the next block can reuse it. The content element `callToAction` holds only content. The Main Content Block Grid is updated to register it with the shared settings model, keeping richText. Leaf first, one changeset, proposed.",
+      "files": [
+        "evals/files/mcp/no-settings-site-context.md"
+      ],
+      "expectations": [
+        "A content element requirements page exists in docs/umbraco-schema/Document-Types/Elements/ with a plain-noun alias such as `callToAction` (not `callToActionBlock`), holding only content fields (heading, text, link) in one `Content` group, with no colour field",
+        "A settings model requirements page exists under docs/umbraco-schema/Document-Types/Elements/Settings/ with a shared, generic alias (e.g. `blockSettings` or `titledBlockSettings`) rather than a block-specific one such as `callToActionSettings`, with no own properties, and the agent says other blocks can reuse it",
+        "A settings composition requirements page exists under docs/umbraco-schema/Document-Types/Elements/Compositions/ for the background colour (alias ending in SettingsComposition), its field on the `Style` tab with Tab Sort 50 and no group",
+        "A purpose-built colour picker data type has its own requirements page under docs/umbraco-schema/Data-Types/ in a folder named after its editor kind (e.g. `Color-Picker/`), ordered before the settings composition",
+        "The Main Content Block Grid is updated (an Update requirements page or checklist item) to register the new block with the shared settings model while keeping the existing `richText` entry",
+        "The changeset orders the work leaf first: data type, folders, settings composition, settings model, content element, then the Block Grid update",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. Add a Quote block to the Main Content Block Grid: the quote and who said it. It always looks the same, so editors don't need any styling options for it.",
+      "expected_output": "The agent specifies a content element `quote` with short generic aliases in one Content group and no settings element: settings are optional, and the block has no style options, so it neither reuses blockSettings nor creates a settings model. The Main Content Block Grid is updated to register quote with settings —, keeping hero and richText. Proposed, stops for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A content element requirements page exists in docs/umbraco-schema/Document-Types/Elements/ with a plain-noun alias such as `quote`, with short generic aliases (e.g. `quote` or `text`, and `attribution` or `author`) in one `Content` group with Group Sort 0 and no tab",
+        "No settings model or settings composition requirements page is written, and the block is registered with no settings element (—) rather than with blockSettings or titledBlockSettings; the agent says settings are optional and this block has no style options",
+        "The Main Content Block Grid is updated (an Update requirements page or checklist item) to add the quote block and keeps the existing `hero` and `richText` entries with their settings models",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "skill_name": "umbraco-add-site-settings",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). We need somewhere for the logo, the footer text, our social links (Facebook, Twitter/X, LinkedIn, Instagram) and a Google Analytics tracking ID. The Home Page already has a Settings tab with some of this, so just add the rest there and give each social network its own URL text field.",
+      "expected_output": "The agent extends the existing siteSettings type (an Update) instead of adding to the home page, keeping its tabs numbered 0 to 9 in reading order, with the social links as a URL picker or repeater rather than one text field per network. It does not delete the home page's existing settings fields, because their values would be lost without migration, and records moving them as a later step. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The change is an Update of the existing `siteSettings` type (requirements page at docs/umbraco-schema/Document-Types/SiteSettings.md with the action Update, or equivalent), not new fields on homePage and not a second settings type",
+        "Every property row on the siteSettings requirements doc has a Tab Sort between 0 and 9, the existing General (0) and Footer (1) tabs keep their sorts, and new tabs continue in reading order",
+        "The social links are specified as a URL picker (e.g. Multi URL Picker) or a Block List repeater, not as one Textstring per network",
+        "The agent does not delete the home page's existing Settings fields in this change, and says moving their values to site settings is a content migration or a later step",
+        "siteSettings keeps Allowed at root Yes with no template, no allowed children and no compositions",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17, no MCP on this laptop and the site isn't running, so go on what I tell you. It's a new site with a Home Page (homePage) allowed at root and nothing for settings yet. The site is in two languages, English and Danish. We need site settings for: site name, logo, main navigation (the pages in the top menu), footer copyright text, cookie banner text and a tracking ID. Requirements docs go in docs/umbraco-schema/ (only a README there). Write it up with the backoffice steps.",
+      "expected_output": "The agent specifies a siteSettings type at the Document Types root, allowed at root, with no template, children or compositions, and its own tabs numbered 0 to 9 in reading order. It addresses the two languages: the type varies by culture and the text fields (copyright, cookie banner, possibly site name) vary, while the logo, navigation and tracking id need not. Main navigation is a page picker. The home page is the user's word; the apply is a manual walkthrough after approval; nothing is claimed as done.",
+      "files": [],
+      "expectations": [
+        "A requirements page exists at docs/umbraco-schema/Document-Types/SiteSettings.md with alias `siteSettings`, Allowed at root Yes, and Default template, Allowed children and Compositions all —",
+        "Every property row has a Tab Sort between 0 and 9 (not the global sorts such as 100 or 600), in the order an editor reads them",
+        "The agent addresses the two languages: it sets or asks about Vary by culture, and says which fields should vary (e.g. copyright and cookie banner text) and which should not (e.g. tracking id)",
+        "Main navigation uses a page picker data type (e.g. a multinode tree picker or Multi URL Picker), not a text field",
+        "The home page is referenced on the user's word and the agent says nothing was read from the site; it says the apply is a manual backoffice walkthrough and produces no uSync, package.xml or C# files",
+        "Every requirements page and the changeset have the status `proposed`; the agent asks for approval and does not claim anything was created or verified; if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. We're adding a microsite to this install with its own home page, logo and footer. Can you add a Microsite Settings document type for it, copying the fields from Site Settings?",
+      "expected_output": "The agent does not create a second settings type. It explains that each site gets its own Site Settings content node of the same siteSettings type, and that how code finds the right node per site (for example a picker on each home page, or a site folder) is agreed with the developer. Any schema change it proposes is minimal and proposed; nothing is claimed as done.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The agent does not create a `micrositeSettings` (or similar second) settings document type, and explains that the microsite gets its own content node of the existing `siteSettings` type",
+        "The agent explains that code must find the right settings node per site (e.g. a picker from each home page to its settings, a site folder, or matching by root) and that this choice is made with the developer",
+        "The agent ends its reply by asking the user something: which per-site lookup to use, or approval of a changeset whose requirements pages (for example a settings picker on homePage) are all `proposed`. It marks nothing `approved` or `applied` and applies nothing in this turn",
+        "The agent does not claim that anything was created, copied or verified on the site"
+      ]
+    }
+  ]
+}

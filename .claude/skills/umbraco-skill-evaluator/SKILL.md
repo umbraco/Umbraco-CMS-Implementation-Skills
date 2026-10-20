@@ -20,8 +20,8 @@ A focused, low-cost skill for evaluating skills. Assumes the skill already exist
 
 - with-skill vs. without-skill (or vs. previous version) parallel runs
 - Haiku-powered grader subagents
-- The HTML viewer for qualitative review
-- `aggregate_benchmark.py` for quantitative summary
+- The HTML viewer for qualitative review (`eval-viewer/generate_review.mjs`)
+- `scripts/aggregate_benchmark.mjs` for quantitative summary
 - The iteration loop
 
 It deliberately drops: skill drafting guidance, blind comparator/analyzer agents, description optimization, and the full schema reference. If you actually need to *write* a new skill, hand off to `skill-creator`. If you want to optimize triggering, see "Description optimization (deferred)" at the bottom.
@@ -150,6 +150,20 @@ Once a run's outputs and transcript are on disk, spawn a **Haiku grader subagent
 
 For deterministic assertions ("file X exists with mime type Y", "transcript contains string Z"), prefer writing a tiny Python script over having the grader eyeball it — scripts are faster, free, and reusable across iterations. The grader can call the script and record the result.
 
+### Boot the run's project (skills whose evals edit an Umbraco project)
+
+A compile check misses the Umbraco mistakes that only fail at startup: a collection anchor that isn't registered, a strong `[ComposeAfter]` on a disabled composer, a component that throws. When a run leaves an Umbraco web project behind, boot it before grading and save the report beside the run as `boot.txt`:
+
+```bash
+node scripts/boot-check.mjs <run>/outputs/project/<WebProject> --out <run>/boot.txt
+```
+
+It builds the project, boots it as a fresh unattended SQLite install in a temp directory (the project's own files are left alone), and stops it again. `RESULT: PASS` means the process answered `GET /` below 500, logged runtime level `Run`, and logged no errors; anything else is `FAIL` with the reason, and the exception and stack frames when it crashed. Grade a boot expectation from `boot.txt`, as the compile expectation is graded from `build.txt`. If the code under test reads tables a fresh install doesn't have, give the eval a SQL file and pass `--seed-sql <file>`. The skill's `evals/README.md` says which evals need that, or need a second boot with a variant applied.
+
+Add `--probe <run>/probe.json` to grade registrations from the running site rather than from reading the code. The probe is compiled into the project for that check only (the run's source is left alone), and reports the content finder, URL provider, health check and component collections in their real order, plus the notification handlers and services registered from the solution's own projects, with lifetimes and counts. A probe that can't be read fails the check.
+
+Boot baseline runs too: a baseline that falls into a boot-time trap still compiles, so this is often the check that separates the two sides.
+
 The grader writes `grading.json` into each run directory. The viewer and aggregator depend on the exact field names `expectations[].text`, `expectations[].passed`, `expectations[].evidence` — don't accept renamed variants from the grader.
 
 ---
@@ -159,10 +173,10 @@ The grader writes `grading.json` into each run directory. The viewer and aggrega
 Once every run has a `grading.json`:
 
 ```bash
-python -m scripts.aggregate_benchmark <workspace>/iteration-N --skill-name <skill-name>
+node <skill-evaluator-path>/scripts/aggregate_benchmark.mjs <workspace>/iteration-N --skill-name <skill-name>
 ```
 
-(Run from the skill-evaluator directory so `scripts/` is on the path.) This produces `benchmark.json` and `benchmark.md` — pass rate, time, tokens per configuration with mean ± stddev and the delta. With one run per config per iteration (the default), the ± is **eval-to-eval spread across the eval set, not run-to-run variance** — read it as "how consistent is the skill across different tasks", not "how noisy is a single task". **Order each `with_skill` run before its `without_skill` (or `old_skill`) counterpart** in the runs list — the viewer reads order to pair them.
+This produces `benchmark.json` and `benchmark.md` — pass rate, time, tokens per configuration with mean ± stddev and the delta. With one run per config per iteration (the default), the ± is **eval-to-eval spread across the eval set, not run-to-run variance** — read it as "how consistent is the skill across different tasks", not "how noisy is a single task". **Order each `with_skill` run before its `without_skill` (or `old_skill`) counterpart** in the runs list — the viewer reads order to pair them.
 
 Do a quick analyst pass on `benchmark.json`:
 - Assertions that pass 100% in *both* configurations — non-discriminating, flag for replacement.
@@ -174,7 +188,7 @@ Add observations to the `notes[]` field of `benchmark.json` so the viewer surfac
 Then launch the viewer:
 
 ```bash
-nohup python <skill-evaluator-path>/eval-viewer/generate_review.py \
+nohup node <skill-evaluator-path>/eval-viewer/generate_review.mjs \
   <workspace>/iteration-N \
   --skill-name "<skill-name>" \
   --benchmark <workspace>/iteration-N/benchmark.json \
@@ -230,17 +244,17 @@ Evaluation workspaces are scratch data, not published skill content. Once the us
 Validate the target first:
 
 ```bash
-python scripts/cleanup_workspace.py <skill-name>-workspace
+node <skill-evaluator-path>/scripts/cleanup_workspace.mjs <skill-name>-workspace
 ```
 
 The validation-only pass refuses paths that do not look like an evaluator workspace. After confirming the printed path is correct **and the user has finished qualitative review and feedback processing**, delete it explicitly:
 
 ```bash
-python scripts/cleanup_workspace.py <skill-name>-workspace \
-  --yes --final-review-complete --clean-python-caches
+node <skill-evaluator-path>/scripts/cleanup_workspace.mjs <skill-name>-workspace \
+  --yes --final-review-complete
 ```
 
-The deletion command requires both `--yes` and `--final-review-complete`; the evaluator must never run it automatically when a run finishes. `--clean-python-caches` removes only `__pycache__/` directories and `*.pyc` files beneath the workspace's parent repository. The evaluator workspace may be recreated for a later iteration. Python caches are local artifacts and should be removed before staging a PR.
+The deletion command requires both `--yes` and `--final-review-complete`; the evaluator must never run it automatically when a run finishes. The evaluator workspace may be recreated for a later iteration.
 
 ---
 
@@ -264,5 +278,8 @@ Out of scope. If the user asks "is the new version *really* better?" beyond what
 
 - `agents/grader.md` — instructions for the Haiku grader subagent
 - `references/schemas.md` — JSON shapes for `evals.json`, `grading.json`, `benchmark.json`, `timing.json`
-- `scripts/aggregate_benchmark.py` — produces `benchmark.json` from a workspace iteration directory
-- `eval-viewer/generate_review.py` — launches the qualitative + quantitative viewer
+- `scripts/aggregate_benchmark.mjs` — produces `benchmark.json` and `benchmark.md` from a workspace iteration directory
+- `scripts/cleanup_workspace.mjs` — validates, then (with both confirmations) deletes a finished workspace
+- `eval-viewer/generate_review.mjs` — launches the qualitative + quantitative viewer
+
+All three scripts use only the Node standard library, and each has a `*.test.mjs` beside it that CI runs.

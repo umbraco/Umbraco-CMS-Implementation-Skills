@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-composing skill (Approach A — composer).
+
+    The skill's assets/ (builder extension, composer, component) are projected into obj/ at build
+    time with placeholders substituted from .generate.json. The reference instance
+    (Umbraco-CMS.Skills) references this project, so the composer is type-scanned and run in-process,
+    and Umbraco-CMS.Skills.TestHost asserts what it composed. Not shipped to users; not part of any
+    plugin.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.Composing</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Version comes from the repo-root Directory.Packages.props, in lockstep with the host. -->
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+</Project>

@@ -486,3 +486,10 @@ umbraco-package-schema.json
 # _ViewImports.cshtml is authored by us, so keep that and ignore the rest.
 /Views/*.cshtml
 !/Views/_ViewImports.cshtml
+
+# Partial views and view-component views written at RUNTIME, standing in for the files a user
+# drops into these folders by hand: copied in by example harnesses (umbraco-templating), or
+# installed from a package's <PartialViews><View path="…"> entries (umbraco-multilingual's
+# languageSwitcher/hreflangLinks partials).
+/Views/Partials/
+/Views/Shared/

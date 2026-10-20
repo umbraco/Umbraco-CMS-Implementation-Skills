@@ -1,0 +1,65 @@
+{
+  "skill_name": "umbraco-add-document-type",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). We need an Office document type: office name, address, phone number, opening hours and a link to the Google map. Offices aren't pages, they get shown in a contact block on the contact page. Create it at the top level next to the page types, give it the SEO composition like everything else has, and let editors create offices at the root of the content tree. No template needed.",
+      "expected_output": "The agent specifies `office` in Document-Types/Data/ (not at the root), with no template, no SEO or other composition, Allowed at root No, fields on the Content tab (sort 100) with sorts in hundreds and the map link as a Multi URL Picker rather than a Textstring. It explains that a type nothing renders takes no SEO, that only the home page, site settings and data folders are allowed at root, and that offices need a folder (an Office Folder via umbraco-add-data-folder, or an existing parent) to be created under. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A requirements page exists at docs/umbraco-schema/Document-Types/Data/Office.md with the alias `office` (not `officePage`), Kind Document Type, and its Folder breadcrumb includes Data; it is not placed directly in Document-Types/",
+        "The requirements page has Default template — and Allowed templates —, and the agent does not write a template requirements page",
+        "The requirements page's Compositions row is — and the agent explains that the SEO composition is declined because nothing renders an office so search engines never see it",
+        "Allowed at root is No, and the agent explains that only the home page, site settings and data folders are allowed at root and names what should hold offices (an office folder via umbraco-add-data-folder, or an existing type updated to allow it)",
+        "The office's own properties sit on the `Content` tab with Tab Sort 100 and sorts in hundreds, the map link uses the Multi URL Picker (or another link picker), not a Textstring, and the office name field does not use the reserved alias `name` (e.g. `officeName` or `title`)",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. Create a document type for a Careers page: an intro and the body text, that's it. Just the document type please, no template, the front-end dev will add templates for all the new types in one go next sprint.",
+      "expected_output": "The agent treats a Careers page as a page: careersPage at the Document Types root with a careersPage template under master in the same change, the SEO composition and the site's other page compositions, and the Home Page updated to allow it. It explains that a template is what makes a page and that a template-less type at the root would be a page that cannot render (and fails the lint), and that the template's markup, not its existence, is the dev's later work. It names umbraco-add-page as the skill that owns this or applies its rules, stops for approval and claims nothing was done.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The type is specified as a page with the alias `careersPage` at docs/umbraco-schema/Document-Types/CareersPage.md (not in Data/, and not `careers` without the Page suffix)",
+        "A template requirements page exists for `careersPage` (file `careersPage.cshtml`, master `master`) and is the page's default template, despite the instruction to skip the template; the agent explains that a template is what makes a page and that only the template's markup is later work",
+        "The page lists the existing `seoComposition` (with `pageDetailsComposition` and/or `openGraphComposition`) flagged Exists",
+        "The Home Page is updated (an Update requirements page or checklist item) to allow careersPage while keeping `contentPage` and `contactPage`, and careersPage has Allowed at root No",
+        "The agent names umbraco-add-page as the skill that owns a page (hands off to it or applies its workflow) rather than writing a template-less document type at the root",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco 17, MCP connected; evals/files/mcp/site-context.md has the read results (treat it as the live site). Requirements docs go in docs/umbraco-schema/. Add a document type for a product category (name, short description, icon image) that our product pages pick from. It's just data. Oh, and give it the SEO composition like everything else so it has meta tags.",
+      "expected_output": "The agent places the category as data (or hands off to umbraco-add-data-folder for the folder and picker) in Data/, without a template, and declines the SEO composition because a type with no template has no page head to render meta tags; it says so. Proposed, stops for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The category type is placed under docs/umbraco-schema/Document-Types/Data/ (or the agent hands off to umbraco-add-data-folder for a folder, item and picker), with no template",
+        "The type does not take seoComposition, and the agent explains that a type that is not a page has no page head to render SEO fields",
+        "The agent does not claim anything was created or verified on the site, and any requirements pages are `proposed`"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "We're on Umbraco 17. The MCP isn't set up on this laptop and the site is down, so go on what I tell you. We have a Home Page (homePage) and a Content Page (contentPage) at the root, an SEO Composition (seoComposition) in a Compositions folder, and a Data folder holding Author Folder (authorFolder) and Author (author). One language. Requirements docs go in docs/umbraco-schema/ (only a README so far). Our mobile app reads FAQ entries through the Delivery API: a question, an answer (rich text) and a category label. Nobody browses to them on the website. Write it up and give me the backoffice steps.",
+      "expected_output": "The agent specifies a plain document type such as `faqItem` or `faqEntry` in Data/, with no template, not allowed at root, without the SEO composition, its fields on a Content tab reusing built-in data types. Everything it relies on is flagged Exists on the user's word, and it says so. It names that nothing can create the type in the content tree until a parent allows it. The apply is a manual backoffice walkthrough to follow after approval; nothing is claimed as done.",
+      "files": [],
+      "expectations": [
+        "A requirements page exists under docs/umbraco-schema/Document-Types/Data/ for a camelCase alias with no Page suffix (e.g. `faqItem` or `faqEntry`), with Default template and Allowed templates set to — and Allowed at root No, and no template requirements page is written",
+        "The type does not take seoComposition, and the agent does not treat it as a page because nobody visits it on the website",
+        "The own properties (question, answer, category) sit on a `Content` tab with Tab Sort 100 and sorts in hundreds, reusing built-in data types (e.g. Textstring, Richtext editor)",
+        "The existing Data folder (and any other existing artefact it relies on) is flagged Exists, and the agent says in the changeset summary or its reply that these come from the user's description, not a read of the site",
+        "The agent names that nothing can create the type in the content tree until a parent allows it, or asks where it should live, rather than allowing it at root",
+        "The agent gives or offers a manual backoffice walkthrough to follow after approval, and produces no uSync, package.xml, C# or Razor files",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site; if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    }
+  ]
+}

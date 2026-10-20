@@ -39,7 +39,7 @@ Defines the eval set for a skill. Located at `evals/evals.json` within the skill
 ## eval_metadata.json
 
 Written per eval into the eval directory (`<iteration>/<eval-name>/eval_metadata.json`).
-Read by both `aggregate_benchmark.py` (for `eval_id` / `eval_name`) and the viewer
+Read by both `aggregate_benchmark.mjs` (for `eval_id` / `eval_name`) and the viewer
 (for `prompt` / `eval_id`).
 
 ```json
@@ -127,7 +127,7 @@ Wall clock timing for a run. Located at `<run-dir>/timing.json`.
 
 ## benchmark.json
 
-Output from `aggregate_benchmark.py`. Located at `<workspace>/iteration-N/benchmark.json`.
+Output from `aggregate_benchmark.mjs`. Located at `<workspace>/iteration-N/benchmark.json`.
 
 ```json
 {

@@ -1,0 +1,9 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = "master.cshtml";
+}
+<h1>@(Model.Value<string>("title"))</h1>
+<div class="intro">
+    @Html.Raw(Model.Value<string>("bodyText"))
+</div>
+<a class="cta" href="/contact">Get in touch</a>

@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-templating skill. Not shipped to users.
+
+    Loaded by SITE 2 (Umbraco-CMS.Skills.Blank, no starter kit). The skill's .cs assets (route-hijack
+    controller + view model, view component, surface controller + model) are generated into obj/ at
+    build time by plugins/Directory.Build.props and compiled here. Its .cshtml assets are embedded,
+    and this example's own harness installs them where a user would put them: the template through a
+    package migration (so Umbraco registers it), the partial and view-component view as files under
+    the host's Views/. The host compiles them at runtime, exactly as it compiles a real user's views.
+
+    Razor SDK so the controllers and view component register as an application part.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.Templating</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Static seeding helpers. Referenced as a PROJECT, not linked as source. -->
+    <ProjectReference Include="../../../../../../ExampleFixtures.Shared/ExampleFixtures.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Example-only schema: the productPage Document Type and its Template record. A real site already
+         has its own Document Types. The template's markup is spliced in from the skill's asset. -->
+    <EmbeddedResource Include="ExampleFixtureContent.xml" LogicalName="ExampleFixtureContent.xml" />
+  </ItemGroup>
+
+</Project>

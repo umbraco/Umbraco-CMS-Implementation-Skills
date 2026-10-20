@@ -1,0 +1,11 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = "master.cshtml";
+}
+<article class="event">
+    <h1>@Model.Value("title")</h1>
+    <p class="event__meta">@Model.Value("startDate") &middot; @Model.Value("venue")</p>
+    <div class="event__description">
+        @Model.Value<IHtmlString>("description")
+    </div>
+</article>

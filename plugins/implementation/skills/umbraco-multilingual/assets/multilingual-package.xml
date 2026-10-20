@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Umbraco package manifest for step 1 of the multilingual skill: a second language, plus example
+  dictionary items showing the translation shape.
+
+  Import it from the backoffice (Packages), or treat it as the spec for doing the same by hand / via
+  the Umbraco Developer MCP. Edit it for the site first:
+
+    - <Language CultureAlias> — the ISO code of each language to ADD. The default language already
+      exists and is skipped if listed.
+    - <Value LanguageCultureAlias> — must match an installed language's ISO code EXACTLY, casing
+      included ("da-DK", not "da-dk"). A value for a language that doesn't exist is dropped silently.
+
+  What this manifest CANNOT do — the importer reads CultureAlias and FriendlyName only, so after
+  importing, set these per language in Settings → Languages (or via the MCP, or ILanguageService):
+
+    - "Fall back to language"   (without it, Fallback.ToLanguage never falls back)
+    - "Mandatory language"
+    - "Default language"
+
+  Languages are imported before dictionary items, so one manifest can carry both. Keys are fixed so a
+  re-import updates the same items rather than creating duplicates.
+-->
+<umbPackage>
+  <info>
+    <package>
+      <name>Multilingual — languages and dictionary</name>
+    </package>
+  </info>
+  <Languages>
+    <Language CultureAlias="da-DK" FriendlyName="Danish (Denmark)" />
+  </Languages>
+  <DictionaryItems>
+    <DictionaryItem Key="4d1f6a52-8c3e-4b17-9f0a-6e2d7c5b1a01" Name="ReadMore">
+      <Value LanguageCultureAlias="en-US"><![CDATA[Read more]]></Value>
+      <Value LanguageCultureAlias="da-DK"><![CDATA[Læs mere]]></Value>
+    </DictionaryItem>
+    <DictionaryItem Key="4d1f6a52-8c3e-4b17-9f0a-6e2d7c5b1a02" Name="LanguageSwitcherLabel">
+      <Value LanguageCultureAlias="en-US"><![CDATA[Choose language]]></Value>
+      <Value LanguageCultureAlias="da-DK"><![CDATA[Vælg sprog]]></Value>
+    </DictionaryItem>
+  </DictionaryItems>
+</umbPackage>

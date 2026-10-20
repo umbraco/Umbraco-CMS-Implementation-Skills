@@ -1,24 +1,49 @@
 # `.claude/skills`
 
-This directory holds **project-local Claude Code skills** used to *author and maintain*
-the skills that ship in this marketplace — not the published skills themselves.
+This directory holds **project-local Claude Code skills** used to *author, validate and
+maintain* the skills that ship in this marketplace — not the published skills themselves.
+Nothing here ships in a plugin.
 
 The published skills live in the plugins:
 
 - `plugins/content-modelling/skills/`
 - `plugins/implementation/skills/`
 
-## What goes here
+## What's here
 
-Put the **`skill-creator`** skill in this directory. It's the tooling skill used to
-scaffold, edit, evaluate, and optimise the marketplace skills, so it belongs alongside
-the repo rather than in a shipped plugin.
+Each of these answers a different question, and none of them covers for another:
+
+| Skill | Answers |
+|-------|---------|
+| `umbraco-skill-author` | How should this skill be **shaped**? House conventions, authoring steps, templates, and the conformance checklist. Start here. |
+| `umbraco-reference-instance` | Does the skill's code **compile and serve** in a real Umbraco? The `dotnet test` gate, plus a manual boot/`try` harness. |
+| `umbraco-skill-evaluator` | Does Claude actually **write** that code when the skill is loaded? The with-skill vs. baseline eval loop. |
+| `umbraco-skill-reviewer` | Is a skill PR **ready to merge**? Reviews it against the others, fixes it on the PR branch, verifies, and summarises. Works through the `for-ai-review` queue. |
 
 ```
 .claude/skills/
-└── skill-creator/
-    └── SKILL.md
+├── umbraco-skill-author/
+│   ├── SKILL.md
+│   ├── references/          # authoring-steps, conformance-checklist, runtime-validation
+│   └── templates/
+├── umbraco-reference-instance/
+│   ├── SKILL.md
+│   └── scripts/
+├── umbraco-skill-evaluator/
+│   ├── SKILL.md
+│   ├── agents/              # grader
+│   ├── references/
+│   ├── scripts/
+│   └── eval-viewer/
+└── umbraco-skill-reviewer/
+    ├── SKILL.md
+    ├── references/          # review, fix-and-push, verify, batch
+    └── scripts/             # review-queue
 ```
 
-Add any other repo-authoring helper skills here too (validators, analyzers, etc.).
-Keep skills that are meant for end users in the plugin `skills/` folders instead.
+The contribution bar these enforce is summarised in [`AGENTS.md`](../../AGENTS.md#contributing-a-skill).
+
+## What goes here
+
+Add any other repo-authoring helper skills here too — validators, analyzers, generators.
+Keep skills meant for end users in the plugin `skills/` folders instead.

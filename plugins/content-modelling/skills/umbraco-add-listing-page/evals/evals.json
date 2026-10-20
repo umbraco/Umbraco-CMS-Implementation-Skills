@@ -1,0 +1,52 @@
+{
+  "skill_name": "umbraco-add-listing-page",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). Add a blog. Blog posts have a publish date, an author (we already have Author data items), a summary and the body. Call the types BlogListing and BlogPost, and allow the listing at root so editors can find it. Newest posts first in the backoffice list please.",
+      "expected_output": "The agent specifies blogListingPage listing blogPage (or blogPostPage) at the Document Types root, reusing the existing compositions, master template and Author Picker. The listing is not allowed at root; the home page is updated to allow it. The listing allows the item and itself; the item allows nothing. A dedicated Blog Listing Page Collection View orders by the post's publish date, newest first. Both templates sit under master. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "Two page type requirements pages exist directly in docs/umbraco-schema/Document-Types/: a listing with alias `blogListingPage` and an item with an alias ending in Page (e.g. `blogPage` or `blogPostPage`); neither is `blogListing` or `blogPost`",
+        "The listing has Allowed at root No, and the Home Page is updated (requirements page or checklist item) to allow the listing while keeping its existing allowed children",
+        "The listing's Allowed children are the item type and the listing itself; the item's Allowed children are —",
+        "A collection view data type requirements doc exists under docs/umbraco-schema/Data-Types/Collection-View/ named `Blog Listing Page Collection View` (not reusing Article Listing Page Collection View), ordered by the item's publish date property descending, and the listing's `Collection` row links to it",
+        "The item's author field reuses the existing `Author Picker` data type, and its own fields sit on the `Content` tab (Tab Sort 100) with sorts in hundreds",
+        "Both pages have a default template named after their alias under the existing `master`",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17, no MCP on this laptop and the site isn't running, so go on what I tell you. We have a Home Page (homePage) that allows Content Page (contentPage), a master template (master), and SEO Composition (seoComposition). One language. We need an events section: each event has a start date and time (events are in the UK and the US, so time zones matter), a venue name and a description. The backoffice list should show upcoming events, soonest first. We also want separate UK and US event listings, so please create a UkEventListingPage and a UsEventListingPage type. Requirements docs go in docs/umbraco-schema/ (only a README there). Write it up with the backoffice steps.",
+      "expected_output": "The agent specifies one eventListingPage and one eventPage rather than two regional listing types, explaining that the listing allows itself so UK and US listings are content nodes of the same type. The event date uses a time-zone-aware date editor. The collection view orders by the event date ascending. The home page gains the listing. Existing artefacts are the user's word, the apply is a manual walkthrough after approval, and nothing is claimed as done.",
+      "files": [],
+      "expectations": [
+        "The requirements doc defines one listing type (`eventListingPage`) and one item type (e.g. `eventPage`), not `ukEventListingPage` and `usEventListingPage`, and explains that UK and US listings are nodes of the same listing type because the listing allows itself",
+        "The listing's Allowed children are the item type and the listing itself",
+        "The event date property uses a date and time editor that keeps the time zone (`Umbraco.DateTimeWithTimeZone`), or the agent explains why another date-time editor was chosen; it is not a Textstring",
+        "The listing's collection view is its own data type, ordered by the event date ascending (soonest first)",
+        "The Home Page, master template and SEO Composition are flagged Exists or named as plain text on the user's word, and the agent says they were not read from the site; it says the apply is a manual backoffice walkthrough and produces no uSync, package.xml or C# files",
+        "Every requirements page and the changeset have the status `proposed`; the agent asks for approval and does not claim anything was created or verified; if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. Our News Page items are all sitting directly under the Home Page and it's a mess. Add a News listing page, move all the existing news under it, and just reuse the Article Listing Page Collection View for its list so we don't have two of the same thing.",
+      "expected_output": "The agent adds newsListingPage and reuses the existing newsPage as the item, with no new item type. It creates a separate News Listing Page Collection View ordered by publishDate, explaining why the article one is not reused. It treats moving the 140 news nodes as a content task outside the schema change, and keeps newsPage allowed under the home page until they are moved (or flags that removing it is a later step). The listing allows newsPage and itself, and the home page gains the listing. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A listing requirements page exists for `newsListingPage`, and the existing `newsPage` is reused as its item (no new item page type is created)",
+        "A separate collection view data type (e.g. `News Listing Page Collection View`) is specified instead of reusing `Article Listing Page Collection View`, and the agent explains why",
+        "The agent says moving the 140 existing News Page nodes is a content task, not part of the schema changeset, and does not claim the schema change moves them",
+        "The agent does not remove `newsPage` from the Home Page's allowed children in this change, or explicitly makes that removal a later step after the content has moved",
+        "The listing's Allowed children are `newsPage` and `newsListingPage`, and the Home Page is updated to allow `newsListingPage` while keeping its existing entries",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created, moved or verified on the site"
+      ]
+    }
+  ]
+}

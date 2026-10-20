@@ -1,0 +1,12 @@
+{
+  "source": "Exported by the user from the backoffice (Settings > Document Types), trimmed to the fields below. Data type configurations and templates were not exported.",
+  "documentTypes": [
+    { "name": "Home Page", "alias": "homePage", "folder": null, "allowedAsRoot": true, "compositions": ["seoMixin", "pageDetailsMixin"], "allowedChildren": ["contentPage", "articleListingPage"], "hasDefaultTemplate": true },
+    { "name": "Content Page", "alias": "contentPage", "folder": null, "allowedAsRoot": true, "compositions": ["seoMixin", "pageDetailsMixin"], "allowedChildren": ["contentPage"], "hasDefaultTemplate": true },
+    { "name": "Article Listing Page", "alias": "articleListingPage", "folder": null, "allowedAsRoot": false, "compositions": ["seoMixin", "pageDetailsMixin"], "allowedChildren": ["articlePage", "articleListingPage"], "hasDefaultTemplate": true },
+    { "name": "Article Page", "alias": "articlePage", "folder": null, "allowedAsRoot": false, "compositions": ["seoMixin", "pageDetailsMixin", "navigationMixin"], "allowedChildren": [], "hasDefaultTemplate": true },
+    { "name": "SEO Mixin", "alias": "seoMixin", "folder": "Mixins", "allowedAsRoot": false, "compositions": [], "allowedChildren": [], "hasDefaultTemplate": false, "tabs": [{ "name": "SEO", "sortOrder": 600 }] },
+    { "name": "Page Details Mixin", "alias": "pageDetailsMixin", "folder": "Mixins", "allowedAsRoot": false, "compositions": [], "allowedChildren": [], "hasDefaultTemplate": false, "tabs": [{ "name": "Page Details", "sortOrder": 200 }] },
+    { "name": "Navigation Mixin", "alias": "navigationMixin", "folder": "Mixins", "allowedAsRoot": false, "compositions": [], "allowedChildren": [], "hasDefaultTemplate": false, "tabs": [{ "name": "Visibility", "sortOrder": 900 }] }
+  ]
+}

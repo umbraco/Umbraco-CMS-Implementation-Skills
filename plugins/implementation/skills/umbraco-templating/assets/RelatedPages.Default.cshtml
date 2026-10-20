@@ -1,0 +1,15 @@
+@* Install at: Views/Shared/Components/RelatedPages/Default.cshtml
+   (the folder is the component name minus the "ViewComponent" suffix). *@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<IPublishedContent[]>
+@if (Model.Length > 0)
+{
+    <nav class="related-pages" aria-label="Related pages">
+        <h2>Related</h2>
+        <ul>
+            @foreach (IPublishedContent item in Model)
+            {
+                <li><a href="@item.Url()">@item.Name</a></li>
+            }
+        </ul>
+    </nav>
+}

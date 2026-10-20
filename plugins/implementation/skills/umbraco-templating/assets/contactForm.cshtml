@@ -1,0 +1,32 @@
+@* Install at: Views/Partials/contactForm.cshtml
+   Render from any template:  <partial name="contactForm" model="new ContactFormModel()" /> *@
+@using <Namespace>.Controllers
+@using <Namespace>.Models
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ContactFormModel>
+
+@if (TempData[ContactFormController.SuccessKey] is true)
+{
+    <p class="contact-form__success" role="status">Thanks — your message has been sent.</p>
+}
+else
+{
+    @* BeginUmbracoForm adds the antiforgery token and the ufprt route token automatically. *@
+    using (Html.BeginUmbracoForm<ContactFormController>(nameof(ContactFormController.Submit)))
+    {
+        <div asp-validation-summary="ModelOnly"></div>
+
+        <label asp-for="Name">Name</label>
+        <input asp-for="Name" autocomplete="name" />
+        <span asp-validation-for="Name"></span>
+
+        <label asp-for="Email">Email</label>
+        <input asp-for="Email" type="email" autocomplete="email" />
+        <span asp-validation-for="Email"></span>
+
+        <label asp-for="Message">Message</label>
+        <textarea asp-for="Message"></textarea>
+        <span asp-validation-for="Message"></span>
+
+        <button type="submit">Send</button>
+    }
+}

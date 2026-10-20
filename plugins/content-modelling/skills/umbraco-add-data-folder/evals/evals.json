@@ -1,0 +1,50 @@
+{
+  "skill_name": "umbraco-add-data-folder",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Requirements docs go in docs/umbraco-schema/ (only a README so far). Articles need proper authors with a photo and a short bio, instead of editors typing the name into Author Name every time. Add authors, and put the Authors folder under the Home Page so it's with everything else. Then swap the article's Author Name field for a picker.",
+      "expected_output": "The agent specifies authorFolder and author in Data/, with the folder allowed at root (not under the home page, with the reason), the item not at root, the folder allowing the item and the item allowing nothing, and neither with a template or compositions. It adds a multinode tree picker data type restricted to author, maximum 1, used by a new property on articlePage, and keeps authorName because replacing it would lose 300 typed names without a migration. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "Requirements pages exist under docs/umbraco-schema/Document-Types/Data/ for a folder type `authorFolder` and an item type `author`",
+        "`authorFolder` has Allowed at root Yes and the agent explains why it sits at the content root rather than under the home page; `author` has Allowed at root No",
+        "`authorFolder` allows `author` as a child; `author` has Allowed children —; neither has a default template or compositions",
+        "A picker data type requirements doc exists under docs/umbraco-schema/Data-Types/ using `Umbraco.MultiNodeTreePicker`, restricted to the `author` type with a maximum of 1, and articlePage gains a new property using it (Update page or checklist item)",
+        "The agent does not delete or convert `authorName` in this change, and says moving the 300 typed names to author items is a content migration",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17, no MCP on this machine and the site isn't running, so go on what I tell you. We have Article Page (articlePage) and News Page (newsPage), both using SEO Composition (seoComposition), and a Home Page (homePage) allowed at root. We want to tag articles and news with topics; editors currently use the built-in Tags editor and keep inventing duplicates like 'Finance' and 'finance'. Each topic needs a short description and an icon, and some topics sit under broader themes. To save time later, please make one generic Taxonomy Item type with a Type dropdown (topic, region, sector) that we can reuse for every list. Requirements docs go in docs/umbraco-schema/ (only a README there). Write it up with the backoffice steps.",
+      "expected_output": "The agent specifies a topic folder and topic item in Data/ rather than a generic taxonomyItem with a Type field, and explains why each list gets its own folder and item. It chooses data items over the Tags editor because of the duplicates and per-topic fields. Themes are handled by letting the folder allow itself, or an explicit departure is flagged. A picker restricted to topics goes on a composition shared by articles and news (or both types). Existing types are the user's word; the apply is a manual walkthrough after approval; nothing is claimed as done.",
+      "files": [],
+      "expectations": [
+        "The requirements doc defines a dedicated folder and item for topics (e.g. `topicFolder` and `topic`) under docs/umbraco-schema/Document-Types/Data/, not a generic `taxonomyItem` with a type dropdown, and the agent explains why",
+        "The agent recommends data items over the Tags editor, citing the duplicates or the per-topic description and icon",
+        "Broader themes are handled by letting the folder allow itself (sub-folders), or the agent explicitly flags that making topics parents of topics departs from the convention",
+        "A picker data type requirements doc restricted to the topic item type exists, and the picker property is placed on a composition shared by articlePage and newsPage or on both types",
+        "Existing types are flagged Exists or named as plain text on the user's word and the agent says they were not read from the site; it says the apply is a manual backoffice walkthrough and produces no uSync, package.xml or C# files",
+        "Every requirements page and the changeset have the status `proposed`; the agent asks for approval and does not claim anything was created or verified; if it did not run lint-requirements.mjs it says the requirements doc was not linted"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco MCP is connected to our Umbraco 17 site; evals/files/mcp/site-context.md holds what the read tools returned (this session can't call it; treat the file as the live site). Requirements docs go in docs/umbraco-schema/. We have 5 offices, each with an address, a phone number and a link to its map. The Contact Page should list them, and so will the footer later. I was going to put five sets of office fields on the Home Page, office1Address, office1Phone and so on. Set it up however you think is best.",
+      "expected_output": "The agent rejects numbered office fields on the home page and models offices as shared data: an office (or location) folder and item in Data/, the folder at root, with address, phone and a map link picker on the item. The contact page gains a picker of offices. Items have no template. Everything is proposed and waits for approval.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "The agent does not add numbered office fields to homePage, and models offices as a data folder and item type (e.g. `officeFolder` and `office`) under docs/umbraco-schema/Document-Types/Data/",
+        "The folder type has Allowed at root Yes and allows the item; the item has no template and Allowed children —",
+        "The item's map link uses a URL picker data type (e.g. Multi URL Picker with a maximum of 1), not a Textstring, and its fields are on the `Content` tab (Tab Sort 100) with sorts in hundreds",
+        "contactPage gains a picker property restricted to the office item type (Update page or checklist item)",
+        "Every requirements page and the changeset have the status `proposed`; the agent stops for approval and does not claim anything was created or verified on the site"
+      ]
+    }
+  ]
+}

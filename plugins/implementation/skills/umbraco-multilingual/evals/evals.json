@@ -1,0 +1,99 @@
+{
+  "skill_name": "umbraco-multilingual",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We have an English-only Umbraco 17.5 site (Razor views, en-US is the only language; the layout is Views/master.cshtml and the homepage template is Views/home.cshtml). We're launching in Denmark next month and need every page available in Danish too, on the same domain as example.com/da, with English at example.com/en. Editors should be able to leave a Danish field blank and have English show instead. We also need a language switcher in the header (Views/master.cshtml) and proper hreflang tags for SEO. Set it up.",
+      "expected_output": "The agent adds da-DK as a language with fallback to en-US, enables vary by culture on the Document Types (keeping shared values invariant), configures Culture and Hostnames on the site root with a domain per culture, renders values with Fallback.ToLanguage in Views/home.cshtml, and adds the skill's language switcher and hreflang partials under Views/Partials/ called from Views/master.cshtml, explaining what the package import cannot do.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "The agent adds da-DK as a language and sets its fallback language to en-US (or explains exactly where to set it)",
+        "If the agent uses or recommends a package manifest to import the language, it explains that the import does not set fallback, mandatory or default and that those must be configured separately; a run that creates the language directly in the backoffice or via the MCP and sets its fallback there satisfies this without mentioning packages",
+        "The agent enables 'Allow vary by culture' on the relevant Document Types and advises keeping values that are the same in every language (e.g. SKUs, dates) as shared/invariant properties",
+        "The agent configures a domain per culture on the site root via Culture and Hostnames (e.g. example.com/en → en-US and example.com/da → da-DK, or relative /en and /da)",
+        "Blank Danish values fall back to English via Fallback.ToLanguage (or equivalent) in Views/home.cshtml, not via a `??` on Value<string>, which never fires because blank values are empty strings",
+        "The language switcher, rendered from the header in Views/master.cshtml (inline or as a partial), links to the current page in other published cultures, compares cultures without ToLower() (case-insensitive comparison), and handles a missing home node or untranslated page without throwing",
+        "hreflang is emitted as <link rel=\"alternate\" hreflang> in the <head> of Views/master.cshtml with absolute URLs and an x-default, not only as an attribute on switcher links",
+        "The agent uses the Umbraco Developer MCP for backoffice steps when one is available; when none is (as in this harness, where the run is told no MCP is running), it walks the user through them manually rather than skipping them",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have built or verified the site"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our Umbraco 17 site is English (default) plus German, and pages render fine in German at /de/. Two things don't. 1) Controllers/PageTitleApiController.cs returns the English title for GET /api/page-title?key=...&culture=de-DE. A colleague lowercased the incoming culture \"to be safe\" and matches it against the configured languages, but it still comes back English, and the response now says culture en-US every time. 2) Jobs/ProductFeedJob.cs writes one feed per culture nightly: products-de-DE.txt is empty most nights, and on the nights it did have rows the descriptions and names were English. Marketing want French next year and I'd like that to need no code change. Can you work out what is wrong in both files and fix them?",
+      "expected_output": "The agent explains that the API controller gets the request middleware's default-language variation context whatever ?culture= says, and that the background job has no variation context at all, so culture-variant values come back empty, and fixes both files: it sets IVariationContextAccessor.VariationContext = new VariationContext(culture) or passes the culture to Value/Url explicitly; removes the ToLowerInvariant() and compares the culture case-insensitively (or looks it up through ILanguageService) while passing it on in ISO casing; replaces the hardcoded { \"en-US\", \"de-DE\" } array with cultures read from ILanguageService or IPublishedContent.Cultures so French needs no code change; replaces the Value<string>(...) ?? fallback (which never fires because a blank value is \"\", not null) with Fallback.ToLanguage or a string.IsNullOrWhiteSpace check; and either lowercases the Examine culture suffix (__Published_de-de) or drops the hand-built field for a culture-aware IsPublished(culture) check, explaining that Examine stores culture field suffixes lowercase.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/culture-context/"
+      ],
+      "expectations": [
+        "The agent explains that the API controller reads in the default language because no routed domain sets its culture, and that the background job runs with no variation context, so neither can rely on the ambient culture",
+        "The fix is applied in both Controllers/PageTitleApiController.cs and Jobs/ProductFeedJob.cs: it sets IVariationContextAccessor.VariationContext to a new VariationContext(culture), or passes the culture explicitly to Value(alias, culture) / Url(culture)",
+        "The hardcoded culture array in Jobs/ProductFeedJob.cs is replaced by cultures read from ILanguageService (e.g. GetAllAsync() / GetAllIsoCodesAsync()) or from IPublishedContent.Cultures, and the answer says that adding French then needs no code change",
+        "Blank German values fall back via Fallback.ToLanguage (or an explicit string.IsNullOrWhiteSpace check), and the answer explains that Value<string> returns \"\" not null for a blank value, so the ?? fallback never fires",
+        "No ToLower() / ToLowerInvariant() is applied to a culture that is then used as a culture (compared, passed to Value/Url/Name/publish, written to a file name or config): cultures are compared case-insensitively (StringComparison.OrdinalIgnoreCase or the language service's own lookup) and passed on in ISO casing (de-DE). Lowercasing only to build the Examine __Published_ field name is allowed, because expectation 6 accepts that fix",
+        "The Examine published-culture field is addressed with the lowercase suffix (__Published_de-de), or the hand-built field is replaced by a culture-aware query/filter (e.g. checking content.IsPublished(culture) / Cultures after the search), and the answer explains that Examine stores culture field suffixes lowercase",
+        "The agent does not suggest changing Umbraco:CMS:Global:DefaultUILanguage or the default language as the fix",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have built or verified the fix"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We're scripting our Danish launch on Umbraco 17 so it's repeatable across environments. A teammate wrote a package migration (Migrations/DanishLaunchMigration.cs) that imports a package.xml (Migrations/danish-launch-package.xml) containing our da-DK language and about 40 dictionary items (the Danish values use LanguageCultureAlias=\"da-dk\"). A startup job (Startup/DanishContentSeeder.cs) then sets the Danish property values on our existing, already-published English pages and calls IContentPublishingService.PublishBranchAsync(rootKey, [\"*\"], PublishBranchFilter.IncludeUnpublished, userKey, false). For the Danish launch they also set Umbraco:CMS:Global:DefaultUILanguage to \"da-DK\" in appsettings.json. After deploying: every dictionary item only has English, the Danish page edits never go live, templates using Fallback.ToLanguage show nothing for blank Danish fields instead of English, and the site's default language is still English. What went wrong and how do we fix each problem?",
+      "expected_output": "The agent diagnoses four separate causes: the package's lowercase LanguageCultureAlias is matched case-sensitively so the Danish dictionary values are silently dropped; a branch publish with \"*\" on already-published variant nodes republishes only the default culture; package import never sets a language's fallback so Fallback.ToLanguage has nothing to fall back to; and DefaultUILanguage is the backoffice UI language, not the content default language. It fixes each in place (the manifest's casing in Migrations/danish-launch-package.xml, explicit cultures in Startup/DanishContentSeeder.cs, the language's fallback, and the DefaultUILanguage setting in appsettings.json) without lowercasing cultures.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/danish-launch/"
+      ],
+      "expectations": [
+        "The agent explains the Danish dictionary values were dropped because LanguageCultureAlias is matched case-sensitively against the installed language's ISO code, so \"da-dk\" doesn't match \"da-DK\", and fixes it by changing the manifest's LanguageCultureAlias values in Migrations/danish-launch-package.xml to the exact ISO casing \"da-DK\"",
+        "The agent explains that PublishBranchAsync with [\"*\"] on already-published variant nodes republishes only the default culture, and fixes it in Startup/DanishContentSeeder.cs by passing explicit cultures (e.g. [\"en-US\", \"da-DK\"]) or each node's cultures",
+        "The agent explains that importing a language from a package does not set its fallback language, and fixes it by setting da-DK's fallback to English (backoffice Settings → Languages, MCP, or ILanguageService/FallbackIsoCode in the migration)",
+        "The agent explains that Umbraco:CMS:Global:DefaultUILanguage is the backoffice UI language, not the site's default content language, which is set on the language itself; it removes the DefaultUILanguage setting from appsettings.json or explains that leaving it only changes the backoffice UI language (and questions whether Danish should really become the default)",
+        "The agent does not propose lowercasing cultures or comparing them with ToLower() as a fix",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have run the migration or verified the fixes"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our Umbraco 17.5 Razor site has English and Danish. The homepage content (Views/home.cshtml) is a Block List property called 'sections' and we set that property to vary by culture, so every language has its own list. Now the Danish homepage keeps drifting: blocks are missing, in a different order, and marketing edits the English blocks and forgets Danish. We want the same blocks in the same order in both languages with only the text translated, and a couple of promo blocks should stay English-only. How do we set this up, and how do we migrate what we have without losing the Danish text?",
+      "expected_output": "The agent recommends block level variance: keep the document type variant, make the 'sections' Block List property invariant (shared), and make the element types and their text properties vary by culture. It explains unexposed blocks (how a block stays English-only and is omitted from Danish output), that structure and order are shared across languages, and that rendering needs no filtering code, so the hand-rolled culture filtering in Views/home.cshtml is removed. It warns that switching the property from varying to shared keeps only the default language's list, so the Danish text must be captured and re-entered as block variants, rehearsed on a copy of the database.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/block-sections/"
+      ],
+      "expectations": [
+        "The agent recommends block level variance: the document type varies, the 'sections' Block List property is made invariant (shared across cultures), and the block element types (and their text properties) vary by culture",
+        "The agent explains that with block level variance the block structure and order are shared across languages, so blocks can no longer drift between English and Danish",
+        "The agent explains that a block can stay English-only by not exposing it in Danish (the 'unexposed' state), and that unexposed blocks are omitted from the Danish output",
+        "The agent rewrites Views/home.cshtml so it needs no filtering or culture code, removing the hand-rolled languages/danishOnly filtering and the lowercased culture comparison: Model.Value<BlockListModel>(\"sections\") already omits unexposed blocks and returns the request culture's values (optionally mentioning Fallback.ToLanguage to show untranslated blocks)",
+        "The agent warns that switching the property from varying to shared keeps only the default language's block list and discards the Danish lists, so the Danish text must be captured first and re-entered as Danish block variants, rehearsed on a copy of the database",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have run the migration or verified the output"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "We need to add Chinese (Hong Kong), zh-HK, as a content language on our Umbraco 17.5 site running on Linux, but it doesn't appear in the dropdown under Settings → Languages → Create. What's going on and how do we fix it?",
+      "expected_output": "The agent explains that under ICU a valid culture can be missing from the dropdown either because GetCultures doesn't enumerate it or because it is flagged UserCustomCulture and rejected by IIsoCodeValidator, and fixes it with a composer that replaces ICultureService (and IIsoCodeValidator where the culture is rejected) — e.g. the documented composer — with the caveat that a replaced validator affects all culture validation.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "The agent explains that zh-HK is missing because under ICU it is either not enumerated by CultureInfo.GetCultures or flagged as a user custom culture and rejected by Umbraco's IIsoCodeValidator",
+        "The agent adds a composer that replaces ICultureService (via AddUnique or equivalent) so zh-HK is listed, and also replaces IIsoCodeValidator only where the culture would otherwise be rejected — the official docs' composer (replacing both) is acceptable",
+        "If the agent replaces IIsoCodeValidator, it warns that the validator is used for all culture validation in Umbraco, not just the language dropdown; if it keeps the stock validator, it explains why that validator already accepts zh-HK",
+        "The agent does not recommend switching to zh-Hant-HK as a workaround (Umbraco's stock validator rejects it as a custom culture)",
+        "The agent does not suggest changing Umbraco:CMS:Global:DefaultUILanguage or adding backoffice translation files as the fix",
+        "The agent says a rebuild/restart is needed before the culture appears",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "If no buildable Umbraco project is available, the agent does not falsely claim to have built it or seen zh-HK in the dropdown"
+      ]
+    }
+  ]
+}

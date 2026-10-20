@@ -1,0 +1,11 @@
+{
+  "_comment": "Compile-only projection of Approach B (Program.cs). It compiles the same builder extension and component as Approach A, without the composer (Approach B never uses one), plus ExampleProgram.cs, which wires them into a CreateUmbracoBuilder() chain after .AddComposers() exactly as the skill tells users to. It is in the solution but referenced by no host: the shared reference host can't take a second Program.cs, and a second Umbraco host can't run in the same process. So this proves the wiring compiles; it does not assert that the override wins at runtime.",
+  "namespace": "Umbraco.Skills.Examples.ComposingProgramCs",
+  "placeholders": {
+    "<Feature>": "ComposingExample"
+  },
+  "assets": [
+    "FeatureBuilderExtensions.cs",
+    "FeatureComponent.cs"
+  ]
+}

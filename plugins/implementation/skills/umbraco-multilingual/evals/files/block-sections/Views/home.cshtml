@@ -1,0 +1,53 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Umbraco.Cms.Core.Models.Blocks
+@inject IVariationContextAccessor VariationContextAccessor
+@{
+    Layout = "master.cshtml";
+
+    // 'sections' is a Block List. In the backoffice the property is set to VARY BY CULTURE, so the
+    // English and Danish homepages each have their own list of blocks.
+    var sections = Model.Value<BlockListModel>("sections") ?? BlockListModel.Empty;
+
+    // The lists keep drifting, so we try to hide blocks that aren't meant for this language:
+    // each block's settings have a 'languages' textbox (e.g. "en-us,da-dk") and a 'danishOnly'
+    // toggle. Blocks with no 'languages' value show everywhere. Nobody is sure this is right.
+    var culture = (VariationContextAccessor.VariationContext?.Culture ?? "en-US").ToLower();
+    var isDanish = culture == "da-dk";
+
+    var visibleSections = sections.Where(block =>
+    {
+        var languages = block.Settings?.Value<string>("languages") ?? string.Empty;
+        var danishOnly = block.Settings?.Value<bool>("danishOnly") ?? false;
+        if (danishOnly && !isDanish)
+        {
+            return false;
+        }
+        return string.IsNullOrWhiteSpace(languages)
+            || languages.ToLower().Split(',').Contains(culture);
+    });
+}
+<h1>@(Model.Value<string>("title"))</h1>
+
+@foreach (var block in visibleSections)
+{
+    switch (block.Content.ContentType.Alias)
+    {
+        case "heroSection":
+            <section class="hero">
+                <h2>@(block.Content.Value<string>("heading"))</h2>
+                <p>@(block.Content.Value<string>("text"))</p>
+            </section>
+            break;
+        case "promoSection":
+            <section class="promo">
+                <h2>@(block.Content.Value<string>("heading"))</h2>
+                <a href="@(block.Content.Value<string>("linkUrl"))">@(block.Content.Value<string>("linkText"))</a>
+            </section>
+            break;
+        default:
+            <section>
+                <h2>@(block.Content.Value<string>("heading"))</h2>
+            </section>
+            break;
+    }
+}

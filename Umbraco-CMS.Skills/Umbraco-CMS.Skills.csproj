@@ -25,6 +25,8 @@
          reference instance referencing its example extensions). -->
     <ProjectReference Include="../plugins/implementation/skills/umbraco-sitemap/examples/approach-a-cached-controller/Umbraco-Sitemap.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-custom-error-pages/examples/approach-a-content-finder/Umbraco-CustomErrorPages.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-composing/examples/approach-a-composer/Umbraco-Composing.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-multilingual/examples/additional-cultures/Umbraco-Multilingual.AdditionalCultures.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-health-check/examples/robots-txt/Umbraco-HealthCheck.Example.csproj" />
     <!-- Compile-only examples are NOT referenced here — they would collide with the above (e.g.
          two controllers on GET /sitemap.xml). They're in the solution instead, so the build still

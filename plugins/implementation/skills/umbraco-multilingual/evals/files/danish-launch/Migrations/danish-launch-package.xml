@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Danish launch: adds the da-DK language and the Danish values for our dictionary items.
+  Imported by DanishLaunchMigration on startup in every environment.
+-->
+<umbPackage>
+  <info>
+    <package>
+      <name>Acme Danish launch</name>
+    </package>
+  </info>
+  <Languages>
+    <Language CultureAlias="da-DK" FriendlyName="Danish (Denmark)" />
+  </Languages>
+  <DictionaryItems>
+    <DictionaryItem Key="7a2e9c41-3b5d-4f68-a1c7-0d9e8b6f2a11" Name="ReadMore">
+      <Value LanguageCultureAlias="en-US"><![CDATA[Read more]]></Value>
+      <Value LanguageCultureAlias="da-dk"><![CDATA[Læs mere]]></Value>
+    </DictionaryItem>
+    <DictionaryItem Key="7a2e9c41-3b5d-4f68-a1c7-0d9e8b6f2a12" Name="GetInTouch">
+      <Value LanguageCultureAlias="en-US"><![CDATA[Get in touch]]></Value>
+      <Value LanguageCultureAlias="da-dk"><![CDATA[Kontakt os]]></Value>
+    </DictionaryItem>
+    <DictionaryItem Key="7a2e9c41-3b5d-4f68-a1c7-0d9e8b6f2a13" Name="SearchPlaceholder">
+      <Value LanguageCultureAlias="en-US"><![CDATA[Search the site]]></Value>
+      <Value LanguageCultureAlias="da-dk"><![CDATA[Søg på sitet]]></Value>
+    </DictionaryItem>
+    <DictionaryItem Key="7a2e9c41-3b5d-4f68-a1c7-0d9e8b6f2a14" Name="CookieBannerAccept">
+      <Value LanguageCultureAlias="en-US"><![CDATA[Accept cookies]]></Value>
+      <Value LanguageCultureAlias="da-dk"><![CDATA[Accepter cookies]]></Value>
+    </DictionaryItem>
+    <DictionaryItem Key="7a2e9c41-3b5d-4f68-a1c7-0d9e8b6f2a15" Name="FooterCopyright">
+      <Value LanguageCultureAlias="en-US"><![CDATA[All rights reserved]]></Value>
+      <Value LanguageCultureAlias="da-dk"><![CDATA[Alle rettigheder forbeholdes]]></Value>
+    </DictionaryItem>
+    <!-- ...and ~35 more items in the same shape. -->
+  </DictionaryItems>
+</umbPackage>

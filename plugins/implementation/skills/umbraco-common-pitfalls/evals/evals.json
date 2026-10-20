@@ -1,0 +1,76 @@
+{
+  "skill_name": "umbraco-common-pitfalls",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "My Umbraco 17 site is occasionally showing content or session data that belongs to a different user. I suspect it's a caching or concurrency issue. Here's the controller we're using:\n\n```csharp\npublic class SearchController : Controller\n{\n    private static UmbracoHelper _helper;\n\n    public SearchController(IUmbracoHelperAccessor accessor)\n    {\n        if (_helper is null)\n        {\n            accessor.TryGetUmbracoHelper(out var h);\n            _helper = h;\n        }\n    }\n\n    public IActionResult Index(string q)\n    {\n        var results = _helper.ContentAtRoot().Where(x => x.Name.Contains(q));\n        return View(results);\n    }\n}\n```\n\nWhat's wrong and how do I fix it?",
+      "expected_output": "The agent identifies the static UmbracoHelper field as the root cause, explains that UmbracoHelper is request-scoped and storing it statically traps a request's security context at application scope, then provides a corrected controller that injects UmbracoHelper (or IUmbracoHelperAccessor) non-statically.",
+      "files": [],
+      "expectations": [
+        "The agent identifies the `private static UmbracoHelper _helper` field as the cause of the cross-user data bleed",
+        "The agent explains that UmbracoHelper is request-scoped and must not be stored in a static or singleton field",
+        "The agent explains that the static field traps a specific request's security context or cache snapshot at application scope",
+        "The corrected code removes the static field and either injects UmbracoHelper directly in the constructor or calls TryGetUmbracoHelper per-request",
+        "The agent does not introduce any new static or application-scoped references to request-scoped objects in the fix",
+        "If no buildable project is available, the agent does not claim the fix has been compiled or tested; it states the expected correctness based on the documented DI pattern"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our Umbraco 17 site has around 12,000 content nodes (lots of news articles). The top navigation renders noticeably slowly — sometimes 2–3 seconds just for the nav partial. Here's the Razor snippet:\n\n```cshtml\n<ul>\n  <li><a href=\"@Model.Root().Url()\">@Model.Root().Name</a></li>\n  @foreach (var node in Model.Root().DescendantsOrSelf().Where(x => x.Level == 2))\n  {\n    <li><a href=\"@node.Url()\">@node.Name</a></li>\n  }\n</ul>\n```\n\nWhy is this slow and what's the fix?",
+      "expected_output": "The agent identifies two compounding problems: DescendantsOrSelf() iterating all 12,000 nodes, and Model.Root() being called three times. It replaces DescendantsOrSelf().Where(x => x.Level == 2) with Children() and caches the root in a variable.",
+      "files": [],
+      "expectations": [
+        "The agent identifies `DescendantsOrSelf()` as the primary performance problem, explaining it iterates every node in the tree",
+        "The agent replaces `DescendantsOrSelf().Where(x => x.Level == 2)` with `Children()` in the fix",
+        "The agent also identifies the three separate `Model.Root()` calls as redundant traversals",
+        "The fix caches `Model.Root()` in a local variable and reuses it",
+        "The agent does not suggest workarounds that still use DescendantsOrSelf() (such as limiting the result count with .Take()) as a substitute for the correct fix",
+        "If no buildable project is available, the agent does not claim to have verified the fix compiles or measurably improved performance"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I need to load a specific content item by ID inside a Razor view in my Umbraco 17 site so I can display a global 'Featured Article' panel. A colleague suggested injecting IContentService. Is that right? What's the correct approach?",
+      "expected_output": "The agent advises against injecting IContentService in a Razor view, explains that it hits the database directly and bypasses the published content cache, then shows the correct UmbracoHelper cache-based approach using Umbraco.Content(id).",
+      "files": [],
+      "expectations": [
+        "The agent explicitly states that injecting `IContentService` (or any write-capable service) in a Razor view is an anti-pattern",
+        "The agent explains that IContentService goes directly to the database and bypasses Umbraco's published content cache",
+        "The agent provides the correct alternative: `Umbraco.Content(id)` via `UmbracoHelper`, which reads from the in-memory cache",
+        "The agent distinguishes cache-backed, read-only APIs that are appropriate in views (such as `UmbracoHelper`) from Services-layer APIs that are not",
+        "The agent does not suggest IContentService as acceptable even with a caveat such as 'just be careful' or 'only for read operations'",
+        "If no buildable project is available, the agent does not claim the corrected view snippet has been compiled or run"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "We're building a page-view counter for our Umbraco 17 news site. My plan is: every time a news article is viewed, update a custom 'viewCount' integer property on that content node via IContentService.Save(). We have about 500 news articles and expect 10,000 page views per day. Is this a good approach?",
+      "expected_output": "The agent identifies this as the volatile-data-as-content-nodes anti-pattern, explains why it is harmful (publish pipeline, cache invalidation, indexing overhead on every save), and recommends a custom database table or an analytics service instead.",
+      "files": [],
+      "expectations": [
+        "The agent clearly states this approach is an anti-pattern and should not be used",
+        "The agent explains that updating content nodes triggers Umbraco's publish/save pipeline, which invalidates caches and re-indexes on every write",
+        "The agent quantifies or at least illustrates the scale problem (10,000 saves/day driving 10,000 cache invalidations and index updates)",
+        "The agent recommends storing the hit count in a custom database table (e.g. using Umbraco's IDatabase / NPoco, or a separate data store)",
+        "The agent mentions an analytics service (e.g. Google Analytics) as an alternative for pure view-count tracking",
+        "The agent does not suggest any approach that continues to use Umbraco content nodes for the per-request write"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "I have a custom RecipeModel that wraps IPublishedContent. When displaying a list of the top-10 most-voted recipes (out of ~4,000 total), the page takes 8–10 seconds to load. Here's the model:\n\n```csharp\npublic class RecipeModel : PublishedContentWrapped\n{\n    public RecipeModel(IPublishedContent content, IPublishedValueFallback fallback)\n        : base(content, fallback)\n    {\n        RelatedRecipes = content\n            .Parent()\n            .Children<RecipeModel>()\n            .Where(x => x.Value<IEnumerable<int>>(\"related\").Contains(content.Id));\n\n        Votes = content.Value<int>(\"votes\");\n    }\n\n    public int Votes { get; private set; }\n    public IEnumerable<RecipeModel> RelatedRecipes { get; private set; }\n}\n```\n\nAnd the view:\n```cshtml\n@foreach (var recipe in recipeNode.Children()\n    .Select(x => new RecipeModel(x, _publishedValueFallback))\n    .OrderByDescending(x => x.Votes)\n    .Take(10))\n```\n\nWhat's wrong and how do I fix it?",
+      "expected_output": "The agent identifies two compounding problems: constructor logic running for all 4,000 nodes (each constructor traverses the parent and iterates siblings), and eager property loading. It rewrites using lazy-loaded properties with the ??= pattern, and ideally removes the wrapper entirely in favour of querying IPublishedContent directly in the view.",
+      "files": [],
+      "expectations": [
+        "The agent identifies that the constructor runs for every node LINQ instantiates — including all 4,000 nodes before `.Take(10)` is applied",
+        "The agent explains that constructing 4,000 RecipeModel instances means 4,000 parent traversals and 4,000 sibling iterations",
+        "The agent recommends moving the expensive logic out of the constructor and into lazy-loaded properties using the `??=` pattern",
+        "The corrected model (if provided) uses `private int? _votes; public int Votes => _votes ??= this.Value<int>(\"votes\");` or equivalent lazy initialisation",
+        "The agent notes that `RelatedRecipes` should return IDs rather than resolved `RecipeModel` instances to avoid cache bloat",
+        "The agent optionally (and correctly) suggests removing the custom wrapper entirely and querying `IPublishedContent` directly in the view as the simplest fix",
+        "If no buildable project is available, the agent does not claim the fix has been compiled or that performance improvement was measured"
+      ]
+    }
+  ]
+}

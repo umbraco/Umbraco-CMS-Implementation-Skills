@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  EXAMPLE-ONLY scaffolding. Not part of the umbraco-multilingual skill and not shipped to users: a real
+  site already has its own Document Types, and step 2 of the skill is making THOSE vary by culture.
+
+  A culture-variant page type ('multilingualPage') with one variant property ('title') and one shared
+  one ('code'), and a template that exercises every rendering piece the skill describes: the hreflang
+  partial in <head>, the switcher partial, a variant value with Fallback.ToLanguage, and a dictionary
+  item. Marker ids on the elements give the fixture something unambiguous to assert on.
+
+  Block level variance: an INVARIANT 'blocks' Block List property whose element type
+  ('multilingualBlock') varies by culture — the configuration the skill recommends. The template renders
+  it twice: plainly, and with Fallback.ToLanguage, because an unexposed block behaves differently in
+  each (omitted vs. shown in the fallback language, Umbraco 17.4+).
+
+  Non-generic UmbracoViewPage because site 2 has no generated models.
+-->
+<umbPackage>
+  <info>
+    <package>
+      <name>Umbraco Multilingual — example fixture content</name>
+    </package>
+  </info>
+  <DocumentTypes>
+    <DocumentType>
+      <Info>
+        <Name>Multilingual Block</Name>
+        <Alias>multilingualBlock</Alias>
+        <Key>e3b5a8d1-6c2f-4a79-9d04-1f8b2c7e5a60</Key>
+        <Icon>icon-brick</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only culture-variant element type for block level variance.</Description>
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>True</IsElement>
+        <Variations>Culture</Variations>
+        <Compositions />
+        <AllowedTemplates />
+      </Info>
+      <Structure />
+      <GenericProperties>
+        <GenericProperty>
+          <Name>Block title</Name>
+          <Alias>blockTitle</Alias>
+          <Key>0f6a2c91-3d58-4b7e-8a14-c2e9d5f0b736</Key>
+          <Type>Umbraco.TextBox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Tab Alias="content">Content</Tab>
+          <SortOrder>0</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Culture</Variations>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Block code</Name>
+          <Alias>blockCode</Alias>
+          <Key>8d27b4e0-5a19-4c63-9f82-71b3e6a0d4c5</Key>
+          <Type>Umbraco.TextBox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Tab Alias="content">Content</Tab>
+          <SortOrder>1</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs>
+        <Tab>
+          <Key>b1f4d7a2-9e36-4c08-8b5d-3a6e2f9c1d47</Key>
+          <Caption>Content</Caption>
+          <Alias>content</Alias>
+          <Type>Group</Type>
+          <SortOrder>0</SortOrder>
+        </Tab>
+      </Tabs>
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Multilingual Page</Name>
+        <Alias>multilingualPage</Alias>
+        <Key>d5a1c7e2-3b64-4f08-9e21-7c4b8a0f6d31</Key>
+        <Icon>icon-globe</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only culture-variant page type.</Description>
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Culture</Variations>
+        <Compositions />
+        <AllowedTemplates>
+          <Template>multilingualPage</Template>
+        </AllowedTemplates>
+        <DefaultTemplate>multilingualPage</DefaultTemplate>
+      </Info>
+      <Structure>
+        <DocumentType>multilingualPage</DocumentType>
+      </Structure>
+      <GenericProperties>
+        <GenericProperty>
+          <Name>Title</Name>
+          <Alias>title</Alias>
+          <Key>9b2e4f60-1a7d-4c85-b3e9-5d0c2a8f7e14</Key>
+          <Type>Umbraco.TextBox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Tab Alias="content">Content</Tab>
+          <SortOrder>0</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Culture</Variations>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Code</Name>
+          <Alias>code</Alias>
+          <Key>3f7c9a12-6e48-4d2b-8a05-b1e7d4c6f290</Key>
+          <Type>Umbraco.TextBox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Tab Alias="content">Content</Tab>
+          <SortOrder>1</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Blocks</Name>
+          <Alias>blocks</Alias>
+          <Key>5e8c3a17-2b94-4f60-a7d1-9c0b4e6f2a83</Key>
+          <Type>Umbraco.BlockList</Type>
+          <Definition>4c9e1f27-8b3a-4d65-a0f2-6e7d9b1c3a58</Definition>
+          <Tab Alias="content">Content</Tab>
+          <SortOrder>2</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs>
+        <Tab>
+          <Key>6a0e2d84-9c31-4b7f-a5d2-e8f1c3b09a47</Key>
+          <Caption>Content</Caption>
+          <Alias>content</Alias>
+          <Type>Group</Type>
+          <SortOrder>0</SortOrder>
+        </Tab>
+      </Tabs>
+    </DocumentType>
+  </DocumentTypes>
+  <Templates>
+    <Template>
+      <Name>Multilingual Page</Name>
+      <Alias>multilingualPage</Alias>
+      <Key>b8e3f1a4-5c27-4d90-8f6b-2a1d7e4c9053</Key>
+      <Design><![CDATA[@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Umbraco.Cms.Core.Models.PublishedContent
+@using Umbraco.Cms.Core.Models.Blocks
+@{ Layout = null; }<!DOCTYPE html>
+<html>
+<head>
+<title>@Model.Name</title>
+@await Html.PartialAsync("hreflangLinks")
+</head>
+<body>
+@await Html.PartialAsync("languageSwitcher")
+<h1 id="title">@Model.Value("title", fallback: Fallback.ToLanguage)</h1>
+<p id="code">@Model.Value("code")</p>
+<p id="read-more">@Umbraco.GetDictionaryValueOrDefault("ReadMore", "DICTIONARY-MISSING")</p>
+<ul id="blocks">@foreach (var b in (IEnumerable<BlockListItem>?)Model.Value<BlockListModel>("blocks") ?? Enumerable.Empty<BlockListItem>()) {<li class="block">@b.Content.Value("blockTitle")|@b.Content.Value("blockCode")</li>}</ul>
+<ul id="blocks-fallback">@foreach (var b in (IEnumerable<BlockListItem>?)Model.Value<BlockListModel>("blocks", fallback: Fallback.ToLanguage) ?? Enumerable.Empty<BlockListItem>()) {<li class="block">@b.Content.Value("blockTitle")|@b.Content.Value("blockCode")</li>}</ul>
+</body>
+</html>]]></Design>
+    </Template>
+  </Templates>
+  <Documents />
+  <MediaTypes />
+  <Stylesheets />
+  <Scripts />
+  <PartialViews />
+  <DictionaryItems />
+  <Languages />
+  <DataTypes>
+    <DataType Name="Multilingual Blocks" Id="Umbraco.BlockList" EditorUiAlias="Umb.PropertyEditorUi.BlockList"
+              Definition="4c9e1f27-8b3a-4d65-a0f2-6e7d9b1c3a58" DatabaseType="Ntext"
+              Configuration='{"blocks":[{"contentElementTypeKey":"e3b5a8d1-6c2f-4a79-9d04-1f8b2c7e5a60"}],"validationLimit":{"min":null,"max":null}}' />
+  </DataTypes>
+  <MediaItems />
+</umbPackage>

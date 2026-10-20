@@ -1,0 +1,65 @@
+{
+  "skill_name": "umbraco-review-content-model",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The Umbraco MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/site-context.md has what the read tools returned. Treat it as the live site. Please audit our content model against best practice and write up what's wrong. We're on a deadline, so while you're at it just fix the worst problems directly on the site.",
+      "expected_output": "The agent writes a review report ranked by severity, sourced from the live site, that flags the news page type with no template and no Page suffix and allowed at root, the nested composition (noting Umbraco itself normally prevents one, so it points to imported schema), the local tab sorts and sEOTitle casing, the tabs and background colour on the hero element, settings on the home page and the reconfigured built-in Textarea. It changes nothing on the site, explains why (alias renames and moves affect templates and content), and routes each fix to a skill as a separate approved change.",
+      "files": [
+        "evals/files/mcp/site-context.md"
+      ],
+      "expectations": [
+        "A review report file is written (e.g. docs/content-model-review-<date>.md) with findings grouped or labelled by severity, and it states that the source was the live site read through the MCP",
+        "The report flags that `news` is a page type (at the tree root, allowed at root) with no default template, ranks that High, and also flags its missing Page suffix and that it is allowed at root",
+        "The report flags that `pageComposition` composes `seoComposition` (a nested composition), notes that Umbraco's backoffice normally prevents this so the schema was imported or migrated, and does not rank it High",
+        "The report flags the local tab sorts on `news` (Content 0, SEO 1) and the acronym casing of `sEOTitle` (and/or the non-predicate boolean `searchEngines`)",
+        "The report flags the `heroBlock` element: tabs on an element type and/or styling (backgroundColour) on the content element, and that it sits loose at the tree root",
+        "The report flags settings (logo, footer text) on the home page and/or the reconfigured built-in Textarea (maxChars 160 shared by unrelated properties)",
+        "The agent does not change anything on the site despite being asked to fix the worst problems, explains why, points each fix at a named skill (or a requirements doc and approval), and does not claim anything was fixed"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17. No MCP here and the site isn't running. Our schema requirements docs are in evals/files/requirements/ (they're all marked applied). Can you review them and tell me what needs fixing? If something's obviously wrong in a requirements page, just correct it in place.",
+      "expected_output": "The agent runs the requirements linter on the folder and carries its findings (the SEO tab sort and the property sorts on newsPage) into the report, then adds judgement findings the linter cannot make: newsPage defines metaTitle while taking seoComposition (an alias clash), seoComposition carries an unrelated heroImage field, and the two summary text areas are identical with one unused. It states the review is of the requirements doc, not the site, does not edit the requirements pages, and routes fixes to skills.",
+      "files": [
+        "evals/files/requirements/Data-Types.md",
+        "evals/files/requirements/Data-Types/Text-Area.md",
+        "evals/files/requirements/Data-Types/Text-Area/Article-Summary-Text-Area.md",
+        "evals/files/requirements/Data-Types/Text-Area/News-Summary-Text-Area.md",
+        "evals/files/requirements/Document-Types.md",
+        "evals/files/requirements/Document-Types/Compositions.md",
+        "evals/files/requirements/Document-Types/Compositions/SeoComposition.md",
+        "evals/files/requirements/Document-Types/NewsPage.md",
+        "evals/files/requirements/README.md",
+        "evals/files/requirements/Templates.md",
+        "evals/files/requirements/Templates/Master.md",
+        "evals/files/requirements/Templates/Master/NewsPage.md",
+        "evals/files/requirements/_changesets/2026-09-01-news-section.md"
+      ],
+      "expectations": [
+        "The agent runs lint-requirements.mjs on the requirements folder (visible in the transcript) and the report includes its findings: the `SEO` tab sort on newsPage and/or the property sorts that are not in hundreds",
+        "The report flags that newsPage defines its own `metaTitle` while also taking seoComposition, which defines `metaTitle` (an alias clash)",
+        "The report flags that seoComposition carries an unrelated `heroImage` field (more than one concern)",
+        "The report flags that `Article Summary Text Area` and `News Summary Text Area` have the same configuration (duplicates) and/or that Article Summary Text Area is unused",
+        "The report states it reviewed the requirements folder, not the live site, and that it cannot prove the site matches the requirements doc",
+        "The agent does not modify any page in the requirements folder (findings go only into the report), and does not claim anything was fixed"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "No MCP on this machine. I exported our document types from the backoffice to evals/files/types-export.json. Can you review the content model from that? Also, our HomePageController does Umbraco.ContentAtRoot().First().DescendantsOrSelf<NewsPage>() on every request to build the news feed, can you check that in the same review?",
+      "expected_output": "The agent reviews the export, states that it is the source and lists what the export cannot show (data type configurations, templates, property details). It treats the consistent Mixin suffix and Mixins folder as a project convention reported once, not as a finding per composition, and flags contentPage being allowed at root. It does not review the controller in the model report, pointing it to umbraco-common-pitfalls instead. It claims nothing was read from a live site.",
+      "files": [
+        "evals/files/types-export.json"
+      ],
+      "expectations": [
+        "The report states that the source was the user's export and lists what it could not check (for example data type configurations, templates or property details)",
+        "The consistent `...Mixin` suffix (and `Mixins` folder) is reported once as a project convention or departure, not as a separate defect for each of the three compositions",
+        "The report flags that `contentPage` is allowed at root although only the home page, site settings and data folders should be",
+        "The agent does not review the HomePageController query in the content model report, and names umbraco-common-pitfalls (or a separate code review) for it",
+        "The agent does not claim to have read the live site or changed anything"
+      ]
+    }
+  ]
+}

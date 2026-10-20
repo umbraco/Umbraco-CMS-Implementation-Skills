@@ -1,0 +1,71 @@
+{
+  "skill_name": "umbraco-composing",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Umbraco 17.5 solution with two projects: MySite.Web (the host) and MySite.Core (a class library the web project references; root namespace MySite.Core). In MySite.Core I need three things registered with Umbraco: (1) a content finder, LegacyProductUrlContentFinder, that maps our old /products/{sku} URLs to product nodes. It has to get first crack at those URLs before Umbraco's normal URL routing, because some old SKU URLs collide with real page URLs. (2) A handler that pushes every published Product page to our search service. That's an HTTP call. (3) A warm-up that loads our SKU lookup table from the Umbraco database into memory when the site starts. This must NOT run while Umbraco is installing or running upgrade migrations, because it blows up then. I don't want to touch Program.cs. Wire up all the registration (the finder, handler and warm-up bodies can be stubs) and tell me where everything sits and why.",
+      "expected_output": "The agent uses a composer in MySite.Core (Approach A) that calls one IUmbracoBuilder extension. That extension inserts the finder before ContentFinderByUrlNew, registers an async ContentPublishedNotification handler, and appends a RuntimeAsyncComponentBase component for the warm-up. Program.cs is untouched, and there are no runtime-level checks or database work inside Compose().",
+      "files": [
+        "evals/files/project/",
+        "evals/files/legacy-products/"
+      ],
+      "expectations": [
+        "Registration lives in an IComposer inside MySite.Core, and Program.cs is not modified",
+        "The content finder is placed ahead of Umbraco's URL finder: either ContentFinders().InsertBefore<ContentFinderByUrlNew, LegacyProductUrlContentFinder>() or ContentFinders().Insert<LegacyProductUrlContentFinder>() (index 0). It is NOT added with Append(), and NOT anchored to the obsolete, unregistered ContentFinderByUrl",
+        "The search push is registered as an async notification handler: AddNotificationAsyncHandler<ContentPublishedNotification, ...> with a class implementing INotificationAsyncHandler<ContentPublishedNotification>",
+        "The warm-up only does its work at RuntimeLevel.Run, by one of: a component deriving from RuntimeAsyncComponentBase; an IAsyncComponent/AsyncComponentBase that checks the runtime level; an UmbracoApplicationStartingNotification handler that returns unless notification.RuntimeLevel is Run; or an UmbracoApplicationStartedNotification handler that returns unless an injected IRuntimeState.Level is Run (that notification has no RuntimeLevel property, so code reading notification.RuntimeLevel on it doesn't compile and fails this). Whichever is used is registered (Components().Append / ComponentComposer<T> for a component, AddNotificationAsyncHandler for a handler)",
+        "No class implements the obsolete IComponent interface (sync Initialize/Terminate)",
+        "Compose() does not check the runtime level, resolve services, call BuildServiceProvider(), or touch the database, and the non-existent [RuntimeLevel(MinLevel = ...)] composer attribute is not used",
+        "The warm-up still loads straight after an attended install or upgrade (when Umbraco restarts the runtime in-process with isRestarting = true, re-running components and re-publishing the Starting/Started notifications): either it is gated on RuntimeLevel.Run without skipping restarts, or the response explicitly tells the user that the chosen mechanism skips that restart, so the table stays empty until the next process start",
+        "The edited project compiles: build.txt beside the run (produced by the evaluator with `dotnet build` of outputs/project/MySite.Web) reports 0 errors",
+        "The edited site boots: boot.txt beside the run (produced by the evaluator with `node scripts/boot-check.mjs` on outputs/project/MySite.Web, seeded with evals/files/boot/legacy-products-seed.sql) reports RESULT: PASS",
+        "Runtime registrations are right in probe.json beside the run (the evaluator's `boot-check.mjs --probe`): LegacyProductUrlContentFinder appears in contentFinders ahead of Umbraco.Cms.Core.Routing.ContentFinderByUrlNew; notificationHandlers lists exactly one async ContentPublishedNotification handler with registrations = 1; and the warm-up is registered, either as a component in components or as an UmbracoApplicationStarting/StartedNotification handler with registrations = 1",
+        "The agent does not claim a build, boot or test result it did not actually run, and if it did not build, it says so"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Our Umbraco 17 site uses a third-party package, Acme.Umbraco.Media. Its composer, AcmeMediaComposer, is internal to their DLL, so we can't edit it or reference its type. It registers a default implementation of Acme's public IAcmeMediaUrlResolver interface as scoped. We need our CdnMediaUrlResolver to be the one that's used, whatever Acme's composer does, and ours has to be scoped too because it uses per-request state. We also want to drop Acme's AcmeHealthCheck from the backoffice Health Checks without losing any of the other health checks. We own Program.cs. Make the changes and tell me exactly what goes where and why it wins.",
+      "expected_output": "The agent uses Approach B: an IUmbracoBuilder extension called from Program.cs after .AddComposers(). It replaces the service with AddUnique<IAcmeMediaUrlResolver, CdnMediaUrlResolver>(ServiceLifetime.Scoped), excludes only AcmeHealthCheck from the lazy HealthChecks collection with Exclude<AcmeHealthCheck>(), and explains that composers all run inside AddComposers(), so anything after it wins.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/acme-package/"
+      ],
+      "expectations": [
+        "The overrides run after every composer: the call sits in Program.cs AFTER .AddComposers() (directly, or via a custom IUmbracoBuilder extension). The service replacement may come before or after the Umbraco builder's .Build(); the HealthChecks change must come before .Build(), when collections are registered",
+        "The agent explains that every composer runs inside .AddComposers(), so a call placed after it overrides what AcmeMediaComposer registered",
+        "The service is replaced so that exactly one IAcmeMediaUrlResolver registration remains and it is Scoped: either builder.Services.AddUnique<IAcmeMediaUrlResolver, CdnMediaUrlResolver>(ServiceLifetime.Scoped), or RemoveAll<IAcmeMediaUrlResolver>() followed by AddScoped<IAcmeMediaUrlResolver, CdnMediaUrlResolver>(). Plain AddScoped/AddSingleton on their own fail, and so does AddUnique without a lifetime (which defaults to singleton)",
+        "Only AcmeHealthCheck is removed, through the HealthChecks() builder's Exclude (generic Exclude<AcmeHealthCheck>() or Exclude(typeof/resolved Type)). The HealthChecks collection is not Clear()ed and rebuilt, and no Remove<T>() method (which doesn't exist on this lazy collection builder) is called",
+        "The agent does not use [ComposeAfter(typeof(AcmeMediaComposer))] or otherwise reference the internal composer type, and does not also add a composer that repeats the Program.cs registration",
+        "The existing CreateUmbracoBuilder() chain (AddBackOffice, AddWebsite, AddDeliveryApi, AddComposers, Build) is preserved apart from the inserted call",
+        "The edited project compiles: build.txt beside the run (produced by the evaluator with `dotnet build` of outputs/project/MySite.Web) reports 0 errors",
+        "The edited site boots: boot.txt beside the run (produced by the evaluator with `node scripts/boot-check.mjs` on outputs/project/MySite.Web) reports RESULT: PASS",
+        "Runtime registrations are right in probe.json beside the run (the evaluator's `boot-check.mjs --probe`): services lists Acme.Umbraco.Media.IAcmeMediaUrlResolver with exactly one registration, MySite.Web.Media.CdnMediaUrlResolver (or the run's resolver type) with lifetime Scoped; and Acme.Umbraco.Media.AcmeHealthCheck is absent from healthChecks while Umbraco's own checks remain",
+        "The agent does not claim a build, boot or test result it did not actually run, and if it did not build, it says so"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We're mid-upgrade from Umbraco 13 to 17. Everything compiles, but there are CS0618 warnings on RedirectCacheComponent, and the site now fails on startup with System.InvalidOperationException: 'Operation is not valid due to the current state of the object.', thrown at startup from the CreateUmbracoBuilder() chain in Program.cs. Separately, some of our deployments switch off the analytics feature with [assembly: DisableComposer(typeof(AnalyticsComposer))], and CampaignComposer needs to run after AnalyticsComposer when it's enabled, but the site must still boot when it's disabled. Here's the code (namespace Acme.Site.Infrastructure):\n\n```csharp\npublic class RedirectCacheComposer : ComponentComposer<RedirectCacheComponent> { }\n\npublic class RedirectCacheComponent : IComponent\n{\n    private readonly IRedirectCache _cache;\n    private readonly IRuntimeState _runtimeState;\n\n    public RedirectCacheComponent(IRedirectCache cache, IRuntimeState runtimeState)\n    {\n        _cache = cache;\n        _runtimeState = runtimeState;\n    }\n\n    public void Initialize()\n    {\n        if (_runtimeState.Level != RuntimeLevel.Run) return;\n        _cache.LoadAllAsync().GetAwaiter().GetResult();\n    }\n\n    public void Terminate() => _cache.Flush();\n}\n\npublic class CampaignComposer : IComposer\n{\n    public void Compose(IUmbracoBuilder builder)\n    {\n        builder.Services.AddSingleton<IRedirectCache, RedirectCache>();\n        builder.ContentFinders().InsertBefore<ContentFinderByUrl, CampaignContentFinder>();\n    }\n}\n```\n\nFix it for 17 and explain what was actually causing the startup crash.",
+      "expected_output": "The agent identifies the crash: ContentFinderByUrl is obsolete and isn't registered in Umbraco 17, so InsertBefore can't find its anchor and throws while the composer runs inside AddComposers(). It re-anchors to ContentFinderByUrlNew. It rewrites the component as a RuntimeAsyncComponentBase with an awaited InitializeAsync and a TerminateAsync, and adds a weak [ComposeAfter(typeof(AnalyticsComposer), true)] to CampaignComposer.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/v13-migration/"
+      ],
+      "expectations": [
+        "The agent attributes the startup InvalidOperationException to InsertBefore<ContentFinderByUrl, ...>: ContentFinderByUrl isn't registered in the Umbraco 17 ContentFinders collection, so the anchor can't be found",
+        "The crash is fixed without the stale anchor and the campaign finder still runs ahead of Umbraco's URL finder: either InsertBefore<ContentFinderByUrlNew, CampaignContentFinder>() or Insert<CampaignContentFinder>() (index 0). ContentFinderByUrl is no longer referenced",
+        "RedirectCacheComponent no longer implements IComponent. The start/stop work moves to a supported v17 mechanism: a component deriving from RuntimeAsyncComponentBase, AsyncComponentBase or IAsyncComponent (InitializeAsync/TerminateAsync), or UmbracoApplicationStartingNotification / UmbracoApplicationStoppingNotification handlers",
+        "The cache load is awaited (await _cache.LoadAllAsync(...)), and the sync-over-async .GetAwaiter().GetResult() is removed",
+        "Runtime-level gating is preserved: either by deriving from RuntimeAsyncComponentBase, or by keeping an explicit RuntimeLevel.Run check",
+        "The response does not claim that ComponentComposer<T> is obsolete (only IComponent is; ComponentComposer<T> now requires an IAsyncComponent and may be kept)",
+        "CampaignComposer runs after AnalyticsComposer when it is enabled, and the site still boots when it is disabled: either a WEAK [ComposeAfter(typeof(AnalyticsComposer), true)] (or equivalent weak form) on CampaignComposer, or [ComposeBefore(typeof(CampaignComposer))] on AnalyticsComposer (which disappears with the disabled composer). The response explains that a strong ComposeAfter fails boot when AnalyticsComposer is disabled",
+        "The CS0618 warnings are gone: build.txt shows no CS0618 for IComponent or ContentFinderByUrl in the project's own files",
+        "The edited project compiles: build.txt beside the run (produced by the evaluator with `dotnet build` of outputs/project/MySite.Web) reports 0 errors",
+        "The edited site boots both as delivered and with AnalyticsComposer disabled: boot.txt and boot-disabled.txt beside the run (produced by the evaluator with `node scripts/boot-check.mjs`, the second after adding evals/files/boot/DisableAnalytics.cs) both report RESULT: PASS",
+        "Runtime registrations are right in probe.json beside the run (the evaluator's `boot-check.mjs --probe`): CampaignContentFinder appears in contentFinders ahead of Umbraco.Cms.Core.Routing.ContentFinderByUrlNew, and the redirect cache start/stop work is registered, either as RedirectCacheComponent in components or as UmbracoApplicationStarting/StoppingNotification handlers with registrations = 1 each",
+        "The agent does not claim a build, boot or test result it did not actually run, and if it did not build, it says so"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using System.Globalization
+@using Umbraco.Cms.Core.Models
+@using Umbraco.Cms.Core.Models.PublishedContent
+@inject IVariationContextAccessor VariationContextAccessor
+@*
+    Language switcher: links to THIS page in every other culture it is published in.
+
+    Place in Views/Partials/languageSwitcher.cshtml and call with
+        @await Html.PartialAsync("languageSwitcher")
+    The model is the current page (IPublishedContent), so it works with or without ModelsBuilder.
+
+    - Only cultures this page is PUBLISHED in and that have a URL are listed — a visitor is never
+      sent to a page that doesn't exist in their language.
+    - The current culture is the one the request was routed in (the matched domain), read from the
+      variation context — the same culture Model.Value(...) renders in.
+    - URLs use UrlMode.Auto: relative on the same host, absolute when a culture's domain is on
+      another host (example.com → example.dk). UrlMode.Relative would drop that host.
+    - Cultures are compared case-insensitively and never lower-cased.
+    - A culture the runtime can't resolve (e.g. InvariantGlobalization) falls back to its raw code
+      rather than failing the page.
+    - Renders nothing for invariant pages or pages published in only one culture.
+*@
+@functions {
+    private static (string Code, string NativeName) Describe(string culture)
+    {
+        try
+        {
+            CultureInfo info = CultureInfo.GetCultureInfo(culture);
+            return (info.Name, info.NativeName);
+        }
+        catch (CultureNotFoundException)
+        {
+            return (culture, culture);
+        }
+    }
+}
+@{
+    string currentCulture = VariationContextAccessor.VariationContext?.Culture ?? string.Empty;
+
+    var languages = Model.Cultures.Keys
+        .Where(culture => !string.IsNullOrEmpty(culture))
+        .Select(culture => (Culture: Describe(culture), Url: Model.Url(culture, UrlMode.Auto)))
+        .Where(language => !string.IsNullOrEmpty(language.Url) && language.Url != "#")
+        .OrderBy(language => language.Culture.NativeName, StringComparer.CurrentCulture)
+        .ToList();
+}
+@if (languages.Count > 1)
+{
+    <nav aria-label="@Umbraco.GetDictionaryValueOrDefault("LanguageSwitcherLabel", "Choose language")">
+        <ul class="language-switcher">
+            @foreach (var language in languages)
+            {
+                <li>
+                    @if (string.Equals(language.Culture.Code, currentCulture, StringComparison.OrdinalIgnoreCase))
+                    {
+                        <span aria-current="true" lang="@language.Culture.Code">@language.Culture.NativeName</span>
+                    }
+                    else
+                    {
+                        <a href="@language.Url" hreflang="@language.Culture.Code" lang="@language.Culture.Code">@language.Culture.NativeName</a>
+                    }
+                </li>
+            }
+        </ul>
+    </nav>
+}

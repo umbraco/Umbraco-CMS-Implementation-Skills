@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    VALIDATION-ONLY example project for umbraco-multilingual — languages, culture variants, domains,
+    dictionary, language switcher and hreflang.
+
+    Loaded by SITE 2 (Umbraco-CMS.Skills.Blank, no starter kit). The skill's assets
+    (multilingual-package.xml, languageSwitcher.cshtml, hreflangLinks.cshtml) are generated into obj/
+    at build time by plugins/Directory.Build.props and embedded from there; the package migration
+    installs them exactly as a user's package import would. Everything else in this folder is
+    example-only scaffolding: a culture-variant page type + template that uses the partials, and a
+    seeder that does the backoffice steps a manifest can't (language fallback, domains, variant
+    content, per-culture publishing).
+
+    Plain Microsoft.NET.Sdk, NOT Sdk.Razor: the template and partials are compiled at runtime by the
+    host, exactly as a real site's are.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.Multilingual.CultureVariants</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../../../../ExampleFixtures.Shared/ExampleFixtures.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Example-only: the culture-variant page type and the template that renders the partials. -->
+    <EmbeddedResource Include="ExampleFixtureContent.xml" LogicalName="ExampleFixtureContent.xml" />
+  </ItemGroup>
+
+</Project>

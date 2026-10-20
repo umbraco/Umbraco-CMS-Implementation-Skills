@@ -1,0 +1,40 @@
+@* Template for the hijacked ProductPage route: Views/productPage.cshtml.
+   The file name must equal the Template alias, and the Template must exist in Umbraco (Settings >
+   Templates) and be allowed on the Document Type — a .cshtml on disk alone is never picked up. *@
+@using <Namespace>.Components
+@using <Namespace>.Models
+@using Umbraco.Cms.Core.Models.PublishedContent
+@using Umbraco.Cms.Core.Strings
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<ProductPageViewModel>
+@{
+    // Standalone page. If you have a master template, set Layout to its file name instead (e.g. "master.cshtml").
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@Model.Name</title>
+</head>
+<body>
+    <main>
+        <h1>@Model.Name</h1>
+
+        @* Property values: typed Value<T> with the property alias, or the generated
+           ModelsBuilder property when the view model derives from the generated model. *@
+        <p class="product__tagline">@(Model.Value<string>("tagline", fallback: Fallback.ToDefaultValue, defaultValue: "No tagline yet"))</p>
+        @* Rich text: render the converter's IHtmlEncodedString (already HTML) — never Html.Raw a string. Optional. *@
+        @(Model.Value<IHtmlEncodedString>("bodyText"))
+
+        @* Values the controller computed — only available because the route is hijacked. *@
+        <p class="product__stock">@Model.StockStatus</p>
+        <p class="product__page">Page @Model.PageNumber</p>
+
+        @* Logic-bearing widget: view component, invoked by type so a rename is a compile error. *@
+        @await Component.InvokeAsync(typeof(RelatedPagesViewComponent), new { page = Model, maxItems = 3 })
+
+        @* Markup-only reuse: partial view from Views/Partials. *@
+        <partial name="contactForm" model="new ContactFormModel()" />
+    </main>
+</body>
+</html>
