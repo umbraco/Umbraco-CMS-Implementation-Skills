@@ -23,6 +23,7 @@
         "The implementation derives from the current Umbraco HealthCheck API and returns an explicit success or error status",
         "A remediation action is offered only when the file is missing, has a stable alias, and is validated in ExecuteAction",
         "Write failures are surfaced as an error and logged rather than swallowed or reported as success",
+        "robots.txt is created in the web root (IWebHostEnvironment.WebRootPath, normally wwwroot), where it is served at /robots.txt, not in the content root",
         "User-facing messages use the project localization mechanism, and the response links to official Health Check and health-check configuration documentation",
         "The response explains that scheduled execution/notifications are separate from dashboard loading",
         "Build verification is reported honestly"
@@ -38,6 +39,7 @@
         "Dictionary aliases are stable and organised by feature and message purpose rather than translated names",
         "English, Danish, and German values are treated as deliberate supported cultures",
         "The fallback order is explicit and ends in a safe non-sensitive invariant message or failure state",
+        "The fallback treats an empty Dictionary value as missing (Umbraco's GetDictionaryValue returns an empty string, not null), for example with string.IsNullOrWhiteSpace or GetDictionaryValueOrDefault, rather than relying on ?? alone",
         "Razor output is encoded and does not expose configuration secrets",
         "Build verification is reported honestly",
         "The response does NOT recommend using Html.Raw for localized strings and explicitly warns that Html.Raw can introduce XSS; when HTML rendering is required the agent recommends a sanitization/whitelisting approach and shows a safe alternative"

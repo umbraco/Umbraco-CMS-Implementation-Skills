@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Umbraco.Cms.Core.Composing;
 using Umbraco.Cms.Core.DependencyInjection;
 using Umbraco.Cms.Core.HealthChecks;
 
-namespace Umbraco.Skills.Examples.HealthCheck;
+namespace Umbraco.Skills.Examples.RobotsTxt;
 
 public sealed class ExampleHealthCheckComposer : IComposer
 {
@@ -19,7 +19,7 @@ public sealed class ExampleHealthCheckComposer : IComposer
 [ApiExplorerSettings(IgnoreApi = true)]
 public sealed class ExampleHealthCheckController(
     HealthCheckCollection checks,
-    IHostEnvironment hostEnvironment)
+    IWebHostEnvironment webHostEnvironment)
     : Controller
 {
     [HttpGet]
@@ -31,7 +31,7 @@ public sealed class ExampleHealthCheckController(
         HealthCheckStatus status = (await check.GetStatusAsync()).Single();
 
         return Content(
-            $"{status.ResultType}|{System.IO.File.Exists(Path.Combine(hostEnvironment.ContentRootPath, "robots.txt"))}");
+            $"{status.ResultType}|{System.IO.File.Exists(Path.Combine(webHostEnvironment.WebRootPath, "robots.txt"))}|{status.Message}");
     }
 
     [Authorize]
@@ -51,7 +51,7 @@ public sealed class ExampleHealthCheckController(
         {
             HealthCheckStatus status = check.ExecuteAction(new HealthCheckAction(requestedAction, check.Id));
             return Content(
-                $"{status.ResultType}|{System.IO.File.Exists(Path.Combine(hostEnvironment.ContentRootPath, "robots.txt"))}");
+                $"{status.ResultType}|{System.IO.File.Exists(Path.Combine(webHostEnvironment.WebRootPath, "robots.txt"))}");
         }
         catch (InvalidOperationException exception)
         {

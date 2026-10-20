@@ -1,11 +1,13 @@
 using System.Globalization;
 using System.Net;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.HealthChecks;
 using Umbraco.Cms.Core.Services;
-using Umbraco.Web.HealthCheck.Checks.SEO;
+using Umbraco.Skills.Examples.RobotsTxt;
 
 namespace Umbraco_CMS.Skills.TestHost.Shared;
 
@@ -213,7 +215,48 @@ public sealed class HealthCheckTests
 
         // assert
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.OK));
-        Assert.That(await response.Content.ReadAsStringAsync(), Does.Match("^(Error|Success)\\|(True|False)$"));
+        // The message proves the "healthcheck" keys resolve from the host's ~/config/lang/en-US.xml:
+        // a missing key comes back from ILocalizedTextService as "[alias]".
+        Assert.That(await response.Content.ReadAsStringAsync(),
+            Does.Match("^(Error|Success)\\|(True|False)\\|The robots\\.txt file (exists|does not exist)\\.$"));
+    }
+
+    [Test]
+    public async Task Remediation_creates_a_robots_txt_that_the_site_serves()
+    {
+        // arrange
+        IServiceProvider services = ReferenceSiteFixture.Factory.Services;
+        string webRootPath = services.GetRequiredService<IWebHostEnvironment>().WebRootPath;
+        string robotsTxtPath = Path.Combine(webRootPath, "robots.txt");
+        if (File.Exists(robotsTxtPath))
+        {
+            Assert.Inconclusive($"{robotsTxtPath} already exists; remove it to run this test.");
+        }
+
+        Umbraco.Cms.Core.HealthChecks.HealthCheck check = services.GetRequiredService<HealthCheckCollection>()
+            .Single(x => x.Id == Guid.Parse("A7D3E9F1-60B4-4C8A-B2D5-9E1F73C6428B"));
+        HttpClient client = ReferenceSiteFixture.Client;
+
+        try
+        {
+            HttpResponseMessage before = await client.GetAsync("/robots.txt");
+            Assert.That(before.StatusCode, Is.EqualTo(HttpStatusCode.NotFound),
+                "the host must not serve a robots.txt of its own, or this test proves nothing");
+
+            // act
+            HealthCheckStatus status = check.ExecuteAction(new HealthCheckAction("addDefaultRobotsTxtFile", check.Id));
+            HttpResponseMessage after = await client.GetAsync("/robots.txt");
+
+            // assert
+            Assert.That(status.ResultType, Is.EqualTo(StatusResultType.Success));
+            Assert.That(after.StatusCode, Is.EqualTo(HttpStatusCode.OK),
+                "the created robots.txt must be served at /robots.txt, so it has to be in the web root");
+            Assert.That(await after.Content.ReadAsStringAsync(), Does.Contain("Disallow: /umbraco/"));
+        }
+        finally
+        {
+            File.Delete(robotsTxtPath);
+        }
     }
 
     [Test]
@@ -234,15 +277,18 @@ public sealed class HealthCheckTests
     private RobotsTxtHealthCheck CreateCheck(string? contentRoot = null) =>
         new(
             textService,
-            new TestHostEnvironment(contentRoot ?? this.contentRoot),
+            new TestWebHostEnvironment(contentRoot ?? this.contentRoot),
             logger);
 
-    private sealed class TestHostEnvironment(string contentRoot) : IHostEnvironment
+    // The check writes to the web root; the test points it at a temp folder.
+    private sealed class TestWebHostEnvironment(string webRoot) : IWebHostEnvironment
     {
         public string ApplicationName { get; set; } = "Umbraco-CMS.Skills.Tests";
         public string EnvironmentName { get; set; } = Environments.Development;
-        public string ContentRootPath { get; set; } = contentRoot;
+        public string ContentRootPath { get; set; } = webRoot;
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+        public string WebRootPath { get; set; } = webRoot;
+        public IFileProvider WebRootFileProvider { get; set; } = new NullFileProvider();
     }
 
     private sealed class RecordingTextService : ILocalizedTextService

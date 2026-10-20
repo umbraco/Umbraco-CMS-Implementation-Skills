@@ -1,11 +1,19 @@
 using System.Globalization;
-using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Umbraco.Cms.Core.HealthChecks;
 using Umbraco.Cms.Core.Services;
 
-namespace Umbraco.Web.HealthCheck.Checks.SEO;
+namespace <Namespace>;
 
+// Found by type scanning: any HealthCheck subclass with a [HealthCheck] attribute is added to the
+// dashboard, so no composer registration is needed.
+//
+// The messages come from ILocalizedTextService: add the "healthcheck" keys used below to
+// ~/config/lang/en-US.xml in the site (or App_Plugins/{YourPackage}/lang/en-US.xml in a package),
+// one file per supported backoffice culture. See assets/en-US.xml.
+
+// Generate a new GUID for your own check; it must never change once deployed.
 [HealthCheck("A7D3E9F1-60B4-4C8A-B2D5-9E1F73C6428B", "Robots.txt",
     Description = "Create a robots.txt file to provide crawler guidance for the site.",
     Group = "SEO")]
@@ -17,17 +25,17 @@ public class RobotsTxtHealthCheck : Umbraco.Cms.Core.HealthChecks.HealthCheck
         User-agent: *
         Disallow: /umbraco/
         """;
-    private readonly IHostEnvironment hostEnvironment;
+    private readonly IWebHostEnvironment webHostEnvironment;
     private readonly ILogger<RobotsTxtHealthCheck> logger;
     private readonly ILocalizedTextService textService;
 
     public RobotsTxtHealthCheck(
         ILocalizedTextService textService,
-        IHostEnvironment hostEnvironment,
+        IWebHostEnvironment webHostEnvironment,
         ILogger<RobotsTxtHealthCheck> logger)
     {
         this.textService = textService;
-        this.hostEnvironment = hostEnvironment;
+        this.webHostEnvironment = webHostEnvironment;
         this.logger = logger;
     }
 
@@ -133,17 +141,24 @@ public class RobotsTxtHealthCheck : Umbraco.Cms.Core.HealthChecks.HealthCheck
         }
     }
 
+    // robots.txt has to be served at /robots.txt, and ASP.NET Core serves static files from the web
+    // root (wwwroot), not the content root: a file in the content root is never served.
     private string GetRobotsTxtPath()
     {
-        string contentRootPath = Path.GetFullPath(hostEnvironment.ContentRootPath);
-        string robotsTxtPath = Path.GetFullPath(Path.Combine(contentRootPath, "robots.txt"));
-        string contentRootPrefix = contentRootPath.EndsWith(Path.DirectorySeparatorChar)
-            ? contentRootPath
-            : contentRootPath + Path.DirectorySeparatorChar;
-
-        if (!robotsTxtPath.StartsWith(contentRootPrefix, StringComparison.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(webHostEnvironment.WebRootPath))
         {
-            throw new InvalidOperationException("The robots.txt path is outside the site content root.");
+            throw new InvalidOperationException("The site has no web root (wwwroot) to serve robots.txt from.");
+        }
+
+        string webRootPath = Path.GetFullPath(webHostEnvironment.WebRootPath);
+        string robotsTxtPath = Path.GetFullPath(Path.Combine(webRootPath, "robots.txt"));
+        string webRootPrefix = webRootPath.EndsWith(Path.DirectorySeparatorChar)
+            ? webRootPath
+            : webRootPath + Path.DirectorySeparatorChar;
+
+        if (!robotsTxtPath.StartsWith(webRootPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("The robots.txt path is outside the site web root.");
         }
 
         return robotsTxtPath;

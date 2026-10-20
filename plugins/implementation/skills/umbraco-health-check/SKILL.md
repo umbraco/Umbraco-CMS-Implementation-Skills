@@ -14,74 +14,35 @@ description: >
 
 Use this skill for the Settings > Health Check dashboard and any explicitly requested Razor
 presentation of its guidance or status text. Fetch the official documentation before implementing;
-do not copy API samples from memory.
+do not copy API samples from memory, and don't copy the docs' sample either: it doesn't compile on 17.
 
 ## Version compatibility (recommended)
 
-This skill and examples are written for Umbraco 17 and verified against Umbraco 17 documentation. The underlying patterns (DI-era health checks, localization via Dictionary items, safe Razor rendering) generally apply to Umbraco v9+ (the DI-era releases), but only Umbraco 17 is explicitly verified here. When implementing, confirm the target project's Umbraco package version and the exact API surface before coding.
-
-Helpful refs:
-- Health Check docs: https://docs.umbraco.com/umbraco-cms/run-in-production/infrastructure-and-ops/health-check.md
-- Health Probes guidance (for Kubernetes/readiness): https://docs.umbraco.com/umbraco-cms/run-in-production/infrastructure-and-ops/health-probes.md
-- Umbraco LTS & EoL: https://umbraco.com/products/knowledge-center/long-term-support-and-end-of-life/
+This skill and its asset are written for Umbraco 17, and the asset is compiled and run against the
+pinned 17.5.3. Earlier versions differ: before 15.3 a check overrides `GetStatus()` instead of
+`GetStatusAsync()`. When implementing, confirm the target project's Umbraco package version and the
+exact API surface before coding. Umbraco LTS & EoL: https://umbraco.com/products/knowledge-center/long-term-support-and-end-of-life/
 
 ## Choose the implementation surface
 
 | Surface | Choose when | Guidance |
 |---|---|---|
-| **Backend C#** (default) | The requirement is a dashboard check, configuration comparison, runtime inspection, or safe remediation action | Use the current Umbraco 17 `AbstractSettingsCheck` or `HealthCheck` API; keep checks fast and report failures honestly. |
+| **Backend C#** (default) | The requirement is a dashboard check, configuration comparison, runtime inspection, or safe remediation action | [backend-health-check.md](references/backend-health-check.md): `AbstractSettingsCheck` or `HealthCheck`; keep checks fast and report failures honestly. |
 | **Razor frontend** | The user explicitly wants localized health-check guidance or status copy rendered by a view/component | Keep status computation in C#; use the project’s Razor/localization conventions, encode output, and never expose secrets. |
 
 If the request is only for a backoffice check, do not add a Razor surface. If it asks for
 Kubernetes, load-balancer, liveness, or readiness probes, skip this skill and use the official
 [Health Probes documentation](https://docs.umbraco.com/umbraco-cms/run-in-production/infrastructure-and-ops/server-setup/health-probes.md).
 
-## Backend C# and official source
+## Backend C#
 
-Start with the official
-[Health Check documentation](https://docs.umbraco.com/umbraco-cms/run-in-production/infrastructure-and-ops/health-check.md).
-Use `AbstractSettingsCheck` for one configuration key and accepted values; use `HealthCheck` for
-custom runtime logic, multiple statuses, or an explicit `HealthCheckAction`. Generate a stable GUID,
-use an appropriate group, validate action aliases, and keep remediation idempotent. Check the
-project’s actual Umbraco 17 package and namespace conventions before writing code.
-
-For scheduling and notification delivery, consult the separate
-[Health checks configuration documentation](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/configuration/healthchecks.md);
-do not conflate scheduled notifications with dashboard execution.
-
-### Minimal HealthCheck outline (adapt to your project/API)
-
-Below is a minimal outline to show the shape of a dashboard check — adapt namespaces, base classes,
-and helper calls to the project's actual Umbraco 17 API rather than copying.
-
-```csharp
-// Minimal outline — adapt to the project's Umbraco 17 API and namespaces.
-[HealthCheck("00000000-0000-0000-0000-000000000000", Name = "Use HTTPS", Description = "Checks that Umbraco:CMS:Global:UseHttps is true", Group = HealthCheckGroup.Security)]
-public class UseHttpsHealthCheck : HealthCheck
-{
-    public UseHttpsHealthCheck(/* inject config/services as needed */) { }
-
-    public override HealthCheckStatus Execute(HealthCheckContext context)
-    {
-        // Read configuration carefully; adapt to your config access pattern
-        var useHttps = context.Configuration?["Umbraco:CMS:Global:UseHttps"];
-        if (string.Equals(useHttps, "true", StringComparison.OrdinalIgnoreCase))
-        {
-            return HealthCheckStatus.Success("HTTPS is enabled.");
-        }
-
-        return HealthCheckStatus.Warning("HTTPS is not configured. See documentation link for remediation.");
-    }
-
-    public override HealthCheckAction[] ExecuteAction(HealthCheckActionRequest request)
-    {
-        // Provide idempotent remediation when appropriate, with validation and logging.
-        throw new NotImplementedException();
-    }
-}
-```
-
-Always validate action inputs and surface write failures as errors (and logs), not swallowed successes.
+**Before writing any code, open [references/backend-health-check.md](references/backend-health-check.md)
+and start from [`assets/RobotsTxtHealthCheck.cs`](assets/RobotsTxtHealthCheck.cs) and its language
+file [`assets/en-US.xml`](assets/en-US.xml).** The reference covers choosing between
+`AbstractSettingsCheck` and `HealthCheck`, the Umbraco 17 API (`GetStatusAsync`, `ExecuteAction`,
+`HealthCheckStatus`), where the language keys go, scheduling, and the docs sample's corrections.
+Generate a stable GUID, use an appropriate group, validate action aliases, and keep remediation
+idempotent. Always surface write failures as errors (and logs), not swallowed successes.
 
 ## Razor, multilingual Dictionary items, and fallbacks
 
@@ -96,14 +57,21 @@ visible controlled fallback or an explicit failure state—not a blank success, 
 value, swallowed exception, or silent default. Encode Razor output and never render secrets or raw
 configuration values.
 
-Suggested explicit fallback chain (pseudocode):
+Umbraco doesn't fall back between cultures for you: `Umbraco.GetDictionaryValue(key)` (current
+culture) and `GetDictionaryValue(key, culture)` return an **empty string**, not null, when the item
+or its translation is missing. So a `??` chain never falls through; test for empty instead, or use
+`GetDictionaryValueOrDefault`, which does.
+
+Suggested explicit fallback chain (uncompiled sketch for a view):
 
 ```csharp
-// Pseudocode: safe Dictionary lookup with explicit fallback
-var translation =
-    Dictionary.GetValue(alias, requestedCulture) ??
-    Dictionary.GetValue(alias, configuredDefaultCulture) ??
-    "Service temporarily unavailable. Please try again later.";
+// Requested (current) culture, then the default culture, then a safe invariant message.
+var translation = Umbraco.GetDictionaryValue(alias);
+if (string.IsNullOrWhiteSpace(translation))
+{
+    translation = Umbraco.GetDictionaryValueOrDefault(alias, defaultCulture,
+        "Service temporarily unavailable. Please try again later.");
+}
 // In Razor: use the normal @translation rendering (it is encoded by default).
 // Avoid Html.Raw(translation) unless you have a verified, sanitized HTML value.
 ```
@@ -117,3 +85,9 @@ Never render configuration values or secrets directly into the view.
 Objective scenarios and build-honesty requirements live in
 [`evals/evals.json`](evals/evals.json). Build a real project when one exists and state clearly when
 verification was not possible.
+
+The backend surface is **Asserted**: the `dotnet test` gate compiles the asset into the reference
+host (`examples/robots-txt/`) and checks its statuses, its Fix action, that its messages resolve
+from the language file, and that the created robots.txt is served at `/robots.txt`. The Razor
+surface is **Documented**: it ships no code, the sketch above is uncompiled, and evals grade the
+guidance.

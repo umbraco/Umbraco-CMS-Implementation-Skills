@@ -7,14 +7,6 @@
     <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="config\lang\en-US.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="config\lang\en-US.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Umbraco.Cms.Web.Website" />
   </ItemGroup>
 </Project>

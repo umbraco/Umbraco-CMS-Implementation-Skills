@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<!-- Install at ~/config/lang/en-US.xml in the site, or App_Plugins/{YourPackage}/lang/en-US.xml in a package. Add one file per backoffice culture (da-DK.xml, ...). -->
 <language alias="en-US" intName="English (United States)" localName="English (United States)" culture="en-US">
   <area alias="healthcheck">
     <key alias="seoRobotsCheckSuccess">The robots.txt file exists.</key>
