@@ -68,15 +68,25 @@ test('a reference over 100 lines needs a Contents index; 100 lines or fewer does
   assert.deepEqual(checkSkill(short), []);
 });
 
+// The output depends on GITHUB_ACTIONS, which CI sets, so each run states it rather than inheriting it.
+const outside = { ...process.env, GITHUB_ACTIONS: '' };
+
 test('the CLI warns with exit 0, and fails with --strict', () => {
   const root = skillTree({ 'one/SKILL.md': '# s', 'one/references/a.md': 'no links' });
-  const out = execFileSync(process.execPath, [CLI, root], { encoding: 'utf8' });
-  assert.match(out, /warning: one: no Umbraco docs link/);
+  const out = execFileSync(process.execPath, [CLI, root], { encoding: 'utf8', env: outside });
+  assert.match(out, /^warning: one: no Umbraco docs link/m);
   let code = 0;
   try {
-    execFileSync(process.execPath, [CLI, '--strict', root], { stdio: 'pipe' });
+    execFileSync(process.execPath, [CLI, '--strict', root], { stdio: 'pipe', env: outside });
   } catch (error) {
     code = error.status;
   }
   assert.equal(code, 1);
+});
+
+test('in GitHub Actions the warnings are annotations, so they show on the PR', () => {
+  const root = skillTree({ 'one/SKILL.md': '# s', 'one/references/a.md': 'no links' });
+  const env = { ...process.env, GITHUB_ACTIONS: 'true' };
+  const out = execFileSync(process.execPath, [CLI, root], { encoding: 'utf8', env });
+  assert.match(out, /^::warning::one: no Umbraco docs link/m);
 });
