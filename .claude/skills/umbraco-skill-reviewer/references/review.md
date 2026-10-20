@@ -44,6 +44,10 @@ against the actual files. The ones PRs most often miss:
 
 - the SKILL.md doesn't tell the agent to open the reference and start from its asset **before
   writing code**;
+- an implementation skill with no Umbraco docs link anywhere: add the docs pages it's built on, where
+  the claims they support are;
+- a reference over 100 lines with no `## Contents` index at the top: add one, a link to each section
+  with when to read it (`node scripts/check-skill-docs.mjs` lists both);
 - a coverage tier that isn't true (e.g. **Documented** for an approach that ships code);
 - a doc link duplicated between SKILL.md and a reference;
 - expectations that accept only one implementation, or reward an answer the skill itself advises

@@ -49,6 +49,12 @@ jobs:
       - name: Skill frontmatter is valid and eval fixtures exist
         run: node scripts/check-skill-frontmatter.mjs
 
+      # Implementation skills link the Umbraco docs they're built on, and a reference over 100 lines
+      # opens with a `## Contents` index so the agent loads only what it needs. Warnings for now (they
+      # show as annotations on the PR); add --strict once the open PRs comply.
+      - name: Skill docs links and reference indexes (warnings)
+        run: node scripts/check-skill-docs.mjs
+
       # Requirements-driven content-modelling skills ship markdown, not code, so there is nothing for the
       # dotnet test gate to compile. Their gate is the requirements linter: the golden requirements must pass, and
       # the deliberately broken fixture must fail with exactly the rules it was written to break.

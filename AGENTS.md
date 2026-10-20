@@ -224,6 +224,10 @@ holds the rules, `umbraco-content-requirements-documentation` holds the format, 
 workflow (`references/change-workflow.md`) and the apply and verify steps; the other
 content-modelling skills link into those two rather than copying them.
 
+Implementation skills are also checked by `node scripts/check-skill-docs.mjs`: each links the Umbraco
+docs it's built on at least once, and a reference over 100 lines opens with a `## Contents` index. It
+reports warnings for now.
+
 Eval runs that leave an edited Umbraco project behind are also booted, with
 `node scripts/boot-check.mjs <project>`, because some mistakes compile and only fail at startup. How
 evals use it is in [`umbraco-skill-evaluator`](.claude/skills/umbraco-skill-evaluator/SKILL.md).

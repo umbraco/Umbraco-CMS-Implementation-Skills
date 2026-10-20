@@ -4,6 +4,20 @@ A `/sitemap.xml` route served by a custom controller, with in-memory caching inv
 content changes. **No backoffice configuration required** — entirely file-based, so it can be
 implemented without the Umbraco Developer MCP.
 
+## Contents
+
+- [When to choose this approach](#when-to-choose-this-approach): read first, to confirm this approach
+  fits the site.
+- [Building blocks (source of truth for each piece)](#building-blocks-source-of-truth-for-each-piece):
+  read before writing code, for the docs behind each piece.
+- [What the implementation does](#what-the-implementation-does): read to explain the behaviour to the
+  user.
+- [The files](#the-files): read for what each asset is.
+- [Step 1 — Discover project context](#step-1--discover-project-context) and
+  [Step 2 — Write the files](#step-2--write-the-files): read while implementing.
+- [Headless](#headless): read when the public front end is on a different host from Umbraco.
+- [Done](#done): read before reporting back to the user.
+
 ## When to choose this approach
 
 - **Headless / Delivery-API** sites, or any site without Razor templates.

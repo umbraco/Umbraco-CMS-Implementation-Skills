@@ -30,6 +30,11 @@ fix anything that fails. A skill is ready only when every applicable item passes
 - [ ] All fetch-me doc links use the `.md` version (or link a sibling skill instead of raw docs)
 - [ ] Says "fetch the docs first" wherever the code isn't verbatim in `assets/`
 - [ ] Every docs snippet a build or the gate disproved is in a *Docs corrections* table
+- [ ] (implementation skills) The skill links the Umbraco docs it's built on at least once, in SKILL.md
+  or a reference. A skill with no docs link is teaching from memory
+- [ ] A reference over 100 lines starts with a `## Contents` index: links to its own sections, each
+  saying when to read it (`- [Fallback](#fallback): read when a value is missing in this culture`), so
+  the agent loads only the part it needs. `scripts/check-skill-docs.mjs` checks both rules
 
 **assets/ (if present)**
 - [ ] Templates use `<Placeholder>` tokens with optional/removable lines marked

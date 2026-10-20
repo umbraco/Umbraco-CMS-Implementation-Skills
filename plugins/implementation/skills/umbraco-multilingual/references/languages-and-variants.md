@@ -11,6 +11,19 @@ Order of preference for every backoffice step:
 2. a manual walk-through, one step at a time;
 3. for languages and dictionary items only, importing [`assets/multilingual-package.xml`](../assets/multilingual-package.xml).
 
+## Contents
+
+- [1. Languages](#1-languages): read when adding languages, or choosing the default and fallbacks.
+- [2. Vary by culture](#2-vary-by-culture): read when making Document Types and properties vary,
+  including blocks.
+- [3. Culture and Hostnames](#3-culture-and-hostnames): read when assigning a domain per culture, or
+  keeping or redirecting existing URLs.
+- [Publishing variants from code](#publishing-variants-from-code): read when a migration, import or
+  seeding job publishes variant content.
+- [Note: a root per market](#note-a-root-per-market): read when markets differ in structure, not just
+  wording.
+- [Done](#done): read before reporting back to the user.
+
 ## 1. Languages
 
 Settings → Languages → Create, once per language. For each one, decide:
