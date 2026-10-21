@@ -9,8 +9,19 @@ gh api repos/umbraco/Umbraco-CMS-Implementation-Skills/pulls/<n>/comments   # in
 ```
 
 Read the earlier reviews before your own: don't re-raise something already answered, and check
-the fixes the author says they made actually landed. The PR description usually states the coverage
-tier, the eval results and what isn't covered. Each of those is a claim to check, not a fact.
+the fixes the author says they made actually landed. Points left unanswered on the current head are
+findings: verify each against the source and fix the ones that hold. An earlier review can be wrong
+too; if the source disproves one, say so in your summary with the source line. The PR description
+usually states the coverage tier, the eval results and what isn't covered. Each of those is a claim
+to check, not a fact.
+
+**Check the PR still adds something.** `gh pr view --json files` lists the PR's diff from its own
+merge base, so a PR that is already on `main` (a duplicate of a merged one, or work that landed
+another way) still looks full. Compare against `main` itself: `git diff --stat origin/main...HEAD`
+for what the PR changes, and `git diff origin/main HEAD -- plugins/` for what would still differ
+after merging. If nothing would, there's nothing to fix or push: comment saying so (naming the PR or
+commit it duplicates), label it `ai-review-done`, and leave closing it to a human (on #52 it was #23's
+exact head).
 
 ## Scope
 
@@ -21,6 +32,9 @@ separately, so don't review its design unless asked. **A failing gate is always 
 causes it**: the PR can't land red, so fix the cause (on #50 it was a `requires` entry pointing at a
 page the Delivery API hides from anonymous requests).
 
+**Overlap with a skill already on `main`** (two skills triggering on the same request) is a scope
+call: report it for the human, and don't move triggers between skills yourself.
+
 ## What to check
 
 ### 1. Conventions
@@ -30,6 +44,10 @@ against the actual files. The ones PRs most often miss:
 
 - the SKILL.md doesn't tell the agent to open the reference and start from its asset **before
   writing code**;
+- an implementation skill with no Umbraco docs link anywhere: add the docs pages it's built on, where
+  the claims they support are;
+- a reference over 100 lines with no `## Contents` index at the top: add one, a link to each section
+  with when to read it (`node scripts/check-skill-docs.mjs` lists both);
 - a coverage tier that isn't true (e.g. **Documented** for an approach that ships code);
 - a doc link duplicated between SKILL.md and a reference;
 - expectations that accept only one implementation, or reward an answer the skill itself advises

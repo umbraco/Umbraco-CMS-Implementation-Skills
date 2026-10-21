@@ -1,0 +1,63 @@
+{
+  "skill_name": "umbraco-security-2fa",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our Umbraco 17.5 site (root namespace Acme.Web) has a members area: everything under /members/ is behind public access, the login page renders Views/Partials/memberLogin.cshtml, and members manage their details on /members/my-account/ (Views/myAccount.cshtml, there's a TODO where security settings go). Backoffice editors already have authenticator-app 2FA (Security/EditorAuthenticator.cs). Now we need the same for members. From My account they should be able to turn 2FA on by scanning a QR code with Google or Microsoft Authenticator, and turn it off again. Our security lead insists that turning it off must need a current code, like it does for editors. Once it's on, signing in must ask for the code, and members must still end up on the page they originally asked for (that works today for password-only logins). We've got a pen test next month, so follow best practice. Make the changes in the project and tell me how to test it.",
+      "expected_output": "A member ITwoFactorProvider registered on MemberIdentityBuilder under its own name; the login partial gains the code step (TryGetTwoFactorProviderNames + Verify2FACode) carrying the originally requested URL; My account gets a setup/disable UI that lists only member providers, with disabling gated on a valid code; tight code tolerance; an honest build report and a test plan.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/member-portal/"
+      ],
+      "expectations": [
+        "A member provider class implementing ITwoFactorProvider is registered through MemberIdentityBuilder's AddTwoFactorProvider, under a provider name different from 'EditorAuthenticator'",
+        "Views/Partials/memberLogin.cshtml (or the login view it is replaced by) handles the second step: after a correct password for an enrolled member it renders a code form, either by checking ViewData.TryGetTwoFactorProviderNames and posting the provider name and code to UmbTwoFactorLoginController.Verify2FACode, or by posting to a custom surface action that completes the sign-in through the member sign-in manager's TwoFactorSignInAsync",
+        "The code form sends a returnUrl holding the originally requested URL (for example from Context.Request.Path), or otherwise makes Verify2FACode redirect to the page the member asked for rather than to the login page",
+        "The My account 2FA UI offers only member providers: EditorAuthenticator is excluded (filtered by name, or by the member IdentityOptions token provider map), so the editor provider's GetSetupDataAsync is never called with a member key",
+        "Turning 2FA off requires a valid current code: it goes through IMemberTwoFactorLoginService.DisableByCodeAsync, or validates the PIN before disabling. A form posting straight to UmbTwoFactorLoginController.Disable, which needs no code, fails this",
+        "The member provider validates codes with an explicit tolerance narrower than the GoogleAuthenticator default of five minutes (a TimeSpan of 60 seconds or less, or an iteration offset of 1)",
+        "Umbraco's own no-code UmbTwoFactorLoginController.Disable can no longer switch member 2FA off: the agent blocks or replaces that action (for example a filter answering 404), recognising that Umbraco auto-routes it at /umbraco/surface/UmbTwoFactorLogin/Disable even when no form posts to it",
+        "If the agent says the project builds, `dotnet build` of the edited project succeeds; if it could not build, it says so rather than claiming a verified build"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Editors' 2FA on our Umbraco 17 site (Acme.Web) has gone weird. Sam set it up from the Umbraco docs before leaving: Security/UmbracoUserAppAuthenticator.cs, its composer, and App_Plugins/TwoFactorProviders/. It worked on staging three weeks ago and three editors enrolled. Then Sam's last commit (the App_Plugins changes) went out, and now 'Configure Two-Factor' has vanished from the user menu, and a couple of other backoffice packages' dashboards have stopped loading too. Please fix it. While you're in there: the backoffice label says 'Google Authenticator' but half of us use Microsoft Authenticator, so rename the provider to something neutral. The app also lists the account as 'testingOn15', which should say 'Acme CMS'. Our agency staff sign in with the Entra ID button (an external login provider; local login is still allowed). Will they be asked for a code? And what do we do when an editor loses their phone? We have no browser in CI, so tell me how to check the login flow works from the command line.",
+      "expected_output": "Plain-JSON manifest whose forProviderName matches the provider; the stored provider name kept (label changed instead) or enrolments migrated, with the reason; issuer 'Acme CMS'; tight tolerance; the stub custom element dropped; correct answers on SSO bypass, recovery and a curl check of the login API's 402 response.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/editor-2fa/"
+      ],
+      "expectations": [
+        "App_Plugins/TwoFactorProviders/umbraco-package.json is valid JSON after the change: the `// This line is the only change` comment is gone, and the agent identifies the comment as what broke manifest loading",
+        "The manifest's forProviderName equals the provider's ProviderName after the change",
+        "The three enrolled editors keep 2FA: the provider name stored with enrolments stays 'GoogleAuthenticator' and only the display label (meta.label / name) becomes neutral, OR the agent migrates existing umbracoTwoFactorLogin rows to the new name. Either way it explains that enrolments under a name no provider claims are ignored. Renaming ProviderName with no migration fails this",
+        "The issuer passed to GenerateSetupCode is 'Acme CMS' instead of 'testingOn15'",
+        "ValidateTwoFactorPIN is called with an explicit tolerance narrower than the five-minute library default (a TimeSpan of 60 seconds or less, or an iteration offset of 1)",
+        "The manifest no longer points `element` at the placeholder 2fa-activation.js (or that file is replaced by a working element), so editors get a usable activation screen",
+        "The agent says Entra ID (external login) users are not asked for an Umbraco 2FA code by default (Umbraco:CMS:Security:UserBypassTwoFactorForExternalLogins defaults to true), and that MFA for them belongs in Entra ID",
+        "For a lost phone, the agent says a user with access to the Users section can switch off that editor's 2FA provider from the backoffice user (no code needed), and that Umbraco has no recovery codes",
+        "The command-line check posts to /umbraco/management/api/v1/security/back-office/login and expects HTTP 402 with the provider in enabledTwoFactorProviderNames for an enrolled editor (optionally followed by .../verify-2fa)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "After merging our 2FA branch, the Umbraco 17 site (Acme.Web) won't start any more. Boot dies with 'An item with the same key has already been added. Key: AppAuthenticator'. The branch added Security/AppAuthenticator.cs (one authenticator for both backoffice editors and website members), App_Plugins/TwoFactor/umbraco-package.json, and Views/Partials/memberSecurity.cshtml, which is rendered on the members' My account page. Fix it so editors and members can both use an authenticator app, and review the 2FA code for security problems before the pen test next week. Fix anything you find, and list what you changed and why.",
+      "expected_output": "Separate user and member providers with distinct names (fixing the duplicate-key boot failure), manifest updated to the user provider's name, server-side QR generation replacing the third-party QR URL that leaked the secret, a member page that only offers the member provider, disable gated on a code, tight tolerance, honest build report.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/shared-provider/"
+      ],
+      "expectations": [
+        "Backoffice users and members end up with separate provider registrations under different provider names: no provider name is registered on both BackOfficeIdentityBuilder and MemberIdentityBuilder",
+        "App_Plugins/TwoFactor/umbraco-package.json's forProviderName matches the backoffice provider's name after the change",
+        "The QR code is no longer built by a third-party service (no api.qrserver.com or similar URL), and the agent identifies that the external URL sent the TOTP secret to that service",
+        "Views/Partials/memberSecurity.cshtml offers only member providers: the backoffice provider is excluded (filtered by name, or by the member IdentityOptions token provider map), so its setup is never requested for a member",
+        "Turning member 2FA off requires a valid current code: it goes through IMemberTwoFactorLoginService.DisableByCodeAsync, or validates the PIN before disabling. A form posting straight to UmbTwoFactorLoginController.Disable fails this",
+        "Code validation uses an explicit tolerance narrower than the GoogleAuthenticator default of five minutes (a TimeSpan of 60 seconds or less, or an iteration offset of 1)",
+        "Umbraco's own no-code UmbTwoFactorLoginController.Disable can no longer switch member 2FA off: the agent blocks or replaces that action (for example a filter answering 404), recognising that Umbraco auto-routes it at /umbraco/surface/UmbTwoFactorLogin/Disable even when no form posts to it",
+        "If the agent says the project builds, `dotnet build` of the edited project succeeds; if it could not build, it says so rather than claiming a verified build"
+      ]
+    }
+  ]
+}

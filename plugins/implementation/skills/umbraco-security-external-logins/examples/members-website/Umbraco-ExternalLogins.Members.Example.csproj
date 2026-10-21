@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-security-external-logins skill, members approach.
+
+    Compiles the skill's assets/MemberExternalLogin.cs, projected into obj/ at build time with its
+    placeholders substituted (see .generate.json). The reference instance (Umbraco-CMS.Skills)
+    references this project, and ExternalLoginsMembersTests asserts the result over HTTP. Not
+    shipped to users; not part of any plugin.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.ExternalLogins.Members</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+  </ItemGroup>
+
+</Project>

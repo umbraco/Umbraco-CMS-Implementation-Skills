@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-security-external-logins skill, users approach.
+
+    Compiles the skill's assets/BackOfficeExternalLogin.cs, projected into obj/ at build time with
+    its placeholders substituted (see .generate.json). The shared GenerateSkillAssets target in
+    plugins/Directory.Build.props also embeds the projected umbraco-package.json, under its bare file
+    name, so ExampleHostWiring can serve it as a package manifest. The reference instance
+    (Umbraco-CMS.Skills) references this project, and ExternalLoginsUsersTests asserts the result
+    over HTTP. Not shipped to users; not part of any plugin.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.ExternalLogins.Users</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+    <PackageReference Include="Umbraco.Cms.Api.Management" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
+  </ItemGroup>
+
+</Project>

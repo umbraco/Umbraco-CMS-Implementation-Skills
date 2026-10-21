@@ -1,0 +1,13 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. namespace = the fixed namespace the <Namespace> placeholder is substituted for; placeholders = the skill's other placeholders, resolved to values that exist in the reference instance (Clean's 'article' Document Type and its 'title' Textstring); assets = the Approach A files (Approach B ships the ContentImport* pair instead). No 'requires' entry: the supported kinds are root-children only and this example needs the non-root 'articleList' node, which its fixture locates by alias.",
+  "host": "clean",
+  "namespace": "Umbraco.Skills.Examples.NotificationHandlers",
+  "placeholders": {
+    "<DocTypeAlias>": "article",
+    "<PropertyAlias>": "title"
+  },
+  "assets": [
+    "PublishingRuleHandler.cs",
+    "NotificationHandlersComposer.cs"
+  ]
+}

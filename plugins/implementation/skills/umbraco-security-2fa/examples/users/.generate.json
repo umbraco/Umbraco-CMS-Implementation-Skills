@@ -1,0 +1,12 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'clean' because Approach A is C# registered into DI plus a backoffice manifest; it needs no content of its own. namespace = what <Namespace> becomes. placeholders = <IssuerName>, the label shown in the authenticator app. assets = Approach A's files only (the member approach is the blank host's example). The manifest is embedded and written to the host's App_Plugins by ExampleHostWiring.cs.",
+  "host": "clean",
+  "namespace": "Umbraco.Skills.Examples.TwoFactor.Users",
+  "placeholders": {
+    "<IssuerName>": "Umbraco Skills (users)"
+  },
+  "assets": [
+    "UmbracoUserAppAuthenticator.cs",
+    "umbraco-package.json"
+  ]
+}

@@ -1,0 +1,17 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>@Model.Name | Acme</title>
+</head>
+<body>
+    <header><a href="/">Acme</a></header>
+    <main>
+        @RenderBody()
+    </main>
+</body>
+</html>

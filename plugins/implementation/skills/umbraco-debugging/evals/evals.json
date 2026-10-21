@@ -1,0 +1,105 @@
+{
+  "skill_name": "umbraco-debugging",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our Umbraco 17.5 site is in Visual Studio 2022 and I run it with F5 on the Acme.Web profile. Controllers/ProductImportController.cs imports products from our PIM and calls IContentService.Save for each one. Save reports success for every row, but some products never show up in the backoffice, so I want to step into Umbraco's Save and see what it does. My breakpoint on the `_contentService.Save(product)` line hits, but F11 just steps over it. I've already ticked 'Microsoft Symbol Servers' under Tools > Options > Debugging > Symbols, and set it to 'Load only specified modules' to keep startup fast. When I opened ContentService through Go To Definition and put a breakpoint in it, VS said 'The breakpoint will not currently be hit. No symbols have been loaded for this document.' I'd rather not clone Umbraco and swap our NuGet package for project references. Get me stepping into Umbraco's real source for Save, with locals I can read, and tell me how to confirm it's working.",
+      "expected_output": "The agent explains why F11 steps over Umbraco and why the breakpoint has no symbols, and gives the Visual Studio 2022 settings to fix it: turn off Enable Just My Code, turn on Enable Source Link support, add the NuGet.org Symbol Server (Umbraco's symbols are there, not on Microsoft's servers), stop 'Load only specified modules' from excluding the Umbraco assemblies, and turn on Suppress JIT optimization on module load so locals are readable. It tells the user to confirm in the Modules window that the Umbraco assemblies show symbols loaded, and to F11 from their own Save call. It does not suggest replacing the NuGet reference with project references to a clone, and does not claim to have run the debugger itself.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/product-import/"
+      ],
+      "expectations": [
+        "The agent tells the user to turn off 'Enable Just My Code' (Tools > Options > Debugging > General) and explains that while it is on, Visual Studio treats Umbraco's NuGet assemblies as non-user code and F11 steps over them",
+        "The agent tells the user to enable the 'NuGet.org Symbol Server' location under Debugging > Symbols, and explains that Umbraco's symbols are published to NuGet.org's symbol server, so ticking 'Microsoft Symbol Servers' alone does not load them",
+        "The agent tells the user to turn on 'Enable Source Link support' (Debugging > General) so Visual Studio downloads the matching Umbraco source from GitHub instead of showing decompiled or no source",
+        "The agent addresses the 'Load only specified modules' setting: switch back to loading all modules, add the Umbraco assemblies (e.g. Umbraco.Core.dll or Umbraco.*.dll) to the specified modules, or load their symbols manually from the Modules window",
+        "The agent recommends 'Suppress JIT optimization on module load (Managed only)' or explains that without it locals in Umbraco's release-built assemblies may be optimized away",
+        "The agent tells the user to confirm the fix in the Modules window (Debug > Windows > Modules), checking that the Umbraco assembly containing ContentService (Umbraco.Core.dll) shows its symbols as loaded",
+        "The agent does not recommend replacing the Umbraco.Cms PackageReference with ProjectReferences to a cloned Umbraco-CMS as the way to step into Umbraco",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "The agent does not claim to have launched Visual Studio, attached the debugger, loaded symbols or stepped into Umbraco; it says or makes clear that the user must do these and check the result"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm on VS Code with C# Dev Kit on a Mac, working on our Umbraco 17.5 site (Acme.Web.csproj). Our .vscode/launch.json was copied from our old Umbraco 13 site and tweaked. F5 builds and starts the site and my own breakpoints hit, but F11 on any Umbraco call steps straight over it, and clicking an Umbraco frame in the call stack shows nothing useful. Fix launch.json so I can step into Umbraco's real source from the NuGet packages, without cloning Umbraco. Keep the rest working: the pre-launch build, the browser opening, and the Development environment. Then tell me how to check it's actually working.",
+      "expected_output": "The agent edits .vscode/launch.json in place: sets \"justMyCode\": false (the default is true), moves the misplaced top-level \"searchMicrosoftSymbolServer\" into a \"symbolOptions\" object and adds \"searchNuGetOrgSymbolServer\": true there, removes or re-enables the \"sourceLinkOptions\" entry that disables Source Link for every URL, adds \"suppressJITOptimizations\": true, and fixes the program path from net8.0 to net10.0 to match the csproj. It keeps preLaunchTask, serverReadyAction and the Development environment, and tells the user how to confirm symbols and source loaded, without claiming to have run the debugger.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/vscode-launch/"
+      ],
+      "expectations": [
+        "The launch configuration in .vscode/launch.json sets \"justMyCode\": false, and the answer says the C# debugger's default is true, which is why F11 stepped over Umbraco",
+        "The launch configuration has a \"symbolOptions\" object containing \"searchNuGetOrgSymbolServer\": true; no symbol-server key (such as the fixture's \"searchMicrosoftSymbolServer\") is left at the top level of the configuration, where the debugger ignores it",
+        "The fixture's \"sourceLinkOptions\" entry that sets \"*\": { \"enabled\": false } is removed or changed to enabled: true, and the answer says it was disabling Source Link for every URL, including Umbraco's GitHub source",
+        "The launch configuration sets \"suppressJITOptimizations\": true, and the answer explains that it keeps locals readable in Umbraco's release-built assemblies",
+        "The \"program\" path points at bin/Debug/net10.0/Acme.Web.dll (matching the csproj's net10.0 TargetFramework), not the fixture's net8.0 path",
+        "The configuration keeps \"preLaunchTask\": \"build\", the \"serverReadyAction\" and ASPNETCORE_ENVIRONMENT set to Development, and .vscode/launch.json remains valid JSON with comments (JSONC)",
+        "The answer gives at least one concrete check that it is working, such as F11 from the user's own code opening an Umbraco source file, or the Debug Console reporting symbols loaded for an Umbraco assembly",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "The agent does not claim to have launched the debugger, loaded symbols or stepped into Umbraco; it says or makes clear that the user must run it and check"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We use JetBrains Rider on an Umbraco 17.5 site (Acme.Web.csproj). When I step into or Ctrl+click an Umbraco method, for example IPublishedContent.Url() or IContentService.Save, Rider shows me its decompiled code: no comments, odd variable names, and breakpoints I set in it don't always bind. When I do get into Umbraco code, most locals say they can't be evaluated. Two colleagues have suggestions: one says the only way to get the real source is to clone Umbraco-CMS and swap our Umbraco.Cms NuGet reference for project references; the other says we need to add <DebugType>full</DebugType> and <EmbedAllSources>true</EmbedAllSources> to Acme.Web.csproj. Is either of them right? How do I get Rider debugging the actual Umbraco GitHub source with readable locals, and how do I confirm it's working?",
+      "expected_output": "The agent explains that Rider decompiles because it has no symbols or source location for the Umbraco assemblies, and fixes it in Rider's settings: use the NuGet.org symbol server, let Rider take sources from symbol files via Source Link and download them from GitHub, and allow stepping into external code. It explains that the unreadable locals come from Umbraco's NuGet assemblies being optimized release builds, and suggests suppressing JIT optimization. It rejects both colleagues' suggestions with reasons (a clone is unnecessary with Source Link; csproj debug settings only affect Acme.Web's own assembly) and gives a concrete way to confirm it works, without claiming to have run Rider.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "The agent explains that Rider shows decompiled code because it has no symbols (PDBs) or source location for the Umbraco assemblies, so it falls back to its decompiler",
+        "The agent tells the user to add or enable the NuGet.org symbol server (e.g. https://symbols.nuget.org/download/symbols) in Rider's symbol settings, because that is where Umbraco's symbols are published",
+        "The agent tells the user to let Rider use sources from symbol files (Source Link) and download them from remote locations such as GitHub, so Rider opens Umbraco's real source instead of decompiling",
+        "The agent tells the user to allow the debugger to step into external (non-user) code, e.g. Rider's external source debugging option or its Just My Code equivalent",
+        "The agent explains that the locals can't be evaluated because Umbraco's NuGet assemblies are optimized release builds, and suggests a way to suppress JIT optimization while debugging",
+        "The agent rejects cloning Umbraco-CMS and swapping to ProjectReferences as unnecessary for stepping into Umbraco source (Source Link and the symbol server are enough)",
+        "The agent rejects the DebugType/EmbedAllSources suggestion, explaining that those properties affect only Acme.Web's own assembly, not Umbraco's NuGet assemblies; Acme.Web.csproj is not changed to add them as the fix",
+        "The answer gives at least one concrete check that it is working, such as stepping into an Umbraco method opening a source file with Umbraco's comments, or Rider's modules or symbols view showing symbols loaded for an Umbraco assembly",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "The agent does not claim to have run Rider, loaded symbols or stepped into Umbraco; it says or makes clear that the user must do these and check the result"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our /products page on Umbraco 17.5 takes 3 to 4 seconds to load. It's a route-hijacked productListing page; the controller is Controllers/ProductListingController.cs. Add timing around the expensive parts so I can see which one is slow. I want it in Umbraco's built-in profiler, not Stopwatch log lines. It's worst on production, so I'd like to look at the timings on the live site; I noticed Debug is already set to true in our appsettings.json, so that part should be fine, right? Tell me exactly how to view the results.",
+      "expected_output": "The agent injects Umbraco's IProfiler into ProductListingController and wraps the descendants query, the per-product category count and the stock API call each in a named `using (_profiler.Step(\"...\"))` block. It tells the user that Debug must not be on in production: it removes `Umbraco:CMS:Hosting:Debug` from the base appsettings.json (which applies in every environment, production included) and sets it in appsettings.Development.json, then explains how to view the timings (restart, request /products?umbDebug=true, read the MiniProfiler output on the page). It offers a production-safe way to investigate the live slowness instead, notes that the Step calls are no-ops when Debug is off so they can stay in the code, and does not claim to have run the site.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/slow-page/"
+      ],
+      "expectations": [
+        "Controllers/ProductListingController.cs takes Umbraco's IProfiler (Umbraco.Cms.Core.Logging.IProfiler) through its constructor, not through a static service locator, and does not use Stopwatch or ILogger timing as a substitute for it",
+        "Each expensive section is wrapped in its own named profiler step, `using (_profiler.Step(\"...\")) { ... }` or `using var ... = _profiler.Step(\"...\")` with a tight scope: at least the Root().DescendantsOrSelf() product query, the per-product same-category count, and the GetStockLevelsAsync call",
+        "The `Debug: true` under Umbraco > CMS > Hosting is removed from the base appsettings.json (or set to false there), and appsettings.Development.json sets it to true under Umbraco > CMS > Hosting > Debug, the exact key `Umbraco:CMS:Hosting:Debug`",
+        "The agent answers the user's question directly: Debug in the base appsettings.json is not fine, because that file applies in every environment including production",
+        "The agent does not advise turning on `Umbraco:CMS:Hosting:Debug` on the production site, even temporarily, and offers a production-safe way to investigate the live slowness instead (e.g. reproduce locally or on a non-production environment with a copy of production data, or use logging or APM timings)",
+        "The agent explains how to view the results: run with Debug on, request the page with ?umbDebug=true (e.g. /products?umbDebug=true), and read the MiniProfiler timings shown on the rendered page, and that seeing them needs a backoffice login with access to the Settings section in the same browser (an anonymous visitor gets no timings)",
+        "The agent says the site must be restarted after changing `Umbraco:CMS:Hosting:Debug`, because Umbraco chooses its profiler at startup",
+        "The agent says the Step calls can stay in the code, because with Debug off Umbraco uses a no-op profiler and the steps cost next to nothing",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "The agent does not claim to have run the site, opened the profiler or seen any timings; it says or makes clear that the user must run it and check"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "On our Umbraco 17.5 site, when editors publish a news article or fix a headline, the article page updates straight away, but the 'Latest news' box on the homepage keeps showing the old headline until the site restarts. The box is Components/LatestNewsViewComponent.cs, called from Views/home.cshtml. Our developer uses VS Code with C# Dev Kit and wants to step through Umbraco's publishing and cache refresh code to see why the cache isn't refreshing. We've mostly noticed it on our staging server (Azure App Service), where we can't attach a debugger. Which debugging approach should we use where? Give us the steps for both, and if you find the cause, fix it.",
+      "expected_output": "The agent reads the view component first and finds the cause in the project's own code: a static `_latest` list built on the first request and never invalidated, so it survives every publish until the app restarts. It fixes LatestNewsViewComponent.cs by querying published content per request (or using a cache that is cleared on publish). It still answers the approach question: locally, step into Umbraco source in VS Code via Source Link (justMyCode false, symbolOptions with the NuGet.org symbol server, suppressJITOptimizations), breaking in the user's own code and pressing F11; on staging, where no debugger can attach, use diagnostics instead (`Umbraco:CMS:Hosting:Debug` set only in a non-production, environment-specific config and only temporarily, then ?umbDebug=true), never Debug in production or in the base appsettings.json. It does not claim to have run or debugged the site.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/stale-news/"
+      ],
+      "expectations": [
+        "The agent identifies the static `_latest` field in Components/LatestNewsViewComponent.cs as the cause: it is built once on the first request and never invalidated, so it outlives every publish until the app restarts. It does not blame Umbraco's published content cache",
+        "Components/LatestNewsViewComponent.cs is fixed: the never-invalidated static list is gone, replaced by querying the published content on each request, or by a cache that is cleared when content is published (e.g. AppCaches.RuntimeCache cleared from a ContentCacheRefresherNotification or ContentPublishedNotification handler)",
+        "The agent matches approach to environment: on the local machine, step into Umbraco's source under the debugger via Source Link; on staging, where no debugger can attach, use diagnostics without a debugger (Umbraco's Debug setting with MiniProfiler, and/or logs) rather than remote debugging",
+        "For local VS Code debugging, the agent gives (in the answer or a written .vscode/launch.json) a configuration with \"justMyCode\": false, a \"symbolOptions\" object with \"searchNuGetOrgSymbolServer\": true, and \"suppressJITOptimizations\": true",
+        "For staging, the agent uses the exact key `Umbraco:CMS:Hosting:Debug` and either enables it only temporarily in a non-production, environment-specific config (e.g. appsettings.Staging.json or an App Service setting `Umbraco__CMS__Hosting__Debug`) with a restart and ?umbDebug=true, then turns it off, or explains that it should stay off outside Development and reproduces the problem locally instead; it does not add Debug to the base appsettings.json",
+        "The agent does not advise turning on `Umbraco:CMS:Hosting:Debug` in production",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "The agent does not claim to have run the site, attached a debugger, stepped into Umbraco or reproduced the stale headline; it says or makes clear that the user must verify the fix"
+      ]
+    }
+  ]
+}

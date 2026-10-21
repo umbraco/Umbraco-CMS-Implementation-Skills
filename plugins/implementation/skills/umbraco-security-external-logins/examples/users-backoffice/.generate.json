@@ -1,0 +1,14 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'clean' (site 1): the approach is C# that registers into DI, and Clean ships no external login of its own. The scheme, label and callback path are placeholders, so they are resolved to values unique in the shared host: the members example registers its own scheme and callback path beside these. umbraco-package.json is projected too and embedded by the csproj, because ExampleHostWiring serves it as a package manifest so the public-manifest test reads the skill's own file.",
+  "host": "clean",
+  "namespace": "Umbraco.Skills.Examples.ExternalLogins.Users",
+  "placeholders": {
+    "<SchemeName>": "ExampleSso",
+    "<ProviderLabel>": "Example SSO",
+    "<CallbackPath>": "/umbraco-example-sso-signin"
+  },
+  "assets": [
+    "BackOfficeExternalLogin.cs",
+    "umbraco-package.json"
+  ]
+}

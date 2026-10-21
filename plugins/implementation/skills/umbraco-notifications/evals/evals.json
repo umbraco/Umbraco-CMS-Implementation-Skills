@@ -1,0 +1,59 @@
+{
+  "skill_name": "umbraco-notifications",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Implement our publishing policy in the supplied NotificationEval project (Umbraco 17.5.3, namespace Acme.News). House rule: an article's 'headline' must not be shouty \u2014 if it has uppercase letters and no lowercase letters, the publish must be blocked with an editor-visible message. Blank headlines and numbers alone are fine. Editors publish batches of pages at once \u2014 several 'article' items mixed with unrelated pages. Articles are translated into Danish and English, but not every language is ready every time. After articles go live we want an audit log: the article key and the languages that went live. A previous attempt watched ContentSavedNotification and unpublished offending pages afterwards \u2014 replace that approach. Put registration in an IComposer under Composers/. Implement real source files, build the supplied project, and briefly explain the edge cases handled. Do not contact any live CMS.",
+      "expected_output": "Compiling before/after handlers with batch-safe, property-variation-aware validation, per-operation culture helpers, editor-visible cancellation, and matching composer registrations. Drafts and removed cultures are not validated as publishes.",
+      "files": [
+        "evals/files/NotificationEval.csproj",
+        "evals/files/Contracts.cs"
+      ],
+      "expectations": [
+        "Validation handles ContentPublishingNotification and cancels with CancelOperation and a human-readable EventMessage. It does not veto drafts in Saving/Saved, throw for policy violations, or unpublish content as a substitute for cancellation.",
+        "For language-variant content the veto checks only cultures actually being published, using IsPublishingCulture or an equivalent operation-specific check. An unchanged English headline and a Danish culture being removed cannot block a Danish-only publish or a single-culture unpublish.",
+        "Both invariant content and an invariant headline property on culture-variant content are supported: invariant properties are read without a culture argument, while variant properties are read in the culture being published. The implementation inspects property variation, not only Document Type variation.",
+        "All article entities in a mixed batch are considered; an unrelated or compliant first entity does not skip later articles. Blank text and digits-only headlines pass, while uppercase text is rejected.",
+        "Success logging handles ContentPublishedNotification and identifies actual published cultures using HasPublishedCulture or equivalent change tracking, not all AvailableCultures or all currently published cultures. A removed culture is not logged as newly published.",
+        "The Acme.News implementation registers both before/after handlers exactly once through an IComposer under Composers/, with no unresolved placeholders or added Save/Publish calls that recursively trigger the handlers.",
+        "The evaluator's independent dotnet build of the submitted NotificationEval.csproj succeeds against Umbraco 17.5.3. All requested implementation files are present, and the final response does not claim runtime/HTTP tests that were not performed."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Fix our Umbraco 17.5.3 product integration in the supplied NotificationEval project (namespace Acme.Pim). Two load-balanced servers each keep a local product cache, and the scheduling publisher also sends published products to our PIM. Use the existing IPublishedProductReader, IProductCache and IPimClient contracts rather than implementing HTTP or URL lookup infrastructure. When product content changes, invalidate the affected local entry or branch on BOTH servers; a full cache refresh must clear the local cache but must not resubmit the whole catalogue to the PIM. Only real publishes should produce PIM upserts, using the product's final public URL/name/key from IPublishedProductReader. Cache-change payloads can mix unsupported entries, missing keys and usable products \u2014 don't drop later usable entries. A branch refresh covers the branch root plus everything under it. Deduplicate overlapping entries within a delivery, but a later republish of the same product must still sync. The PIM must not get two upserts merely because both servers saw the change. We register in Program.cs, not composers \u2014 provide a callable IUmbracoBuilder extension for that chain. Propagate cancellation to async work, build the project, and explain what your single-sender guard does and does not guarantee. Do not contact a live CMS or the PIM.",
+      "expected_output": "An async cache-refresher handler with separate local invalidation and outbound-publish paths, flag-aware batch processing, branch expansion, per-delivery deduplication and a single-sender role guard. Final URLs are read only after cache refresh; registration fits Program.cs.",
+      "files": [
+        "evals/files/NotificationEval.csproj",
+        "evals/files/Contracts.cs"
+      ],
+      "expectations": [
+        "The implementation handles ContentCacheRefresherNotification (not only ContentPublishedNotification) and explains why: it is raised on every server after that server's cache has refreshed, whereas ContentPublishedNotification runs only on the server that published, so a per-server local cache cannot be kept correct from it.",
+        "Payload handling uses flag-aware tests for TreeChangeTypes rather than equality with one flag. Unsupported or missing-key entries are skipped individually, so a later valid payload is still processed.",
+        "Local invalidation runs on every server, including Subscriber/Unknown roles as appropriate for local reads, and handles node, branch, removal and RefreshAll changes. The outbound role/publish filters do not suppress local invalidation; RefreshAll never causes catalogue upserts.",
+        "Outbound upserts are limited to actual publish payloads with non-empty PublishedCultures (or equivalent evidence), exclude blueprints and removal-only changes, and use IServerRoleAccessor Single/SchedulingPublisher or an equivalent single-sender mechanism. The explanation does not claim this provides durable exactly-once delivery.",
+        "Branch publishes include products from IPublishedProductReader.ReadBranchAsync and the root from ReadAsync, with per-delivery key deduplication. No handler-field or singleton forever-seen set suppresses a later legitimate republish of the same product.",
+        "An INotificationAsyncHandler awaits IPublishedProductReader/IPimClient work with the supplied CancellationToken, without fire-and-forget, Result or Wait. A callable IUmbracoBuilder extension registers it via AddNotificationAsyncHandler for the Program.cs chain, not a discoverable composer.",
+        "The evaluator's independent dotnet build of the submitted NotificationEval.csproj succeeds against Umbraco 17.5.3. All requested implementation files are present, and the final response does not claim live PIM/CMS or runtime tests that were not performed."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Implement the notification boundary for our Umbraco 17.5.3 package in the supplied NotificationEval project (namespace Acme.ProductSync). The recurring job already exists: write the injectable import service it calls, using IProductImporter for the actual work. Before any content is written, other packages must be able to veto an import and supply an editor/log-friendly reason. Our own freeze-window check implements IFreezeWindow \u2014 show that handler too. On veto, log the supplied reason and don't call IProductImporter. Handlers may attach arbitrary per-import context to the starting notification; the completed notification must carry the feed, the imported count, and that same context. Concurrent imports must not share context or lose each other's state. Completion reporting has to be correct: the importer can throw partway through, and callers may wrap the service in their own transactions \u2014 observers must only ever hear about imports that truly succeeded. Don't suppress Umbraco's other notifications or rebuild its indexes. Use the existing IProductImporter/IFreezeWindow contracts, preserve cancellation tokens, register through a package composer \u2014 the host's Program.cs is not ours to edit. Build the project and explain when the completed notification actually reaches observers.",
+      "expected_output": "Compiling cancelable/stateful before/after notifications, an awaited async veto path and freeze handler, a scoped async import service with per-operation State handoff, and composer registrations. Completion is queued, not immediately aggregated, and waits for successful outermost scope disposal.",
+      "files": [
+        "evals/files/NotificationEval.csproj",
+        "evals/files/Contracts.cs"
+      ],
+      "expectations": [
+        "The starting notification uses CancelableNotification with the required EventMessages constructor or an equivalent Umbraco ICancelableNotification implementation. The freeze handler supplies its reason via EventMessage/CancelOperation, not a swallowed exception.",
+        "Before calling IProductImporter, the service awaits PublishCancelableAsync (true means cancelled) or an equivalent asynchronous publish-and-check path. When vetoed it logs the handler's reason and never imports. The IFreezeWindow handler itself is asynchronous and awaited.",
+        "The completed notification carries constructor-set feed/count and the starting notification's same per-operation State dictionary via WithStateFrom or an equivalent assignment. Each import creates fresh notification/context objects; concurrent operations do not share static, singleton or handler-field state.",
+        "The service awaits IProductImporter inside an ICoreScope and queues completion via scope.Notifications.Publish, not immediate IEventAggregator publication. Complete is called only after successful awaited work, never in a finally/autoComplete path that also runs on exceptions or cancellation.",
+        "The implementation respects an existing outer Umbraco scope instead of detaching or forcing a commit. The explanation states that queued completion waits for successful outermost completion AND disposal, so an outer rollback still drops it even after the inner service returns.",
+        "A package IComposer registers the async freeze handler with AddNotificationAsyncHandler and the import service using a compatible DI lifetime; consumer handler registration is explained. No Program.cs edits, notification suppression, or unnecessary recurring-job scaffolding is introduced.",
+        "The evaluator's independent dotnet build of the submitted NotificationEval.csproj succeeds against Umbraco 17.5.3. All requested implementation files are present, and the final response does not claim runtime transaction tests that were not performed."
+      ]
+    }
+  ]
+}

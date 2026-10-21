@@ -1,0 +1,75 @@
+{
+  "skill_name": "umbraco-security-external-logins",
+  "evals": [
+    {
+      "id": 1,
+      "name": "entra-backoffice-multitenant",
+      "prompt": "Our marketing site runs on Umbraco 17 (project MySite.Web, root namespace MySite.Web, self-hosted on Azure App Service). Editors log in to the backoffice with passwords today and we want them on Microsoft Entra ID instead. The app registration already exists and is multi-tenant (it uses the 'common' endpoint), because two contractors from our agency sign in from the agency's own Entra tenant. All 15 editors already have Umbraco accounts with the same email addresses they have in Entra. In the app registration we've created three app roles: Umbraco.Admin, Umbraco.Editor and Umbraco.Writer. People should land in the matching Umbraco group, and if someone is taken out of Umbraco.Admin they must lose admin. Anyone without one of those roles shouldn't get in at all. Two former editors are already disabled in Umbraco but are still in Entra until HR's leaver process catches up, and they must stay locked out. We still need a way in if Entra is ever down. Please write the code, configuration and anything else the backoffice needs, and tell me exactly what to set up in Entra. There's no .NET SDK on this machine, so you can't build it.",
+      "expected_output": "A backoffice OpenID Connect (or Microsoft Account) external login registered with the Umbraco. scheme prefix, an authProvider manifest, tenant-restricted sign-in, groups mapped from app roles and re-synced on every sign-in, no default groups, local login kept as break-glass, secret kept out of source, and honest build reporting.",
+      "files": [],
+      "expectations": [
+        "Registers the provider with AddBackOfficeExternalLogins, using a scheme built by BackOfficeAuthenticationBuilder.SchemeForBackOffice (or otherwise prefixed 'Umbraco.')",
+        "Ships an umbraco-package.json with an authProvider extension whose forProviderName is 'Umbraco.' followed by the scheme name, and sets allowPublicAccess to true",
+        "Does not accept tokens from any tenant through the unrestricted multi-tenant endpoint: it pins the authority to the company tenant (with contractors invited as guests) or validates the tenant/issuer against an explicit allow-list",
+        "Explains that auto-linking matches existing Umbraco accounts by email, and that an unrestricted multi-tenant registration would let another tenant's account with an editor's or admin's email take over that account",
+        "Does not give new users a default group that grants access regardless of role (no 'admin' or 'editor' in defaultUserGroups or unconditionally in OnAutoLinking); groups come from the app roles",
+        "Re-applies the role-to-group mapping on every sign-in (in OnExternalLogin), adding and removing mapped groups, so losing Umbraco.Admin removes the admin group",
+        "Refuses sign-in, or refuses to create the user, when the person has none of the three app roles",
+        "Marks newly created users approved (IsApproved = true for a new user in OnAutoLinking), so a new user can sign in more than once",
+        "Refuses to auto-link an existing Umbraco user who is disabled or locked out, because linking signs them in without Umbraco's approval check",
+        "Maps roles to the Umbraco group aliases 'admin', 'editor' and 'writer', not to display names",
+        "Keeps password login available (DenyLocalLogin not enabled) or describes a concrete break-glass route such as a local administrator account",
+        "Keeps the client secret out of the committed appsettings.json (user secrets, environment variables or Key Vault)",
+        "If the OpenID Connect handler is used, sets TokenValidationParameters.NameClaimType to \"name\" (or otherwise ensures Identity.Name is populated); a solution built on the Microsoft Account handler passes this automatically",
+        "Does not claim the code was built, run or tested"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "google-members-beside-backoffice",
+      "prompt": "Our Umbraco 17 shop (root namespace Shop.Web) already has Google login for editors in the backoffice: it's in evals/files/google-members/GoogleBackOfficeComposer.cs and works, so don't break it. Marketing now wants 'Sign in with Google' on the public website for customers. Our login page renders the partial in evals/files/google-members/Views/Partials/Login.cshtml, which we made from Umbraco's Login snippet. We have about 4,000 customers who registered with email and password. Our registration form doesn't send a confirmation email, and our team approves new registrations by hand, so a few hundred are still waiting for approval. If a customer signs in with Google using the same address, they should end up in their existing account, not a new one. New people signing in with Google should be created as our Customer member type (alias 'customer') and put in the 'Customers' member group, because the order-history pages are protected by that group. Please implement it, tell me what to change in the Google Cloud console, and tell me what a customer sees if they cancel on Google's consent screen. There's no .NET SDK here, so you can't build.",
+      "expected_output": "A separate member scheme registered with AddMemberExternalLogins and SchemeForMembers on its own callback path, auto-linking new members as approved 'customer' members in 'Customers', verified-email guard before linking existing members, provider-error handling that returns to the login page, the existing backoffice login untouched, and honest build reporting.",
+      "files": [
+        "evals/files/google-members/GoogleBackOfficeComposer.cs",
+        "evals/files/google-members/Views/Partials/Login.cshtml"
+      ],
+      "expectations": [
+        "Registers a separate member provider with AddMemberExternalLogins and a scheme from the member builder's SchemeForMembers (prefix 'UmbracoMembers.'), rather than reusing or modifying the backoffice registration",
+        "Gives the member scheme a callback path different from the backoffice's '/signin-google'",
+        "Configures MemberExternalSignInAutoLinkOptions with autoLinkExternalAccount true, defaultIsApproved true and defaultMemberTypeAlias 'customer'",
+        "Puts new members in the 'Customers' group (defaultMemberGroups or an equivalent assignment in OnAutoLinking)",
+        "Explains that auto-linking attaches the Google sign-in to an existing member by matching email, and guards it on a verified email (checks Google's email_verified claim, or explains why Google's verified addresses make it safe)",
+        "Prevents auto-linking from signing in an existing member who is still awaiting approval (or locked out), because linking skips Umbraco's approval check",
+        "Points out that, because registration doesn't confirm emails, someone could have registered a customer's address first and would keep password access after the customer links Google to that account, and proposes a mitigation (confirming emails, not auto-linking accounts that have a password, or linking from the profile page)",
+        "Handles a cancelled or failed Google sign-in for members (OnAccessDenied/OnRemoteFailure redirecting back to the site), and says what the customer sees, instead of leaving an unhandled exception page",
+        "Does not add an umbraco-package.json authProvider manifest for the member login",
+        "Tells the user to add the new member callback URL as an authorized redirect URI in Google Cloud console, per environment",
+        "Keeps the Google client secret out of source control",
+        "Does not claim the code was built, run or tested"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "okta-backoffice-debug",
+      "prompt": "We tried adding Okta SSO to our Umbraco 17 backoffice and it's been a day of whack-a-mole. The files are in evals/files/okta-backoffice/ (the C#, App_Plugins/OktaLogin/umbraco-package.json and appsettings.json). First there was no Okta button on the login screen at all. A colleague changed forProviderName locally and the button appeared, but clicking it throws 'InvalidOperationException: Provide Authority, MetadataAddress, Configuration, or ConfigurationManager to OpenIdConnectOptions', even though the Authority is right there in appsettings. We haven't got past that yet, but we need users created automatically on first sign-in as editors. Please find every problem in these files, not just the ones we've hit, fix them, and explain each one. We go live on Monday. There's no .NET SDK here, so you can't build.",
+      "expected_output": "Each planted defect found and fixed with an explanation: manifest provider name and public access, the named-options check, the name claim, the 'Editors' alias, the blanket admin grant, the committed secret and the DenyLocalLogin lockout risk; honest build reporting.",
+      "files": [
+        "evals/files/okta-backoffice/OktaBackOfficeExternalLogin.cs",
+        "evals/files/okta-backoffice/App_Plugins/OktaLogin/umbraco-package.json",
+        "evals/files/okta-backoffice/appsettings.json"
+      ],
+      "expectations": [
+        "Changes forProviderName in umbraco-package.json to 'Umbraco.Okta'",
+        "Adds \"allowPublicAccess\": true to umbraco-package.json, explaining the login screen can only load public manifests",
+        "Fixes OktaOpenIdConnectOptions so it matches the prefixed scheme name ('Umbraco.Okta', via SchemeForBackOffice or the prefix constant), explaining this is why Authority was never applied",
+        "Sets TokenValidationParameters.NameClaimType to \"name\" (or otherwise populates Identity.Name), explaining that auto-linking cannot create a user without a name",
+        "Replaces the 'Editors' group with the alias 'editor', explaining that group aliases, not display names, are expected and an unknown alias leaves the user without that group",
+        "Removes the unconditional user.AddRole(\"admin\") from OnAutoLinking",
+        "Keeps newly auto-linked users approved (IsApproved = true for new users), so they can sign in again after their first sign-in",
+        "Removes the committed ClientSecret from appsettings.json and moves it to user secrets, environment variables or a vault",
+        "Flags DenyLocalLogin = true as a lockout risk before SSO is proven, and either turns it off for go-live or describes a break-glass route",
+        "Does not claim the code was built, run or tested"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = null;
+    var siteName = Model.Value<string>("siteName", fallback: Fallback.ToAncestors);
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Model.Name | @siteName</title>
+</head>
+<body>
+    <header class="site-header">
+        <a class="site-name" href="/">@siteName</a>
+        <nav aria-label="Main">
+            @foreach (var child in Model.Root().Children().Where(c => c.IsVisible()))
+            {
+                <a href="@child.Url()">@child.Name</a>
+            }
+        </nav>
+    </header>
+    <main>
+        @RenderBody()
+    </main>
+    <footer class="site-footer">
+        <p>&copy; @DateTime.Now.Year Acme Ltd</p>
+    </footer>
+</body>
+</html>

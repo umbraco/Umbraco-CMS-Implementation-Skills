@@ -1,0 +1,25 @@
+{
+  "$schema": "../../umbraco-package-schema.json",
+  "name": "<ProviderLabel> backoffice login",
+  "allowPublicAccess": true,
+  "extensions": [
+    {
+      "type": "authProvider",
+      "alias": "<Namespace>.AuthProvider",
+      "name": "<ProviderLabel> login button",
+      "forProviderName": "Umbraco.<SchemeName>",
+      "meta": {
+        "label": "<ProviderLabel>",
+        "defaultView": {
+          "icon": "icon-cloud"
+        },
+        "behavior": {
+          "autoRedirect": false
+        },
+        "linking": {
+          "allowManualLinking": true
+        }
+      }
+    }
+  ]
+}

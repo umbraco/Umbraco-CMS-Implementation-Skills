@@ -1,0 +1,20 @@
+{
+  "_comment": "How scripts/generate-examples.py builds this example from the skill's assets/. host = clean, because the only C# (the server-role composer) registers into DI; the JSON profiles are bound into Umbraco's options classes by the fixture, not loaded by the site. Placeholder values are deliberately obvious fakes: a URL that passes Umbraco's production validators, and Key Vault URIs so the no-literal-secrets assertion has something to inspect. No requires: nothing here needs a content node.",
+  "host": "clean",
+  "namespace": "Umbraco.Skills.Examples.Configuration",
+  "placeholders": {
+    "<UmbracoApplicationUrl>": "https://www.example.com/",
+    "<AzureBlobContainerName>": "mysitestorage",
+    "<KeyVaultSqlSecretUri>": "https://example-vault.vault.azure.net/secrets/umbraco-sql/",
+    "<KeyVaultBlobSecretUri>": "https://example-vault.vault.azure.net/secrets/umbraco-blob/"
+  },
+  "assets": [
+    "production.json",
+    "load-balanced.json",
+    "load-balanced-scheduling-publisher.json",
+    "load-balanced-subscriber.json",
+    "azure-app-service.json",
+    "azure-app-service-settings.json",
+    "ConfiguredServerRoleComposer.cs"
+  ]
+}

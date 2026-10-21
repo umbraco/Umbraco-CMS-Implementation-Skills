@@ -1,0 +1,23 @@
+{
+  "name": "<PackageName>",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "<PackageName>.Localize.En",
+      "name": "<PackageName> English",
+      "meta": {
+        "culture": "en"
+      },
+      "js": "/App_Plugins/<PackageName>/en.js"
+    },
+    {
+      "type": "localization",
+      "alias": "<PackageName>.Localize.Da",
+      "name": "<PackageName> Danish",
+      "meta": {
+        "culture": "da"
+      },
+      "js": "/App_Plugins/<PackageName>/da.js"
+    }
+  ]
+}

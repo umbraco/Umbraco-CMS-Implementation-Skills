@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-nullable-reference-types skill.
+
+    Loaded by SITE 1 (Umbraco-CMS.Skills, Clean). The skill's assets (NullSafeContentController,
+    NullSafeContentMapper, NullSafeContentViewModel, NullSafeComposer) are generated into obj/ at
+    build time by plugins/Directory.Build.props, with <Namespace> and the alias placeholders
+    substituted. NullableReferenceTypesTests.cs sits beside it but is compiled by
+    Umbraco-CMS.Skills.TestHost.
+
+    Nullable + WarningsAsErrors=nullable is the point of this project, not a style choice: every
+    nullable diagnostic (CS8600, CS8602, CS8603, CS8618 …) fails the BUILD, so the gate proves the
+    assets are nullable-clean without a single null-forgiving `!` — a guarantee the HTTP assertions
+    alone could not give.
+
+    Razor SDK so the controller registers as an application part.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>$(WarningsAsErrors);nullable</WarningsAsErrors>
+    <RootNamespace>Umbraco.Skills.Examples.NullableReferenceTypes</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+</Project>

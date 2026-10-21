@@ -1,0 +1,18 @@
+{
+  "$schema": "../../umbraco-package-schema.json",
+  "name": "Okta login",
+  "extensions": [
+    {
+      "type": "authProvider",
+      "alias": "Contoso.AuthProvider.Okta",
+      "name": "Okta login button",
+      "forProviderName": "Okta",
+      "meta": {
+        "label": "Sign in with Okta",
+        "defaultView": {
+          "icon": "icon-cloud"
+        }
+      }
+    }
+  ]
+}

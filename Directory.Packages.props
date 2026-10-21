@@ -13,17 +13,26 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
-  <!-- Umbraco. Keep Web.Website in lockstep with Umbraco.Cms: the examples reference the former
-       directly, the hosts pull it in transitively via the latter. -->
+  <!-- Umbraco. Keep Web.Website and Api.Management in lockstep with Umbraco.Cms: the examples reference them
+       directly, the hosts pull them in transitively via the latter. -->
   <ItemGroup>
     <PackageVersion Include="Clean" Version="7.0.8" />
     <PackageVersion Include="Umbraco.Cms" Version="17.5.3" />
     <PackageVersion Include="Umbraco.Cms.Web.Website" Version="17.5.3" />
+    <PackageVersion Include="Umbraco.Cms.Api.Management" Version="17.5.3" />
     <PackageVersion Include="Umbraco.Cms.DevelopmentMode.Backoffice" Version="17.5.3" />
     <PackageVersion Include="Microsoft.ICU.ICU4C.Runtime" Version="72.1.0.3" />
     <!-- Razor runtime compilation for the starter-kit-free host, whose templates are written
          to disk at runtime by a package migration. -->
     <PackageVersion Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="10.0.10" />
+    <!-- The external-logins skill's examples sign in through OpenID Connect. -->
+    <PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="10.0.10" />
+  </ItemGroup>
+
+  <!-- Third-party packages a skill tells users to install, so its example compiles against them. -->
+  <ItemGroup>
+    <!-- umbraco-security-2fa: TOTP codes and QR generation. -->
+    <PackageVersion Include="GoogleAuthenticator" Version="3.2.0" />
   </ItemGroup>
 
   <!-- Test hosts. -->

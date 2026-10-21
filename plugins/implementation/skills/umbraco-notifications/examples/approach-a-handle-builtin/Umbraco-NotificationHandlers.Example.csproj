@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-notifications skill.
+
+    It is a compilable projection of the skill's Approach A assets
+    (PublishingRuleHandler + NotificationHandlersComposer) with the <Namespace>,
+    <DocTypeAlias> and <PropertyAlias> placeholders substituted for fixed values.
+    The reference instance (Umbraco-CMS.Skills) references this project so the
+    handler is compiled, registered by its composer and loaded in-process, and
+    Umbraco-CMS.Skills.TestHost asserts that a violating publish is cancelled.
+    Regenerate the .cs files from the skill's assets/ with
+    scripts/generate-examples.mjs. Not shipped to users; not part of any plugin.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.NotificationHandlers</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Web.Website pulls in Web.Common + Core + Infrastructure transitively, covering the
+         Umbraco.Cms.* namespaces the assets use. Version comes from the repo-root
+         Directory.Packages.props, so it stays in lockstep with the Umbraco the host loads. -->
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+</Project>

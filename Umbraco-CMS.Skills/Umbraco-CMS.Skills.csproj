@@ -25,9 +25,22 @@
          reference instance referencing its example extensions). -->
     <ProjectReference Include="../plugins/implementation/skills/umbraco-sitemap/examples/approach-a-cached-controller/Umbraco-Sitemap.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-custom-error-pages/examples/approach-a-content-finder/Umbraco-CustomErrorPages.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-configuration/examples/golden-configs/Umbraco-Configuration.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-backoffice-localization/examples/approach-b-net-localization/Umbraco-BackofficeLocalization.NetLocalization.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-services/examples/custom-service/Umbraco-Services.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-composing/examples/approach-a-composer/Umbraco-Composing.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-multilingual/examples/additional-cultures/Umbraco-Multilingual.AdditionalCultures.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-health-check/examples/robots-txt/Umbraco-HealthCheck.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-oembed-providers/examples/oembed-providers/Umbraco-OEmbedProviders.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-nullable-reference-types/examples/approach-a-nullable-patterns/Umbraco-NullableReferenceTypes.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-security-headers/examples/approach-a-middleware/Umbraco-SecurityHeaders.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-notifications/examples/approach-a-handle-builtin/Umbraco-NotificationHandlers.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-notifications/examples/approach-b-publish-custom/Umbraco-NotificationHandlers.ApproachB.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-security-2fa/examples/users/Umbraco-Security2fa.Users.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-debugging/examples/approach-a-sourcelink-probe/Umbraco-Debugging.SourceLinkProbe.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-debugging/examples/approach-b-profiler/Umbraco-Debugging.Profiler.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-security-external-logins/examples/users-backoffice/Umbraco-ExternalLogins.Users.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-security-external-logins/examples/members-website/Umbraco-ExternalLogins.Members.Example.csproj" />
     <!-- Compile-only examples are NOT referenced here — they would collide with the above (e.g.
          two controllers on GET /sitemap.xml). They're in the solution instead, so the build still
          compiles them. See each project's header. -->

@@ -1,0 +1,54 @@
+@* Rendered on /members/my-account/ (behind public access). Based on the Umbraco docs' member 2FA view. *@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@using Umbraco.Cms.Core.Services
+@using Umbraco.Cms.Web.Website.Controllers
+@using Umbraco.Cms.Core.Models
+@using Umbraco.Cms.Web.Website.Models
+@using Acme.Web.Security
+@inject MemberModelBuilderFactory MemberModelBuilderFactory
+@inject IMemberTwoFactorLoginService MemberTwoFactorLoginService
+@{
+    var profileModel = await MemberModelBuilderFactory.CreateProfileModel().BuildForCurrentMemberAsync();
+
+    List<UserTwoFactorProviderModel>? providerNameList = null;
+    if (profileModel != null)
+    {
+        var providerNamesAttempt = await MemberTwoFactorLoginService.GetProviderNamesAsync(profileModel.Key);
+        if (providerNamesAttempt.Success)
+        {
+            providerNameList = providerNamesAttempt.Result.ToList();
+        }
+    }
+
+    if (providerNameList != null && providerNameList.Any())
+    {
+        <div asp-validation-summary="All" class="text-danger"></div>
+        foreach (var provider in providerNameList)
+        {
+            var setupData = await MemberTwoFactorLoginService.GetSetupInfoAsync(profileModel!.Key, provider.ProviderName);
+            if (setupData.Success)
+            {
+                if (setupData.Result is AppAuthenticatorSetup setup)
+                {
+                    @using (Html.BeginUmbracoForm<UmbTwoFactorLoginController>(nameof(UmbTwoFactorLoginController.ValidateAndSaveSetup)))
+                    {
+                        <h3>Set up @provider.ProviderName</h3>
+                        <img src="@setup.QrCodeSetupImageUrl" />
+                        <input type="hidden" name="providerName" value="@provider.ProviderName" />
+                        <input type="hidden" name="secret" value="@setup.Secret" />
+                        <input type="text" name="code" />
+                        <button type="submit">Validate &amp; save</button>
+                    }
+                }
+            }
+            else
+            {
+                @using (Html.BeginUmbracoForm<UmbTwoFactorLoginController>(nameof(UmbTwoFactorLoginController.Disable)))
+                {
+                    <input type="hidden" name="providerName" value="@provider.ProviderName" />
+                    <button type="submit">Disable @provider.ProviderName</button>
+                }
+            }
+        }
+    }
+}

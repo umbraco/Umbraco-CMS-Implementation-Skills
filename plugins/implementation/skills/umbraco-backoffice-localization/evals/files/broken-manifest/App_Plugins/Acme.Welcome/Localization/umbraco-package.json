@@ -1,0 +1,21 @@
+{
+  "name": "Acme.Welcome.Localization",
+  "extensions": [
+    {
+      "type": "localization",
+      "alias": "Acme.Welcome.Localize.Da",
+      "name": "Acme Welcome Danish",
+      "meta": {
+        "culture": "da_DK",
+        "localizations": {
+          "welcomeLabel": "Velkommen",
+          "welcomeDashboard": {
+            "intro": {
+              "text": "Vælg en side i indholdstræet for at komme i gang."
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<Acme.Web.Models.ProductListingViewModel>
+@{
+    Layout = "master.cshtml";
+}
+<h1>@Model.Name</h1>
+<ul class="product-list">
+    @foreach (var product in Model.Products)
+    {
+        <li>
+            <a href="@product.Url">@product.Name</a>
+            @if (product.SameCategoryCount > 0)
+            {
+                <span class="badge">@product.SameCategoryCount more in @product.Category</span>
+            }
+        </li>
+    }
+</ul>

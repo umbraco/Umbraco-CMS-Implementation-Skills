@@ -1,0 +1,6 @@
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{
+    Layout = "master.cshtml";
+}
+<h1>@Model.Name</h1>
+@await Html.PartialAsync("memberLogin")

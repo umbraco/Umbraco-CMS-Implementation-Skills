@@ -20,8 +20,9 @@ Pin down before writing anything (ask if ambiguous):
   hosts. See [runtime-validation.md](runtime-validation.md).
 - **Complementary building blocks are not approaches.** A toolkit skill (`umbraco-templating`:
   template, partial, view component, hijacked controller, surface controller) routes between parts
-  that work *together* and can share one `examples/` project. Only competing implementations of
-  the *same* feature count towards the two-approach cap.
+  that work *together* and can share one `examples/` project. Deployment scenarios that share one
+  example (umbraco-configuration's profiles) are not approaches either. Only competing
+  implementations of the *same* feature count towards the two-approach cap.
 - **Version compatibility** — target Umbraco version and any "introduced in vX" APIs.
 - **Backoffice vs file-based** — needs the Umbraco Developer MCP / manual backoffice steps, or pure
   `.cs`/`.cshtml`? This drives the MCP→manual→fallback guidance.
@@ -130,7 +131,9 @@ no longer exist, and output that never renders. Full detail — the `examples/<a
 A config-only or backoffice-only approach is NOT automatically exempt any more. If it can be expressed
 as a `package.xml` (Document Types, templates, content) plus a template file, it can ship those as
 assets and be asserted on the starter-kit-free host — that's how umbraco-sitemap's Approach B is
-gated. Skip the gate only when the approach ships no code at all, and then say so explicitly rather
+gated. Configuration the hosts cannot boot at all (Production mode, load balancing, a cloud platform)
+is gated as **Bound** instead — see that section of runtime-validation.md. Skip the gate only when
+the approach ships no code at all, and then say so explicitly rather
 than leaving it ambiguous, so nobody assumes coverage that isn't there.
 
 **Documented-only skills.** A skill with no `assets/`, or with markdown assets only, ships no code, so

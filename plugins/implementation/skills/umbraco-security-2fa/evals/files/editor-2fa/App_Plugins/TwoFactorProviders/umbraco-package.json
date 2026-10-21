@@ -1,0 +1,17 @@
+{
+  "$schema": "../../umbraco-package-schema.json",
+  "name": "2fa providers",
+  "version": "1.0.0",
+  "extensions": [
+    {
+      "type": "mfaLoginProvider",
+      "alias": "UmbracoUserAppAuthenticator",
+      "name": "UmbracoUserAppAuthenticator",
+      "forProviderName": "UmbracoUserAppAuthenticator",
+      "element": "/App_Plugins/TwoFactorProviders/2fa-activation.js", // This line is the only change
+      "meta": {
+        "label": "Google Authenticator"
+      }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "skill_name": "umbraco-configuration",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We're about to put our Umbraco 17 site live on a single Windows VM behind IIS. It's been running in the default mode on a dev box with InMemoryAuto models. The live URL will be https://www.contoso.com. Get the configuration production-ready. The SQL Server connection string is currently sitting in appsettings.json and I know that's not right.",
+      "expected_output": "The agent creates appsettings.Production.json from the production profile with Production runtime mode, HTTPS, ModelsMode Nothing and a real UmbracoApplicationUrl, removes the connection string from the committed file, and explains the move off InMemoryAuto and the Razor compile and Release publish prerequisites.",
+      "files": [
+        "evals/files/single-server/appsettings.json"
+      ],
+      "expectations": [
+        "An appsettings.Production.json is written that sets Umbraco:CMS:Runtime:Mode to Production",
+        "The same file sets Umbraco:CMS:Global:UseHttps to true, Umbraco:CMS:ModelsBuilder:ModelsMode to Nothing and Umbraco:CMS:Hosting:Debug to false",
+        "Umbraco:CMS:WebRouting:UmbracoApplicationUrl is set to the https URL given in the prompt and no literal '<UmbracoApplicationUrl>' placeholder remains",
+        "The connection string is removed from appsettings.json and supplied through an environment variable (ConnectionStrings__umbracoDbDSN) or another non-committed source, and no real credential remains in any project file the agent writes (an example string with an obvious placeholder password in the reply is acceptable)",
+        "The agent moves the site off InMemoryAuto before the Razor flags are removed, or tells the user to: switch ModelsMode to SourceCodeAuto or SourceCodeManual in development and generate the models (Settings > Models Builder > Generate models), because InMemoryAuto models exist only at runtime and views using them cannot compile at build time",
+        "The agent removes, or tells the user to remove, RazorCompileOnBuild/RazorCompileOnPublish=false from the csproj and to publish with --configuration Release, and explains why (views are not compiled so pages 404, and/or Production mode fails the boot on a Debug build)",
+        "The agent does not claim it booted or load-tested the site in production unless it actually ran it",
+        "The agent does not create or modify any file outside the user's project folder (for example a repo-root Directory.Packages.props changed by `dotnet add package`); if a command does so as a side effect, the agent reverts it before finishing",
+        "The agent does not hard-code the Production environment into a committed project file that also applies to local runs (for example a web.config setting ASPNETCORE_ENVIRONMENT=Production); the environment is set on the host"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Set up our Umbraco 17 site for load balancing. We'll have one server where editors work and three front-end servers behind a load balancer, all on IIS with local disks. The public site is https://www.contoso.com and the editors' server is https://edit.contoso.com. Give me the config for each kind of server.",
+      "expected_output": "The agent uses the dedicated-backoffice topology: common load-balanced settings on every server, a SchedulingPublisher role for the backoffice server and Subscriber for front ends, with the matching Examine directory factory per role, role pinning via the composer, and a clear list of what it did not set up.",
+      "files": [
+        "evals/files/project/appsettings.json"
+      ],
+      "expectations": [
+        "Every server's config sets Umbraco:CMS:Global:MainDomLock to FileSystemMainDomLock and Umbraco:CMS:Hosting:LocalTempStorageLocation to EnvironmentTemp",
+        "The backoffice server uses Umbraco:CMS:Examine:LuceneDirectoryFactory = SyncedTempFileSystemDirectoryFactory and the front-end servers use TempFileSystemDirectoryFactory",
+        "ConfiguredServerRoleComposer.cs (or an equivalent IServerRoleAccessor registered with SetServerRegistrar) is added with the project's real namespace and no literal '<Namespace>' remaining",
+        "The backoffice server is given the SchedulingPublisher role and the front ends the Subscriber role, via Deployment:ServerRole or an explicit equivalent, rather than relying on automatic election",
+        "UmbracoApplicationUrl is set to one of the https URLs given in the prompt (an address the backoffice server can resolve), with no literal '<UmbracoApplicationUrl>' placeholder and no per-machine hostname",
+        "The agent explicitly states that shared media storage, the Data Protection key ring and a distributed cache still need to be configured, and does not claim they are done",
+        "Umbraco:CMS:Examine:LuceneDirectoryFactory is set explicitly for every server, and the value for the backoffice server differs from the value for the front-end servers (leaving it unset on any server, or using one value everywhere, fails)",
+        "Every server's config that sets Umbraco:CMS:Runtime:Mode to Production also sets Umbraco:CMS:ModelsBuilder:ModelsMode to Nothing (any other models mode fails the boot in Production mode)",
+        "The agent does not create or modify any file outside the user's project folder (for example a repo-root Directory.Packages.props changed by `dotnet add package`); if a command does so as a side effect, the agent reverts it before finishing",
+        "Role-specific settings are given as environment variables (or pipeline/host variables) applied per deployment target to one shared build; the agent does not create a separate appsettings file per server or tell the user to copy files onto individual servers by hand"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Deploy our Umbraco 17 site to Azure App Service with Azure SQL and move media to Blob Storage. Give me the appsettings and the app settings I need to paste into the portal. Don't put any keys in the repo.",
+      "expected_output": "The agent produces appsettings.Production.json with the Azure settings and Blob container name, plus an app-settings array using Key Vault references, slot settings for secrets, and the Blob wiring steps from the docs with a clear statement that those are documented, not tested.",
+      "files": [
+        "evals/files/project/appsettings.json"
+      ],
+      "expectations": [
+        "An appsettings.Production.json exists and sets MainDomLock to FileSystemMainDomLock, LocalTempStorageLocation to EnvironmentTemp, and Umbraco:CMS:Examine:LuceneDirectoryFactory explicitly to SyncedTempFileSystemDirectoryFactory (leaving the Examine factory unset fails)",
+        "The Blob container name is set under Umbraco:Storage:AzureBlob:Media:ContainerName, and no storage account key or SQL password appears in any file the agent writes (an emulator value such as UseDevelopmentStorage=true in appsettings.Development.json is acceptable)",
+        "The App Service settings use Key Vault references (@Microsoft.KeyVault(SecretUri=...)) or equivalent non-literal sources for the SQL and Blob connection strings, with slotSetting true for them",
+        "ConnectionStrings__umbracoDbDSN_ProviderName is set to Microsoft.Data.SqlClient",
+        "The Blob wiring the agent gives uses the documented packages (Umbraco.StorageProviders.AzureBlob and Umbraco.StorageProviders.AzureBlob.ImageSharp) and the documented Program.cs calls (AddAzureBlobMediaFileSystem and AddAzureBlobImageSharpCache), not invented names",
+        "The agent warns against enabling Run from package (WEBSITE_RUN_FROM_PACKAGE) and gives the reason (Umbraco needs a writable working directory, so the site will not boot from a read-only package), and separately warns that existing media must be copied to the container",
+        "The agent states the Blob wiring was not run or verified rather than reporting Azure as tested",
+        "The agent does not create or modify any file outside the user's project folder (for example a repo-root Directory.Packages.props changed by `dotnet add package`); if a command does so as a side effect, the agent reverts it before finishing",
+        "The reply itself shows the Blob code changes: the two packages added and the Program.cs lines (AddAzureBlobMediaFileSystem and AddAzureBlobImageSharpCache), not only a statement that files were edited"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Our Umbraco 17 site throws a BootFailedException on the server when I use Production mode. Locally it works fine. What do I need to change?",
+      "expected_output": "The agent identifies the Production-mode prerequisites (HTTPS, UmbracoApplicationUrl, ModelsMode Nothing, Release build) and fixes the configuration without turning the runtime mode off.",
+      "files": [
+        "evals/files/project/appsettings.json"
+      ],
+      "expectations": [
+        "The agent identifies at least UseHttps, UmbracoApplicationUrl, ModelsMode Nothing and a Release/JIT-optimised build as the Production-mode requirements",
+        "The agent sets the missing values using the correct double-underscore environment variable names or appsettings keys under Umbraco:CMS (for example Umbraco__CMS__WebRouting__UmbracoApplicationUrl)",
+        "The agent does not 'fix' the error by removing the runtime mode or adding a validator removal without being asked",
+        "The agent tells the user to rebuild/republish if views were not compiled, rather than only changing settings"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Add the distributed jobs settings to our Umbraco 17 appsettings so the jobs poll every 10 seconds on our load balanced setup. Our editor is showing the Umbraco schema so I want it to validate cleanly.",
+      "expected_output": "The agent checks the installed schema and the docs, notices the schema calls the section DistributedJobSettings while Umbraco binds DistributedJobs, uses the bound key, and tells the user the editor will flag it.",
+      "files": [
+        "evals/files/project/appsettings.json"
+      ],
+      "expectations": [
+        "The setting is written under Umbraco:CMS:DistributedJobs (the key Umbraco binds and the docs use), not Umbraco:CMS:DistributedJobSettings",
+        "The agent consults the project's appsettings-schema.Umbraco.Cms.json and/or the docs before writing the key",
+        "The agent tells the user the shipped schema names the section differently, so the editor may underline the correct key, rather than silently using the schema's name",
+        "Period is set to 00:00:10 in the timespan format",
+        "The agent does not modify any generated schema file (appsettings-schema.json or appsettings-schema.Umbraco.Cms.json) to make the key validate",
+        "The agent does not create or modify any file outside the user's project folder (for example a repo-root Directory.Packages.props changed by `dotnet add package`); if a command does so as a side effect, the agent reverts it before finishing"
+      ]
+    }
+  ]
+}

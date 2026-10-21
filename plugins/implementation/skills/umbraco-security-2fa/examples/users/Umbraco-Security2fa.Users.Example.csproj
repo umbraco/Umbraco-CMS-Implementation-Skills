@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-security-2fa skill, Approach A (backoffice users).
+    Not shipped to users.
+
+    Loaded by SITE 1 (Umbraco-CMS.Skills, Clean). The skill's provider + composer are generated into
+    obj/ at build time by plugins/Directory.Build.props and compiled here; its umbraco-package.json is
+    embedded, and ExampleHostWiring.cs writes it to the host's App_Plugins, where a user puts it.
+    UserTwoFactorTests.cs signs a user in through the backoffice login API and its 2FA step.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.TwoFactor.Users</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Api.Management carries BackOfficeIdentityBuilder.AddTwoFactorProvider; Web.Website doesn't. -->
+    <PackageReference Include="Umbraco.Cms.Api.Management" />
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+    <!-- The package the skill tells users to install. -->
+    <PackageReference Include="GoogleAuthenticator" />
+  </ItemGroup>
+
+</Project>

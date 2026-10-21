@@ -1,0 +1,17 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'blank' because Approach B renders member login and setup partials on real pages behind public access, and the blank host gives the example its own login and account page types with no starter kit competing. namespace = what <Namespace> becomes. placeholders = <IssuerName>, the label shown in the authenticator app. assets = Approach B's files only. requires = the login page this example seeds under site 2's root. The account page is seeded too but not required: it is behind public access, and the Delivery API query the precondition check uses hides protected content from anonymous requests (ApiContentQuerySelectorBuilder). The tests reach it by signing in.",
+  "host": "blank",
+  "namespace": "Umbraco.Skills.Examples.TwoFactor.Members",
+  "placeholders": {
+    "<IssuerName>": "Umbraco Skills (members)"
+  },
+  "assets": [
+    "UmbracoMemberAppAuthenticator.cs",
+    "MemberTwoFactorController.cs",
+    "MemberLogin.cshtml",
+    "TwoFactorSetup.cshtml"
+  ],
+  "requires": {
+    "documentTypeAliasAtRoot": ["twoFactorLoginPage"]
+  }
+}

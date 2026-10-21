@@ -12,6 +12,17 @@ The collection list, the collection kinds and the attribute syntax are all in th
 [Composing docs](https://docs.umbraco.com/umbraco-cms/model-your-content/content-types-and-structure/composing.md),
 so fetch it before writing code. This file covers what the docs leave out.
 
+## Contents
+
+- [1 — Items inside a collection](#1--items-inside-a-collection): read when adding, inserting,
+  replacing or removing a content finder, URL provider or other collection item, or when an anchor
+  type makes boot fail.
+- [Replacing a single service (not a collection)](#replacing-a-single-service-not-a-collection): read
+  when overriding one service with `AddUnique`, including its lifetime.
+- [2 — Composers relative to each other](#2--composers-relative-to-each-other): read when one composer
+  must run before or after another.
+- [Disabling a composer](#disabling-a-composer): read when turning off your own or a package's composer.
+
 ## 1 — Items inside a collection
 
 Each collection's kind determines which methods it has, so check the kind in the docs table first:

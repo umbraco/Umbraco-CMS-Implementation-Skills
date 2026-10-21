@@ -1,0 +1,37 @@
+{
+  "skill_name": "umbraco-dictionary-items",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "We've got a traditional Umbraco 17 site (Razor views, ModelsBuilder on) that's going bilingual - Danish and English. The templates are full of hardcoded English labels: 'Read more', 'Search', the footer copyright line, and the 'Category' dropdown on our Product doc type has options like Electronics / Clothing / Books that show up in English on the Danish site. Editors should own all of that text from the backoffice. We have the Umbraco Developer MCP connected. Sort it out - I need the Razor side done properly and I don't want the site to blow up if a translation is missing.",
+      "expected_output": "The agent fetches the official docs, creates (or guides creating) grouped dictionary items via the MCP using dotted keys, renders labels with GetDictionaryValueOrDefault so missing values fall back gracefully, applies the documented multi-value property editor pattern for the dropdown (option keys = dictionary keys, translated with GetDictionaryValue at render time), and does not touch ILocalizationService or build custom infrastructure.",
+      "files": [],
+      "expectations": [
+        "The agent renders the labels in Razor with UmbracoHelper and does NOT build a custom API controller, seeder, or caching layer for this request",
+        "The agent uses the Umbraco Developer MCP (or explicitly states the backoffice steps it would perform) to create the dictionary items rather than inventing a bespoke storage mechanism",
+        "Labels are rendered with @Umbraco.GetDictionaryValueOrDefault(key, fallback) (or GetDictionaryValue with an explicit fallback guard), so a missing translation yields visible fallback text rather than an empty string or an exception",
+        "The dropdown is handled with the documented multi-value property editor pattern: the stored option value is used as (or composed into, e.g. with a 'Site.Category.' prefix) a dictionary key and translated at render time via UmbracoHelper (GetDictionaryValue or GetDictionaryValueOrDefault), rather than hard-coding a translation table in the view",
+        "Dictionary keys are grouped under a parent item with a dotted prefix (e.g. Site.ReadMore) rather than created as unrelated root-level items",
+        "The agent does NOT use ILocalizationService or any obsolete localization API",
+        "Every dictionary call in the written views uses an overload that actually exists on UmbracoHelper: GetDictionaryValue(key), GetDictionaryValue(key, CultureInfo), GetDictionaryValueOrDefault(key, fallback) or GetDictionaryValueOrDefault(key, CultureInfo, fallback). A call shaped like GetDictionaryValue(\"key\", \"fallback\") - a string as the second argument - does not compile and fails this expectation",
+        "The agent changes only the site's own templates/layout; it does NOT add demo or placeholder files to the project (e.g. a partial with sample keys or a deliberately missing key) that the site never renders",
+        "The agent does NOT propose translating the dropdown or labels by making them language-variant content properties (it keeps dictionary items for chrome/labels and variants for content)",
+        "If a real buildable project is available, dotnet build succeeds with no compilation errors; if not, the agent does not falsely claim to have verified a build, but does explicitly state whether it expects the code to compile against the documented APIs it used"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17 site, Danish + English, ModelsBuilder on. A contractor added dictionary items last sprint and now three things are wrong and I need them fixed properly, not patched.\n\n1) The build is red. Views/Partials/footer.cshtml has lines like `@Umbraco.GetDictionaryValue(\"Footer.Copyright\", \"All rights reserved\")` and `@Umbraco.GetDictionaryValue(\"Footer.Contact\", \"Contact us\")` and the compiler says there's no overload taking (string, string). He says the second argument is the fallback.\n\n2) Views/product.cshtml renders the Category dropdown as a translated label with `@Umbraco.GetDictionaryValue(Model.Value<string>(\"category\"))`. Products with no category set render an empty label where the category should be, and products whose category has no translation yet show nothing either.\n\n3) The nightly order-confirmation job (a hosted service, no HTTP request) builds the email subject with `GetDictionaryValue(\"Email.OrderConfirmed\")` via an injected ICultureDictionaryFactory, and every customer gets the English subject even when the order came in on the .dk domain. He suggested setting Danish as the fallback language on the English language in Settings > Languages so dictionary lookups 'fall through'. Will that work?\n\nFix 1 and 2 in the views, and tell me the right approach for 3.",
+      "expected_output": "The agent replaces the non-compiling (string, string) calls with GetDictionaryValueOrDefault(key, fallback), guards the empty category value before the lookup and falls back to the raw value, and explains that configured language fallbacks do not apply to dictionary lookups: the job must resolve the order's culture itself and look the key up with an explicit CultureInfo (or culture dictionary for that culture). It does not use GetChildren in views, does not propose ILocalizationService, and states build correctness honestly.",
+      "files": [],
+      "expectations": [
+        "For issue 1, the agent rewrites the calls as Umbraco.GetDictionaryValueOrDefault(key, fallback) and explains that GetDictionaryValue has no string-fallback overload because its second parameter is a CultureInfo; it does NOT keep a (string, string) GetDictionaryValue call anywhere in the fixed views",
+        "For issue 2, the fixed view does NOT call a dictionary lookup with a possibly-null key: it checks the category value for null/empty before the lookup (or uses the typed ModelsBuilder property with the same guard), and when a translation is missing it renders a fallback such as the raw stored value rather than an empty string or an exception",
+        "For issue 3, the agent says clearly that the proposed Settings > Languages fallback will NOT fix dictionary lookups, because a language's fallback language applies to content property values, not to dictionary values",
+        "For issue 3, the recommended fix resolves the order's culture (e.g. from the order record or the domain it was placed on) and performs the lookup with an explicit culture - a CultureInfo overload or a culture dictionary obtained for that culture - rather than relying on the thread's current UI culture inside a hosted service",
+        "The agent does NOT introduce ILocalizationService, IDictionaryItemService in a view, or CultureDictionary.GetChildren in a template as part of any fix",
+        "If a real buildable project is available, dotnet build succeeds with no compilation errors after the changes; if not, the agent does not falsely claim to have verified a build, but does explicitly state whether it expects the fixed code to compile against the four documented UmbracoHelper overloads"
+      ]
+    }
+  ]
+}

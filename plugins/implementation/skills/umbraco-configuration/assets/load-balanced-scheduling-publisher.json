@@ -1,0 +1,12 @@
+{
+  "Deployment": {
+    "ServerRole": "SchedulingPublisher"
+  },
+  "Umbraco": {
+    "CMS": {
+      "Examine": {
+        "LuceneDirectoryFactory": "SyncedTempFileSystemDirectoryFactory"
+      }
+    }
+  }
+}

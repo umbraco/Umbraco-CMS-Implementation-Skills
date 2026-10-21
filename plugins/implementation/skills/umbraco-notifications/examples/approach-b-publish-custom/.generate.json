@@ -1,0 +1,9 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. namespace = the fixed namespace the <Namespace> placeholder is substituted for; assets = the Approach B pair (the notification and a consuming handler). No 'requires' entry: the fixture publishes its own notifications and needs no particular content. The handler registration and a test-only recording handler ship in ExampleHostWiring.cs alongside the generated assets.",
+  "host": "clean",
+  "namespace": "Umbraco.Skills.Examples.NotificationHandlersApproachB",
+  "assets": [
+    "ContentImportCompletedNotification.cs",
+    "ContentImportCompletedHandler.cs"
+  ]
+}

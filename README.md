@@ -45,6 +45,14 @@ workflow; the others link into them.
 | `umbraco-custom-maintenance-page` | Customises the page visitors see while Umbraco runs upgrade migrations |
 | `umbraco-common-pitfalls` | Reference guide to anti-patterns, performance traps and common mistakes |
 | `umbraco-templating` | Templates, partial views, view components, route hijacking and surface-controller forms, with runtime-tested code |
+| `umbraco-configuration` | Tested `appsettings` profiles for production single server, load balanced and Azure App Service |
+| `umbraco-oembed-providers` | Embed (oEmbed) providers in C#: new oEmbed hosts, hosts without oEmbed, replacing a built-in (e.g. youtube-nocookie), registration order |
+| `umbraco-services` | Published cache vs management services, reading content with no request (jobs, notification handlers), custom services and their lifetimes |
+| `umbraco-security-headers` | A Content Security Policy using Umbraco's nonce, with separate backoffice and site policies, plus the other security headers |
+| `umbraco-notifications` | Runs server-side code when Umbraco saves, publishes or deletes content, or raises your own notification, with runtime-tested handlers |
+| `umbraco-security-2fa` | Authenticator-app two-factor authentication for backoffice users and website members, with runtime-tested code |
+| `umbraco-debugging` | Steps into Umbraco's own source with Source Link (Visual Studio, Rider, VS Code), or profiles requests with debug mode and MiniProfiler |
+| `umbraco-security-external-logins` | Single sign-on through Entra ID, Google, Okta and other OpenID Connect providers, for backoffice users or website members, with safe auto-linking and group mapping |
 
 ## Quick Start
 

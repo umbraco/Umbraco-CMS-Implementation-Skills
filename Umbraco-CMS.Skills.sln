@@ -40,6 +40,22 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "assets", "assets", "{C6032B
 		plugins\implementation\skills\umbraco-health-check\assets\RobotsTxtHealthCheck.cs = plugins\implementation\skills\umbraco-health-check\assets\RobotsTxtHealthCheck.cs
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "umbraco-backoffice-localization", "umbraco-backoffice-localization", "{4233613F-74DB-43D0-AA8D-9B23C79DAB68}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{94A42045-8CDD-24A4-38ED-B6EA2E976834}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "approach-a-ui-localization", "approach-a-ui-localization", "{55C75057-C74A-E54A-C5E1-C516DE140C85}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco-BackofficeLocalization.UiLocalization.Example", "plugins\implementation\skills\umbraco-backoffice-localization\examples\approach-a-ui-localization\Umbraco-BackofficeLocalization.UiLocalization.Example.csproj", "{5F1DCD27-4625-443D-9B48-61B9C18473F8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "approach-b-net-localization", "approach-b-net-localization", "{E00C5409-0A6E-12FC-8906-DAC656EF1FA1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco-BackofficeLocalization.NetLocalization.Example", "plugins\implementation\skills\umbraco-backoffice-localization\examples\approach-b-net-localization\Umbraco-BackofficeLocalization.NetLocalization.Example.csproj", "{72794EEA-B22D-42C3-8E4F-3E8602004616}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco-NotificationHandlers.Example", "plugins\implementation\skills\umbraco-notifications\examples\approach-a-handle-builtin\Umbraco-NotificationHandlers.Example.csproj", "{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Umbraco-NotificationHandlers.ApproachB.Example", "plugins\implementation\skills\umbraco-notifications\examples\approach-b-publish-custom\Umbraco-NotificationHandlers.ApproachB.Example.csproj", "{178F7DE0-3C38-4452-A6D6-211706EF5625}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "umbraco-composing", "umbraco-composing", "{195A2225-6E4E-5890-6907-0131F6A566E3}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{ED2F904C-42CC-68C8-E4E3-F7EEFB05F4DF}"
@@ -142,6 +158,54 @@ Global
 		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|x64.Build.0 = Release|Any CPU
 		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|x86.ActiveCfg = Release|Any CPU
 		{423FFEA8-C860-4CDD-ACCE-603961EECC63}.Release|x86.Build.0 = Release|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Debug|x64.Build.0 = Debug|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Debug|x86.Build.0 = Debug|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Release|x64.ActiveCfg = Release|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Release|x64.Build.0 = Release|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Release|x86.ActiveCfg = Release|Any CPU
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8}.Release|x86.Build.0 = Release|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Debug|x64.Build.0 = Debug|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Debug|x86.Build.0 = Debug|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Release|x64.ActiveCfg = Release|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Release|x64.Build.0 = Release|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Release|x86.ActiveCfg = Release|Any CPU
+		{72794EEA-B22D-42C3-8E4F-3E8602004616}.Release|x86.Build.0 = Release|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Debug|x64.Build.0 = Debug|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Debug|x86.Build.0 = Debug|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Release|x64.ActiveCfg = Release|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Release|x64.Build.0 = Release|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Release|x86.ActiveCfg = Release|Any CPU
+		{0B8C272E-BA7F-479F-A94B-DBBD3A2EE69B}.Release|x86.Build.0 = Release|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Debug|x64.Build.0 = Debug|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Debug|x86.Build.0 = Debug|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Release|Any CPU.Build.0 = Release|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Release|x64.ActiveCfg = Release|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Release|x64.Build.0 = Release|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Release|x86.ActiveCfg = Release|Any CPU
+		{178F7DE0-3C38-4452-A6D6-211706EF5625}.Release|x86.Build.0 = Release|Any CPU
 		{90A71A5B-C8F4-4DA1-8DBE-10058B099159}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{90A71A5B-C8F4-4DA1-8DBE-10058B099159}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90A71A5B-C8F4-4DA1-8DBE-10058B099159}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -170,6 +234,12 @@ Global
 		{DE9AF4B6-D0E2-4700-805A-04535FC1E3CE} = {5D4B4661-7188-A874-1DDC-8A8D659F2A4F}
 		{423FFEA8-C860-4CDD-ACCE-603961EECC63} = {DE9AF4B6-D0E2-4700-805A-04535FC1E3CE}
 		{C6032B00-5642-4C45-965E-763B1053C913} = {C0388796-F19A-D70E-64A9-86F2DF0A3CAF}
+		{4233613F-74DB-43D0-AA8D-9B23C79DAB68} = {2DE2A6A9-4D32-DEEF-535B-925581132E3E}
+		{94A42045-8CDD-24A4-38ED-B6EA2E976834} = {4233613F-74DB-43D0-AA8D-9B23C79DAB68}
+		{55C75057-C74A-E54A-C5E1-C516DE140C85} = {94A42045-8CDD-24A4-38ED-B6EA2E976834}
+		{5F1DCD27-4625-443D-9B48-61B9C18473F8} = {55C75057-C74A-E54A-C5E1-C516DE140C85}
+		{E00C5409-0A6E-12FC-8906-DAC656EF1FA1} = {94A42045-8CDD-24A4-38ED-B6EA2E976834}
+		{72794EEA-B22D-42C3-8E4F-3E8602004616} = {E00C5409-0A6E-12FC-8906-DAC656EF1FA1}
 		{195A2225-6E4E-5890-6907-0131F6A566E3} = {2DE2A6A9-4D32-DEEF-535B-925581132E3E}
 		{ED2F904C-42CC-68C8-E4E3-F7EEFB05F4DF} = {195A2225-6E4E-5890-6907-0131F6A566E3}
 		{001C09DB-8873-83FF-1CBE-0605B56444A9} = {ED2F904C-42CC-68C8-E4E3-F7EEFB05F4DF}

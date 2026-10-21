@@ -5,6 +5,18 @@ and the fallback section of
 [Rendering Content](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/templating-and-rendering/design/rendering-content.md)
 before writing rendering code.
 
+## Contents
+
+- [In a template: the request's culture is already set](#in-a-template-the-requests-culture-is-already-set):
+  read when rendering a page, or a language switcher for another culture.
+- [Fallback](#fallback): read when a value is missing in the current culture.
+- [Outside page rendering: controllers, jobs, notification handlers](#outside-page-rendering-controllers-jobs-notification-handlers):
+  read when reading variant content outside a routed page.
+- [Dictionary items: fixed UI strings](#dictionary-items-fixed-ui-strings): read when translating
+  labels and other fixed text.
+- [Blocks](#blocks): read when rendering block content in a variant site.
+- [Done](#done): read before reporting back to the user.
+
 ## In a template: the request's culture is already set
 
 When a request matches a domain, Umbraco sets the **variation context** to that domain's culture.
@@ -96,7 +108,9 @@ Both read the current request's culture. Prefer `GetDictionaryValueOrDefault` so
 translation renders readable text rather than an empty string. For dropdown/checkbox property editors,
 use dictionary keys as the option values and translate them at render time (the tutorial shows the
 loop). The package manifest in [`assets/`](../assets/multilingual-package.xml) shows the dictionary
-XML shape.
+XML shape. For depth - the full overload set, the `GetDictionaryValue(key, "fallback")` compile
+trap, key grouping, null-safe multi-value rendering and culture outside routed requests - load
+the `umbraco-dictionary-items` skill.
 
 ## Blocks
 

@@ -1,0 +1,15 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. namespace = what <Namespace> becomes; placeholders = the skill's other placeholders (routePrefix must not collide with another example's route on the shared Clean host); assets = every file the skill ships, since the single approach uses all of them. No host = clean: this approach is C# that registers into DI, and Clean supplies the published content it reads. No requires block: the fixture only needs a published root, which Clean always installs.",
+  "namespace": "Umbraco.Skills.Examples.Services",
+  "placeholders": {
+    "<routePrefix>": "umbraco-services-example"
+  },
+  "assets": [
+    "ISiteService.cs",
+    "SiteService.cs",
+    "RootContentReader.cs",
+    "UnpublishingUrlRecorder.cs",
+    "SiteServiceComposer.cs",
+    "SiteServiceController.cs"
+  ]
+}

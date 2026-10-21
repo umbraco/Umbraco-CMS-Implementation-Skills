@@ -8,6 +8,8 @@ run and passed, run and failed (with the output), or not run (and why). Never in
 
 ```bash
 node scripts/validate-skills.mjs --check-index     # run --write-index first if the index is stale
+node scripts/check-skill-links.mjs                 # relative links and #anchors under plugins/
+node scripts/check-skill-frontmatter.mjs
 node scripts/generate-examples.mjs --lint
 node --test scripts/*.test.mjs
 dotnet build Umbraco-CMS.Skills.sln
@@ -69,27 +71,53 @@ discriminate.
 
 When you do run them, keep it cheap: with `umbraco-skill-evaluator`, run **with-skill only**, on the
 evals your change touches, Haiku first (weak models expose a router that isn't followed). Run
-baselines only if the PR has none.
+baselines only if the PR has none, which doubles the runs on a first review. Use `evals.json` as it
+is: don't stop to ask about the prompts, as the evaluator's step 1 suggests, since reviews run on
+their own. With no baseline, ignore the benchmark's delta: it compares against nothing.
 
 - **Which evals a change touches.** An eval whose expectations or fixture you changed; every eval a
-  changed reference or asset is used in; and **every** eval when you changed what `SKILL.md` tells
-  the agent to open, since all of them go through it.
+  changed reference or asset is used in; and **every** eval when you changed what `SKILL.md`
+  teaches or routes to. Adding only the "open the reference and start from its asset" line isn't a
+  teaching change: it makes the agent read more, not differently, so on its own it doesn't call for
+  evals the PR already reports as passing.
+- **Skip should-not-trigger evals** (a prompt the skill should *not* handle): a with-skill run loads
+  the skill by force, so it can't test triggering. Say you skipped them and why.
 - **Follow the skill's own `evals/README.md`** for the fixture, the run prompt and the grading
   artefacts. They differ between skills (`build.txt` or `razor-build.txt`, `final-answer.md` or
   `answer.md`, a seeded boot or none), and the expectations name them. With no README and no
   fixture (`files: []`), the evals are code-reading: each run writes its reply to `outputs/answer.md`
   and is graded from that and any files it created.
-- **Tell each run that the snapshot's `references/` and `assets/` are part of the skill.** A run told
-  only "don't read anything else" decided the references were off limits, never opened them, and
-  answered from memory.
-- **Check every `grading.json` before you believe it**: the number of graded expectations equals the
-  number in `evals.json`, and the summary matches the individual verdicts (a grader has reported
-  9/9 over ten passes). Check anything the grader couldn't (a file left unchanged, for example)
+- **What each run must be told:**
+  - the snapshot's `references/` and `assets/` are part of the skill (a run told only "don't read
+    anything else" decided they were off limits and answered from memory);
+  - its answer and transcript files are **required inputs for grading**, not optional reports
+    (subagents are told not to write report files, and some skipped them and still said "done"); use
+    the file names the skill's README gives, exactly;
+  - what it must not read: the skill's `evals/` and `examples/` (snapshot the skill without them),
+    the Umbraco source, and the NuGet package cache (a run read Umbraco's XML docs from it).
+- **Keep the eval workspace in your scratchpad**, never in the repo or the worktree, even if the
+  skill's README says to put it at the repo root.
+- **An interrupted run counts as not run.** Don't grade partial output; start it again or report it
+  as not run.
+- **Give each grader the exact path to write `grading.json` to.** Without it, graders have saved it in
+  the eval's folder instead of the run's.
+- **Check every `grading.json` before you believe it**: it parses (a grader has written invalid
+  JSON), the number of graded expectations equals the number in `evals.json`, the texts match, and
+  the summary matches the individual verdicts (graders have reported 9/9 over ten passes, and saved
+  the file one folder too high). Check anything the grader couldn't (a file left unchanged, for example)
   yourself, with a diff.
-- **A single failed expectation is not yet a regression.** Read the run: if it comes from your
-  harness, fix the harness and re-run; if it's behaviour, re-run that eval once and compare with
-  the PR's reported results. Grade the re-run the same way as the first (a Haiku grader), and report
-  both runs.
+- **A single failed expectation is not yet a regression.** Read the run, then:
+  - **your harness caused it**: fix the harness and re-run;
+  - **the skill has a real gap**: fix the skill and re-run that eval;
+  - **noise**: re-run that eval once and compare with the PR's reported results;
+  - **the expectation is stricter than the behaviour** (it fails the same way twice, for a reason
+    unrelated to your changes): leave it for the human, with the evidence. If your own fix made it
+    fail (for example, new advice the expectation didn't allow for), correct the expectation and
+    re-grade the same run.
+
+  Grade every re-run the same way as the first (a Haiku grader) and report both runs. A weak model
+  that keeps skipping an explanation step the skill already asks for is worth reporting, not
+  re-running.
 
 ## Traps
 
@@ -97,6 +125,12 @@ baselines only if the PR has none.
   argument, and `for a in "x 1"; do set -- $a` doesn't split either), and `echo =====` fails (`=` expansion). Write anything with loops
   or argument lists as a `bash` script, with arguments in arrays.
 - **Two builds of one project at once** race. Parallel boots each need their own copy.
+- **Parallel reviewers slow every build.** Run long build, break and rebuild chains in the background
+  rather than against a foreground time limit.
+- **Probing a booted site by hand** (when `boot-check` can't answer the question): start it on a port
+  of your own (`ASPNETCORE_URLS=http://127.0.0.1:<port>`). `umbraco-reference-instance`'s
+  `instance.sh boot` reuses whatever already answers on port 44372, which in a batch can be another
+  reviewer's site.
 - **Never trust a pass without process evidence.** `boot-check` requires runtime level `Run` from the
   booted process itself. If you boot any other way, confirm what answered was what you started, and
   that nothing is left running afterwards (`pgrep -fl <Assembly>.dll`).

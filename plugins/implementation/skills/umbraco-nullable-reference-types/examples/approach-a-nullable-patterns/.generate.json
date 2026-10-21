@@ -1,0 +1,18 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'clean' (site 1): the assets are C# that registers into DI (composer + attribute-routed controller), and the fixture needs real published content with blank optional properties, which Clean ships. The aliases are Clean's own: 'title'/'subtitle' are on every page type, 'mainImage' is a single media picker and 'author' a single content picker on Clean's 'article' type. The route prefix is unique to this example so it cannot collide with another example's controller. No `requires`: the fixture addresses nodes by key, which no requirement kind expresses, so it asserts its own preconditions (a 200 for the known keys) instead.",
+  "host": "clean",
+  "namespace": "Umbraco.Skills.Examples.NullableReferenceTypes",
+  "placeholders": {
+    "<RoutePrefix>": "api/nullable-example",
+    "<TitleAlias>": "title",
+    "<SubtitleAlias>": "subtitle",
+    "<ImageAlias>": "mainImage",
+    "<PickerAlias>": "author"
+  },
+  "assets": [
+    "NullSafeContentController.cs",
+    "NullSafeContentMapper.cs",
+    "NullSafeContentViewModel.cs",
+    "NullSafeComposer.cs"
+  ]
+}

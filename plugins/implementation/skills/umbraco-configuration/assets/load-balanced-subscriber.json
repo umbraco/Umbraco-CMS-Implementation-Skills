@@ -1,0 +1,12 @@
+{
+  "Deployment": {
+    "ServerRole": "Subscriber"
+  },
+  "Umbraco": {
+    "CMS": {
+      "Examine": {
+        "LuceneDirectoryFactory": "TempFileSystemDirectoryFactory"
+      }
+    }
+  }
+}

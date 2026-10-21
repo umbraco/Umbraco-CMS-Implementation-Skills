@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for the umbraco-security-headers skill.
+
+    A compilable projection of the skill's Approach A assets (SecurityHeadersMiddleware,
+    SecurityHeadersSettings, SecurityHeadersComposer) with <Namespace> substituted at build time.
+    The reference instance (Umbraco-CMS.Skills) references this project so the composer registers
+    the middleware in-process, and Umbraco-CMS.Skills.TestHost asserts the headers over HTTP.
+    Not shipped to users; not part of any plugin.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.SecurityHeaders</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Version comes from the repo-root Directory.Packages.props, so it stays in lockstep with
+         the Umbraco the host loads. -->
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,22 @@
+{
+  "name": "Acme.Welcome",
+  "extensions": [
+    {
+      "type": "dashboard",
+      "alias": "Acme.Welcome.Dashboard",
+      "name": "Acme Welcome Dashboard",
+      "element": "/App_Plugins/Acme.Welcome/welcome-dashboard.js",
+      "weight": 20,
+      "meta": {
+        "label": "Welcome",
+        "pathname": "acme-welcome"
+      },
+      "conditions": [
+        {
+          "alias": "Umb.Condition.SectionAlias",
+          "match": "Umb.Section.Content"
+        }
+      ]
+    }
+  ]
+}

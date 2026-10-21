@@ -1,0 +1,10 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. namespace = what <Namespace> becomes. No host = clean: the approach is C# registered into DI (embed providers + composer). No requires block: the tests call IOEmbedService directly and need no content. Replacing the built-in YouTube provider is safe on the shared Clean host: no other example uses embeds.",
+  "namespace": "Umbraco.Skills.Examples.OEmbedProviders",
+  "assets": [
+    "YouTubeNoCookieEmbedProvider.cs",
+    "CustomVideoEmbedProvider.cs",
+    "OEmbedJsonProviderTemplate.cs",
+    "EmbedProvidersComposer.cs"
+  ]
+}
