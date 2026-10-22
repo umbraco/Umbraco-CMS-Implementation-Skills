@@ -170,16 +170,23 @@ benchmark notes.
 a partial that is never rendered, otherwise passes every structural assertion.
 
 **Check compilation yourself rather than trusting the transcript.** After the runs, build each
-`outputs/project/` and save the result beside the run (e.g. `razor-build.txt`). Grade the
-compile assertion from that file. For Umbraco views, check the fixture's ModelsBuilder `ModelsMode`:
-- **`Nothing` or `SourceCode*`:** use `dotnet build -p:RazorCompileOnBuild=true`. The stock csproj
-  never compiles views, so a plain build passes when they're broken.
-- **`InMemoryAuto`:** that build fails with CS0246 even on a healthy site, because the generated
-  models exist only at runtime. Grade views by rendering a page instead, or give the fixture
-  `Nothing`/`SourceCodeAuto` so the compile check is meaningful.
+`outputs/project/` and save the output beside the run. Grade the compile assertion from that file.
+Which build, and so which file name:
+- **The skill ships no views:** `dotnet build --no-incremental`, saved as `build.txt`. Without
+  `--no-incremental`, a project the run already built skips compilation and prints no CS warnings,
+  so a "no warnings" expectation passes on missing evidence.
+- **The skill ships views, ModelsBuilder `ModelsMode` `Nothing` or `SourceCode*`:**
+  `dotnet build -p:RazorCompileOnBuild=true`, saved as `razor-build.txt`. The stock csproj never
+  compiles views, so a plain build passes when they're broken.
+- **The skill ships views, `ModelsMode` `InMemoryAuto`:** the Razor build fails with CS0246 even
+  on a healthy site, because the generated models exist only at runtime. Nothing in this loop
+  renders the run's views for you either: the boot check in Step 5 only requests `GET /` on an empty
+  install. Either give the fixture `Nothing`/`SourceCodeAuto` so the Razor build is meaningful, or
+  seed content (`--seed-sql`) and request the page that uses the view yourself. Otherwise, record
+  view correctness as unchecked rather than passed.
 
-Keep the build-honesty assertion ("doesn't claim a build it didn't run") separate, so one broken
-view isn't failed twice.
+The skill's `evals/README.md` names the file its expectations use. Keep the build-honesty assertion
+("doesn't claim a build it didn't run") separate, so one broken view isn't failed twice.
 
 Subjective qualities (writing voice, design taste) belong in qualitative review, not assertions. Don't force them.
 
@@ -201,7 +208,7 @@ Process notifications as they arrive; don't try to batch.
 
 Once a run's outputs and transcript are on disk, spawn a **Haiku grader subagent** for it. Read `agents/grader.md` and pass it as the subagent's instructions. Use Haiku (`model: "haiku"`) — grading is structured evidence-checking, Haiku does it well, and it keeps the eval loop cheap.
 
-For deterministic assertions ("file X exists with mime type Y", "transcript contains string Z", "the project compiles"), prefer a tiny script (Node, like the rest of the repo's tooling) over having the grader eyeball it — scripts are faster, free, and reusable across iterations. The grader can call the script and record the result.
+For deterministic assertions ("file X exists with mime type Y", "transcript contains string Z", "the project compiles", "the project boots"), prefer a tiny script (Node, like the rest of the repo's tooling) over having the grader eyeball it — scripts are faster, free, and reusable across iterations. The grader can call the script and record the result.
 
 Give the grader the run directory's **absolute path** and tell it to write `grading.json` there
 exactly. Graders have written it one level up, into the eval folder, where the aggregator doesn't
@@ -215,7 +222,10 @@ A compile check misses the Umbraco mistakes that only fail at startup: a collect
 node scripts/boot-check.mjs <run>/outputs/project/<WebProject> --out <run>/boot.txt
 ```
 
-It builds the project, boots it as a fresh unattended SQLite install in a temp directory (the project's own files are left alone), and stops it again. `RESULT: PASS` means the process answered `GET /` below 500, logged runtime level `Run`, and logged no errors; anything else is `FAIL` with the reason, and the exception and stack frames when it crashed. Grade a boot expectation from `boot.txt`, as the compile expectation is graded from `build.txt`. If the code under test reads tables a fresh install doesn't have, give the eval a SQL file and pass `--seed-sql <file>`. The skill's `evals/README.md` says which evals need that, or need a second boot with a variant applied.
+It builds the project, boots it as a fresh unattended SQLite install in a temp directory (the project's own files are left alone), and stops it again. `RESULT: PASS` means the process answered `GET /` below 500, logged runtime level `Run`, and logged no errors; anything else is `FAIL` with the reason, and the exception and stack frames when it crashed. Grade a boot expectation from `boot.txt`, as the compile expectation is graded from `build.txt` or `razor-build.txt` (Step 3).
+boot-check runs a plain `dotnet build` and requests only `GET /` on an empty install, so a boot
+pass doesn't prove the run's views compile or render. Use the Razor build for views and boot-check
+for startup and registration traps. If the code under test reads tables a fresh install doesn't have, give the eval a SQL file and pass `--seed-sql <file>`. The skill's `evals/README.md` says which evals need that, or need a second boot with a variant applied.
 
 Add `--probe <run>/probe.json` to grade registrations from the running site rather than from reading the code. The probe is compiled into the project for that check only (the run's source is left alone), and reports the content finder, URL provider, health check and component collections in their real order, plus the notification handlers and services registered from the solution's own projects, with lifetimes and counts. A probe that can't be read fails the check.
 
