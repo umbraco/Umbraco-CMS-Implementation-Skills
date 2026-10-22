@@ -121,7 +121,8 @@ even if it's the wrong tool for the skill's case.
 
 - Each expectation matches what the skill now teaches: if the skill calls something "usually too
   early", an expectation that accepts it should say when it's right, and the skill should too.
-- Expectations are checkable from the run's files, `build.txt` and `boot.txt`/`probe.json`.
+- Expectations are checkable from the run's files, `build.txt` or `razor-build.txt` (whichever the
+  skill's `evals/README.md` names), and `boot.txt`/`probe.json`.
 - Fixtures build, and boot if the evals rely on a running site ([verify.md](verify.md)).
 
 ## Write the findings down before fixing
