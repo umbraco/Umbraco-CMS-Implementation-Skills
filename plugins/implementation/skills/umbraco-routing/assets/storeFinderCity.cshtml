@@ -1,0 +1,17 @@
+@using <Namespace>.Controllers
+@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage<StoreFinderCityPage>
+@{
+    // Set this to your master layout. The model is still the landing node (wrapped), so a layout
+    // typed UmbracoViewPage or UmbracoViewPage<IPublishedContent> renders as on any other page.
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>@Model.City | @Model.Name</title>
+</head>
+<body>
+    <p><a href="@Model.Url()">@Model.Name</a></p>
+    <h1>Stores in @Model.City</h1>
+</body>
+</html>

@@ -63,6 +63,8 @@
     <ProjectReference Include="../plugins/implementation/skills/umbraco-custom-maintenance-page/examples/approach-a-upgrading-viewpath/Umbraco-CustomMaintenancePage.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-multilingual/examples/culture-variants/Umbraco-Multilingual.CultureVariants.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-templating/examples/render-pipeline/Umbraco-Templating.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-routing/examples/built-in-routing/Umbraco-Routing.BuiltIn.Example.csproj" />
+    <ProjectReference Include="../plugins/implementation/skills/umbraco-routing/examples/custom-routing/Umbraco-Routing.Custom.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-backoffice-localization/examples/approach-a-ui-localization/Umbraco-BackofficeLocalization.UiLocalization.Example.csproj" />
     <ProjectReference Include="../plugins/implementation/skills/umbraco-security-2fa/examples/members/Umbraco-Security2fa.Members.Example.csproj" />
   </ItemGroup>

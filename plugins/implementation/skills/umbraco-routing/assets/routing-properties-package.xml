@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Approach A schema: a "Routing Properties" composition carrying Umbraco's four reserved routing
+  property aliases. Umbraco reads these aliases from any published page that has them; nothing else
+  needs registering. Keys are fixed so re-importing updates the same type rather than creating a
+  duplicate.
+-->
+<umbPackage>
+  <info>
+    <package>
+      <name>Umbraco Routing — routing properties composition</name>
+    </package>
+  </info>
+  <DocumentTypes>
+    <DocumentType>
+      <Info>
+        <Name>Routing Properties</Name>
+        <Alias>routingProperties</Alias>
+        <Key>3c6b1f0e-8a24-4d5b-9e71-0f2a6c8d4b13</Key>
+        <Icon>icon-sitemap</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>URL name, URL aliases and redirects. Add as a composition to page Document Types.</Description>
+        <AllowAtRoot>False</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Nothing</Variations>
+        <Compositions />
+        <AllowedTemplates />
+      </Info>
+      <Structure />
+      <GenericProperties>
+        <GenericProperty>
+          <Name>URL name</Name>
+          <Alias>umbracoUrlName</Alias>
+          <Key>7a2e5d91-0c46-4b8f-a3d5-6e1f9b0c2a84</Key>
+          <Type>Umbraco.TextBox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Description>Replaces the last part of this page's URL. Leave empty to use the page name.</Description>
+          <Tab Alias="routing">Routing</Tab>
+          <SortOrder>0</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>URL aliases</Name>
+          <Alias>umbracoUrlAlias</Alias>
+          <Key>c4f81a36-5e2b-4d07-9b6c-28d0e7a5f193</Key>
+          <Type>Umbraco.TextBox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Description>Comma-separated extra paths that show this page, e.g. "offers,promo/spring". No leading slash, no domain.</Description>
+          <Tab Alias="routing">Routing</Tab>
+          <SortOrder>1</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Redirect to</Name>
+          <Alias>umbracoRedirect</Alias>
+          <Key>2b9d6e48-71a3-4c5f-8e02-d4b6a1f7c360</Key>
+          <Type>Umbraco.ContentPicker</Type>
+          <Definition>fd1e0da5-5606-4862-b679-5d0cf3a52a59</Definition>
+          <Description>Visitors to this page are sent to the picked page (302).</Description>
+          <Tab Alias="routing">Routing</Tab>
+          <SortOrder>2</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+        <GenericProperty>
+          <Name>Show content from</Name>
+          <Alias>umbracoInternalRedirectId</Alias>
+          <Key>e8a03c57-9f14-4b26-a6d1-5c7e2f0b8d49</Key>
+          <Type>Umbraco.ContentPicker</Type>
+          <Definition>fd1e0da5-5606-4862-b679-5d0cf3a52a59</Definition>
+          <Description>Renders the picked page at this page's URL, without a redirect.</Description>
+          <Tab Alias="routing">Routing</Tab>
+          <SortOrder>3</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs>
+        <Tab>
+          <Key>9d1c7b2a-4e85-4f60-b3a9-81e5c0d6f274</Key>
+          <Type>Group</Type>
+          <Caption>Routing</Caption>
+          <Alias>routing</Alias>
+          <SortOrder>0</SortOrder>
+        </Tab>
+      </Tabs>
+    </DocumentType>
+  </DocumentTypes>
+  <Templates />
+  <MediaTypes />
+  <Stylesheets />
+  <Scripts />
+  <PartialViews />
+  <DictionaryItems />
+  <Languages />
+  <DataTypes />
+  <MediaItems />
+  <Documents />
+</umbPackage>

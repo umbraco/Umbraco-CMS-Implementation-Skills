@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  EXAMPLE-ONLY scaffolding for umbraco-routing Approach B — not shipped to users.
+
+  The Document Types the skill's code targets: routingProduct (with a "sku" property) under a
+  routingProductList, and a storeFinder landing node for the virtual route. Each template prints the
+  node's name so a fixture can tell which node answered. Content is seeded in code
+  (ExampleHostWiring.cs) beneath site 2's single shared root.
+-->
+<umbPackage>
+  <info>
+    <package>
+      <name>Umbraco Routing (custom) — example fixture content</name>
+    </package>
+  </info>
+  <DocumentTypes>
+    <DocumentType>
+      <Info>
+        <Name>Routing Product List</Name>
+        <Alias>routingProductList</Alias>
+        <Key>4e8a1c63-7d20-4b95-8f3a-1c6e9b0d2a47</Key>
+        <Icon>icon-document</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only parent of routingProduct pages.</Description>
+        <AllowAtRoot>True</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Nothing</Variations>
+        <Compositions />
+        <AllowedTemplates>
+          <Template>routingProductList</Template>
+        </AllowedTemplates>
+        <DefaultTemplate>routingProductList</DefaultTemplate>
+      </Info>
+      <Structure>
+          <DocumentType>routingProduct</DocumentType>
+        </Structure>
+      <GenericProperties />
+      <Tabs />
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Routing Product</Name>
+        <Alias>routingProduct</Alias>
+        <Key>d92b5f04-1e7a-4c38-b6d1-8f0a3e5c7b19</Key>
+        <Icon>icon-document</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only product page whose URL segment the skill's SkuUrlSegmentProvider rewrites.</Description>
+        <AllowAtRoot>True</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Nothing</Variations>
+        <Compositions />
+        <AllowedTemplates>
+          <Template>routingProduct</Template>
+        </AllowedTemplates>
+        <DefaultTemplate>routingProduct</DefaultTemplate>
+      </Info>
+      <Structure />
+      <GenericProperties>
+        <GenericProperty>
+          <Name>SKU</Name>
+          <Alias>sku</Alias>
+          <Key>b3e0f6a1-2c49-4d78-9e05-7a1c8d2f6e30</Key>
+          <Type>Umbraco.TextBox</Type>
+          <Definition>0cc0eba1-9960-42c9-bf9b-60e150b429ae</Definition>
+          <Tab Alias="product">Product</Tab>
+          <SortOrder>0</SortOrder>
+          <Mandatory>False</Mandatory>
+          <LabelOnTop>False</LabelOnTop>
+          <Variations>Nothing</Variations>
+        </GenericProperty>
+      </GenericProperties>
+      <Tabs>
+        <Tab>
+          <Key>c7d2a9e4-5b13-4f86-a0e7-3d9b1f4c8a52</Key>
+          <Caption>Product</Caption>
+          <Alias>product</Alias>
+          <Type>Group</Type>
+          <SortOrder>0</SortOrder>
+        </Tab>
+      </Tabs>
+    </DocumentType>
+    <DocumentType>
+      <Info>
+        <Name>Store Finder</Name>
+        <Alias>storeFinder</Alias>
+        <Key>0a7c4e9b-6f31-4d52-8e2b-5b9d1c3f7a64</Key>
+        <Icon>icon-document</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only landing node for the skill's /stores/{city} virtual route.</Description>
+        <AllowAtRoot>True</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Nothing</Variations>
+        <Compositions />
+        <AllowedTemplates>
+          <Template>storeFinder</Template>
+        </AllowedTemplates>
+        <DefaultTemplate>storeFinder</DefaultTemplate>
+      </Info>
+      <Structure />
+      <GenericProperties />
+      <Tabs />
+    </DocumentType>
+  </DocumentTypes>
+  <Templates>
+    <Template>
+      <Name>Routing Product List</Name>
+      <Alias>routingProductList</Alias>
+      <Key>1f5d8b2a-9e64-4c07-a3b8-6d0e2f7c4a91</Key>
+      <Design><![CDATA[@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{ Layout = null; }
+<h1>@Model.Name</h1>
+]]></Design>
+    </Template>
+    <Template>
+      <Name>Routing Product</Name>
+      <Alias>routingProduct</Alias>
+      <Key>8c3a6e1d-4b07-4f92-b5c8-2e9f0a7d3b56</Key>
+      <Design><![CDATA[@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{ Layout = null; }
+<h1>@Model.Name</h1>
+]]></Design>
+    </Template>
+    <Template>
+      <Name>Store Finder</Name>
+      <Alias>storeFinder</Alias>
+      <Key>5b2e9f7c-0d48-4a13-9c6e-7f1a3d8b0e25</Key>
+      <Design><![CDATA[@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{ Layout = null; }
+<h1>@Model.Name</h1>
+]]></Design>
+    </Template>
+  </Templates>
+  <Documents />
+  <MediaTypes />
+  <Stylesheets />
+  <Scripts />
+  <PartialViews />
+  <DictionaryItems />
+  <Languages />
+  <DataTypes />
+  <MediaItems />
+</umbPackage>

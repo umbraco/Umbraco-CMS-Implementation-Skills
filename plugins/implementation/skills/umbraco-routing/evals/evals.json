@@ -1,0 +1,76 @@
+{
+  "skill_name": "umbraco-routing",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Umbraco 17.5 shop (root namespace Acme.Web, project in the current folder). Products are Document Type `product`, with a Textstring property `productCode` (e.g. TR-200), and they sit under a `Shop` node, so today a product URL is /shop/trail-runner/. Marketing want the code in every product URL: /shop/trail-runner-tr-200/. Separately, the packaging team have already printed QR codes pointing at /go/TR-200 (the code, any case) and those need to land on the product's real page. We have about 400 products published and the current /shop/trail-runner/ style URLs are all over Google, so don't break those. Implement it and tell me anything I need to do in the backoffice.",
+      "expected_output": "An IUrlSegmentProvider for the product type that appends the code to the segment (registered with UrlSegmentProviders().Insert), an IContentFinder appended to the content finders that answers /go/{code} with a 301 to the product's canonical URL, no hardcoded ids, and a handover that says existing products must be republished for the new segments and that Umbraco's redirect tracking then 301s the old URLs.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "The product URL change is implemented as an IUrlSegmentProvider (not only an IUrlProvider, a rewrite rule, or a route), registered in a composer with builder.UrlSegmentProviders().Insert<...>()",
+        "The segment provider leaves content that isn't the `product` type to Umbraco's default segment (e.g. returns null for it), and a product with no productCode keeps its plain name-based segment rather than getting `name-` or an empty suffix",
+        "The segment provider implements the GetUrlSegment(IContentBase, bool published, string? culture) overload, or otherwise reads the property value with the published flag Umbraco passes",
+        "The /go/{code} short link is an IContentFinder registered with builder.ContentFinders().Append<...>() (or after ContentFinderByUrlNew), not InsertBefore ContentFinderByUrlNew, and it returns false early, before any content lookup, for paths it doesn't handle",
+        "The finder answers with a permanent redirect (SetRedirectPermanent or SetRedirect with 301) to the product's URL, rather than rendering the product at /go/{code}, and matches the code case-insensitively",
+        "No node id is hardcoded anywhere: products and other nodes are found by Document Type alias, key or URL path, never by an integer id",
+        "The run handles the ~400 already-published products correctly: deploying a new URL segment provider makes Umbraco 17 rebuild every document URL at the next boot (no republish needed) and that rebuild records NO redirects, because redirect tracking only runs on publish and move. So the run provides permanent redirects from the old /shop/{name}/ URLs itself (e.g. a content finder or rewrite) rather than relying on republishing plus Umbraco's redirect tracking to create them",
+        "If the run says the project builds, `dotnet build` on the project succeeds; if it didn't build, it doesn't claim it did"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm the content lead on an Umbraco 17 site (project in the current folder; our developer is off this sprint). Three asks from the marketing team, and I'd like to do as much as possible myself in the backoffice — no Umbraco MCP or anything like that set up, just me clicking: (1) the Spring Campaign page (real URL /campaigns/2026/spring-campaign/) should also open at /spring for print ads; (2) editors want to pick their own URL slug for any page instead of it coming from the page name; (3) we've retired the old 'Offers' page and anyone who still visits /offers/ should end up on the 'Deals' page instead — and our editors should be able to change where it points later. Separately, the SEO agency says http must go to https and the bare acme.com host to www.acme.com, both as permanent redirects; a small change to Program.cs is fine for that one if it has to be code. Tell me exactly what to do.",
+      "expected_output": "Uses the reserved routing properties: umbracoUrlAlias (Textstring) for /spring, umbracoUrlName (Textstring) for slugs, umbracoRedirect (Content Picker) for Offers -> Deals, ideally as a composition, with click-by-click backoffice steps because there is no MCP; notes umbracoRedirect is a 302; and adds UseRewriter with permanent https and www redirects before UseUmbraco. No custom content finder or controller.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "For /spring the run uses the reserved `umbracoUrlAlias` property (Textstring editor) with a value like `spring` (no domain), and says the page then also renders at /spring",
+        "For editor-chosen slugs the run uses the reserved `umbracoUrlName` property (Textstring editor)",
+        "For Offers -> Deals the run uses the reserved `umbracoRedirect` property with a Content Picker editor (not a Multi URL Picker or a text field), set on the Offers page and pointing at Deals",
+        "The run states that `umbracoRedirect` issues a temporary (302) redirect, or otherwise distinguishes it from a permanent 301",
+        "Because no MCP is available, the run gives step-by-step backoffice instructions (where to add the properties, e.g. on a composition or the page Document Types, and that the pages must be saved and published) rather than refusing or switching to custom code",
+        "The https and www redirects are permanent (301 or 308, not 302/307) and are applied in Program.cs before app.UseUmbraco(), e.g. app.UseRewriter with AddRedirectToHttpsPermanent()/AddRedirectToWwwPermanent() or explicit 301 rules, or equivalent middleware",
+        "The run does not write a custom IContentFinder, IUrlProvider, controller or middleware for the three content asks",
+        "If the run says the project builds, `dotnet build` on the project succeeds; if it didn't build, it doesn't claim it did"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Umbraco 17 site, root namespace Acme.Web (project in the current folder). We need a page per city at /locations/{city} (e.g. /locations/leeds) listing our branches from IBranchDirectory, which is already in the project and registered in DI. There's no Umbraco node per city and we don't want one: there IS a single 'Locations' page (Document Type alias `locationsLanding`) that editors use for the intro text and SEO fields, and the city pages should behave as if they were that page — same master layout (Views/master.cshtml, which reads Model.Value(\"siteName\", fallback: Fallback.ToAncestors)), breadcrumb back to it, and so on. A city with no branches should 404. One more thing: the old site used /locations/leeds.html and those links are printed on leaflets, so those have to keep working too. Build it.",
+      "expected_output": "A controller inheriting UmbracoPageController and implementing IVirtualPageController (attribute-routed at locations/{city}), or a ForUmbracoPage route, whose FindContent finds the locationsLanding node by Document Type alias; a view model derived from PublishedContentWrapped so the master layout binds; NotFound for unknown cities; and the .html URLs either 301-redirected to the extensionless URL before Umbraco or opted in with UmbracoRequestOptions.HandleAsServerSideRequest.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/locations/"
+      ],
+      "expectations": [
+        "The city route is served by a controller that inherits UmbracoPageController and implements IVirtualPageController (or is mapped with .ForUmbracoPage(...)), not a RenderController route hijack and not a plain Controller without Umbraco context",
+        "FindContent (or the ForUmbracoPage delegate) finds the Locations node by its Document Type alias `locationsLanding` or by key, never by a hardcoded integer id",
+        "The model passed to the view keeps the Locations node available as IPublishedContent (e.g. derives from PublishedContentWrapped), so Views/master.cshtml can still call Model.Value(\"siteName\", ...); it is not a ContentModel or an unrelated POCO",
+        "A city for which IBranchDirectory returns null results in a 404 (NotFound())",
+        "The /locations/{city}.html URLs are handled explicitly: either redirected (preferably 301) to the extensionless URL by something that does not need an Umbraco context (rewrite middleware/rules before UseUmbraco, or a plain endpoint), or the path is opted in with UmbracoRequestOptions.HandleAsServerSideRequest. Serving them through the virtual route with neither is a fail, because paths with an extension get no Umbraco context",
+        "The branch lookup is awaited with the request's cancellation token (HttpContext.RequestAborted or a CancellationToken action parameter)",
+        "If the run says the project builds, `dotnet build` on the project succeeds; if it didn't build, it doesn't claim it did"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Two routing problems on our Umbraco 17.5 site (project in the current folder, appsettings.json included). (1) Last week we added a second site, 'Acme Outlet', as a new root node beside our main 'Acme' root. Since then a bunch of Outlet pages show '#err-' something as their URL in the backoffice info tab and won't open on the front end, and one or two main-site pages have started showing Outlet content. Nothing has domains set up yet; the outlet will be on outlet.acme.com and the main site on www.acme.com. (2) Security asked us to stop pages being reachable by their ID. We added WebRouting:DisableFindContentByIdPath = true to appsettings.json, but the pen-testers say pages are still reachable by an ID-style URL. What's going on with each, and what exactly should we change?",
+      "expected_output": "Explains that with two roots, no domains and HideTopLevelNodeFromPath true (the default) both sites' pages compete for the same paths, so collisions produce #err URLs; the fix is to assign outlet.acme.com and www.acme.com to the roots in Culture and Hostnames (rather than turning off HideTopLevelNodeFromPath, which changes every URL). Explains that DisableFindContentByIdPath isn't a setting on 17 — the key is DisableFindContentByIdentifierPath — and that 17 routes /{guid} keys, not /1234.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/two-sites/"
+      ],
+      "expectations": [
+        "The run attributes the #err- URLs to URL collisions between the two roots' pages: two roots without domains while HideTopLevelNodeFromPath is true (its default) produce the same paths",
+        "The primary fix is to assign hostnames to each root in Culture and Hostnames (www.acme.com on Acme, outlet.acme.com on Acme Outlet); if the run mentions setting HideTopLevelNodeFromPath to false, it warns that this changes every existing URL",
+        "The run identifies that `DisableFindContentByIdPath` is not a recognised setting on Umbraco 17 (it is silently ignored) and that the correct key is `Umbraco:CMS:WebRouting:DisableFindContentByIdentifierPath`",
+        "The run states that Umbraco 17 no longer resolves pages by an integer /1234 path but by key (a /{guid} path), and that the /{guid} route is still live because the setting key was wrong",
+        "The run edits appsettings.json (or gives the exact JSON) replacing the wrong key with `\"DisableFindContentByIdentifierPath\": true` under Umbraco:CMS:WebRouting",
+        "The run does not claim the setting change or domain assignment was verified against a running site unless it ran one"
+      ]
+    }
+  ]
+}

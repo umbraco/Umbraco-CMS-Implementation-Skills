@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  EXAMPLE-ONLY scaffolding for umbraco-routing Approach A — not shipped to users.
+
+  A page type that composes the skill's routingProperties composition, and a template that prints the
+  rendered node's name, so a fixture can tell WHICH node answered a URL. Installed as one manifest
+  with the skill's package (see ExampleHostWiring.cs); content is seeded in code.
+-->
+<umbPackage>
+  <info>
+    <package>
+      <name>Umbraco Routing (built-in) — example fixture content</name>
+    </package>
+  </info>
+  <DocumentTypes>
+    <DocumentType>
+      <Info>
+        <Name>Routing Demo Page</Name>
+        <Alias>routingDemoPage</Alias>
+        <Key>a51e7c20-3d94-4f68-8b1a-6e2c9d0f4b75</Key>
+        <Icon>icon-document</Icon>
+        <Thumbnail>folder.png</Thumbnail>
+        <Description>Example-only page type composing the skill's routingProperties.</Description>
+        <AllowAtRoot>True</AllowAtRoot>
+        <IsListView>False</IsListView>
+        <IsElement>False</IsElement>
+        <Variations>Nothing</Variations>
+        <Compositions>
+          <Composition>routingProperties</Composition>
+        </Compositions>
+        <AllowedTemplates>
+          <Template>routingDemoPage</Template>
+        </AllowedTemplates>
+        <DefaultTemplate>routingDemoPage</DefaultTemplate>
+      </Info>
+      <Structure />
+      <GenericProperties />
+      <Tabs />
+    </DocumentType>
+  </DocumentTypes>
+  <Templates>
+    <Template>
+      <Name>Routing Demo Page</Name>
+      <Alias>routingDemoPage</Alias>
+      <Key>6f0b3d82-9c15-4a47-b2e6-0d8a5c1f7e93</Key>
+      <Design><![CDATA[@inherits Umbraco.Cms.Web.Common.Views.UmbracoViewPage
+@{ Layout = null; }
+<h1 data-routing-node="@Model.Key">@Model.Name</h1>
+]]></Design>
+    </Template>
+  </Templates>
+  <Documents />
+  <MediaTypes />
+  <Stylesheets />
+  <Scripts />
+  <PartialViews />
+  <DictionaryItems />
+  <Languages />
+  <DataTypes />
+  <MediaItems />
+</umbPackage>

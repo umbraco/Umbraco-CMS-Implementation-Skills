@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <!--
+    VALIDATION-ONLY example project for umbraco-routing Approach B (custom routing code). Not shipped
+    to users.
+
+    Loaded by SITE 2 (Umbraco-CMS.Skills.Blank, no starter kit). The skill's .cs assets (URL segment
+    provider, content finder, composer, virtual-page controller) are generated into obj/ at build time
+    by plugins/Directory.Build.props and compiled here; its .cshtml is embedded, and this example's
+    harness writes it to Views/ where the skill tells users to put it.
+
+    Razor SDK so the controller registers as an application part.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.RoutingCustom</RootNamespace>
+    <AddRazorSupportForMvc>true</AddRazorSupportForMvc>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../../../../ExampleFixtures.Shared/ExampleFixtures.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Example-only schema: product list, product (with a SKU) and store-finder landing types. -->
+    <EmbeddedResource Include="ExampleFixtureContent.xml" LogicalName="ExampleFixtureContent.xml" />
+  </ItemGroup>
+
+</Project>
