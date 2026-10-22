@@ -54,6 +54,7 @@ workflow; the others link into them.
 | `umbraco-debugging` | Steps into Umbraco's own source with Source Link (Visual Studio, Rider, VS Code), or profiles requests with debug mode and MiniProfiler |
 | `umbraco-security-external-logins` | Single sign-on through Entra ID, Google, Okta and other OpenID Connect providers, for backoffice users or website members, with safe auto-linking and group mapping |
 | `umbraco-design-fundamentals` | Stylesheets and scripts in `wwwroot`, rendering content and media in Razor, and a guided path for a whole design |
+| `umbraco-security` | Entry point for securing a site: HTTPS behind proxies, CORS for headless front ends, user and member login rules, authorization, production hardening; routes CSP, SSO and 2FA to their own skills |
 
 ## Quick Start
 
