@@ -1,0 +1,50 @@
+{
+  "skill_name": "umbraco-draft-page",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The CMS Editor MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/campaigns-site.md has what the read tools returned. Treat it as the live site. Build the campaign page from the brief in evals/files/brief-autumn-launch.md under Campaigns and publish it, it needs to be live for tomorrow's newsletter.",
+      "expected_output": "The agent writes a page plan (not the page) that puts the page under Campaigns as a campaignPage, learns the blocks from the recent Spring Offer page, maps the content to heroBanner, richText, featureCards (three benefits), and callToAction, writes an SEO title and meta description, leaves out the testimonial because no quote is approved, lists the video gallery as a gap because videoEmbed is not an allowed block, lists the 10,000 clinics claim as a claim to confirm and keeps it out of the copy, marks block field limits as unverified, and stops for approval. It does not create or publish the page and explains that publishing is the editor's decision after preview.",
+      "files": [
+        "evals/files/mcp/campaigns-site.md",
+        "evals/files/brief-autumn-launch.md"
+      ],
+      "expectations": [
+        "A page plan is written (a file such as docs/page-plans/sms-reminders.md, or in full in the conversation) naming Campaigns as the parent and campaignPage as the page type, and stating the plan awaits approval",
+        "The plan maps content to blocks that are allowed on contentGrid (heroBanner, richText, featureCards, callToAction), with the three benefits in featureCards and the call to action linking /signup/?ref=sms",
+        "The plan does not use videoEmbed and lists the video gallery as a gap the current blocks cannot cover, with options",
+        "The plan does not add a testimonial block with an invented quote; it notes that no quote is approved",
+        "The 'more than 10,000 clinics' claim is listed as a claim to confirm and is not in the planned copy",
+        "The plan includes an SEO title and a meta description for the page, and marks block field limits as unverified rather than inventing them",
+        "The agent stops for approval and does not claim the page was created, saved or published",
+        "The agent declines to publish, explains that publishing stays with the editor after previewing the draft, and does not mention using a create-and-publish or publish tool"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Umbraco 17, but the MCP isn't set up for me yet. Here's the brief: evals/files/brief-autumn-launch.md. The page type is campaignPage under Campaigns and it uses a block grid with hero, rich text, feature cards and a call to action. Can you plan the page and tell me how to put it in the backoffice myself?",
+      "expected_output": "The agent writes the page plan from what the user described, states that it could not read the site so block aliases, fields and limits are unverified, and hands over backoffice steps: create a campaignPage under Campaigns, add the blocks in order and paste the copy into each field. It keeps the 10,000 clinics claim and the video gallery out with reasons, and says nothing was written to the site.",
+      "files": [
+        "evals/files/brief-autumn-launch.md"
+      ],
+      "expectations": [
+        "The plan states that the site was not read through the MCP and that block names, fields and limits come from the user's description and are unverified",
+        "The agent gives step-by-step backoffice instructions: create the page under Campaigns with the campaign page type, add each block in plan order, and enter the copy per field",
+        "The 'more than 10,000 clinics' claim is listed as a claim to confirm and is not in the planned copy",
+        "The video gallery is listed as a gap or open item rather than mapped to an invented block",
+        "The agent says nothing was written to the site and does not claim a draft exists"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We're on Umbraco 17 with the CMS Editor MCP. We want to start running events. Create an Event page for our October webinar, and the event pages need their own date, venue and registration link fields that we don't have yet.",
+      "expected_output": "The agent recognises that the site has no event page type with date, venue and registration fields, and that adding one is a content model change. It routes that to umbraco-add-page (a developer or modelling task) before any event page can be drafted, rather than forcing the event details into an existing page type's rich text or creating anything.",
+      "files": [],
+      "expectations": [
+        "The agent identifies that new fields or a new page type are needed and that this skill does not create document types or fields",
+        "The agent routes the page type change to umbraco-add-page (or names it as a content model change for a developer) and offers to draft the event page once the type exists",
+        "The agent does not create a page or fields, and does not claim anything was changed"
+      ]
+    }
+  ]
+}
