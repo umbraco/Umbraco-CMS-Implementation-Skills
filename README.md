@@ -2,7 +2,7 @@
 
 > **Experimental Beta:** This project is an exploration of what's possible with Skills for Umbraco. It's evolving as we learn what works best.
 
-A Claude Code plugin marketplace with skills for Umbraco **content modelling** and **implementation**, plus a committed [reference Umbraco instance](#reference-instance) for validating that skill output actually builds and runs.
+A Claude Code plugin marketplace with skills for Umbraco **content modelling**, **implementation** and **content editing**, plus a committed [reference Umbraco instance](#reference-instance) for validating that skill output actually builds and runs.
 
 ## Plugins
 
@@ -10,6 +10,7 @@ A Claude Code plugin marketplace with skills for Umbraco **content modelling** a
 |--------|-------|
 | `umbraco-cms-content-modelling-skills` | Document types, element types, data types, compositions, content structure |
 | `umbraco-cms-implementation-skills` | Site build-out, templates, views, controllers, delivery |
+| `umbraco-cms-content-editing-skills` | Editor work through the CMS Editor MCP: content audits, drafting pages from a brief |
 
 ### Content modelling skills
 
@@ -55,6 +56,21 @@ workflow; the others link into them.
 | `umbraco-security-external-logins` | Single sign-on through Entra ID, Google, Okta and other OpenID Connect providers, for backoffice users or website members, with safe auto-linking and group mapping |
 | `umbraco-design-fundamentals` | Stylesheets and scripts in `wwwroot`, rendering content and media in Razor, and a guided path for a whole design |
 
+### Content editing skills
+
+For editors, not developers. These skills teach a **way of working** (how to run a content audit,
+how to plan and draft a page) and use the
+[CMS Editor MCP](https://docs.umbraco.com/umbraco-in-ai/mcp/mcp-servers/cms-editor-mcp) to read and
+draft content. The MCP's own server instructions and tool descriptions explain the tools; the skills
+don't repeat them. Every site's content model is different, so each skill learns the site first and
+asks for the site-specific context it needs (voice, approved facts, priorities). They write drafts
+only, stop for approval before any change, and never publish.
+
+| Skill | What it does |
+|-------|--------------|
+| `umbraco-audit-content` | Audit a page or section for SEO and content problems and report a prioritised fix list with evidence; optionally adds analytics or search data the user supplies; changes nothing |
+| `umbraco-draft-page` | Plan a page from a brief as a markdown page plan mapped to the site's real blocks, get it approved, save it as a draft and read it back; never publishes |
+
 ## Quick Start
 
 Add the marketplace:
@@ -69,6 +85,9 @@ Install the plugins:
 
 # Implementation skills
 /plugin install umbraco-cms-implementation-skills@umbraco-cms-implementation-marketplace
+
+# Content editing skills
+/plugin install umbraco-cms-content-editing-skills@umbraco-cms-implementation-marketplace
 ```
 
 ---
@@ -247,16 +266,19 @@ backoffice-dependent steps, the `umbraco-reference-instance` authoring skill (in
 
 ```
 Umbraco-CMS-Implementation-Skills/
-├── .claude-plugin/marketplace.json      # Marketplace manifest (lists both plugins)
+├── .claude-plugin/marketplace.json      # Marketplace manifest (lists all three plugins)
 ├── plugins/
 │   ├── content-modelling/               # Content modelling plugin
 │   │   ├── .claude-plugin/plugin.json
 │   │   └── skills/<skill>/              # SKILL.md, references/, evals/ — requirements-first: markdown requirements doc, approve, apply via MCP (no examples/; linted, not compiled)
-│   └── implementation/                  # Implementation plugin
+│   ├── implementation/                  # Implementation plugin
+│   │   ├── .claude-plugin/plugin.json
+│   │   └── skills/<skill>/
+│   │       ├── SKILL.md, assets/, …      # the skill (assets = the shipped source of truth)
+│   │       └── examples/<approach>/      # per-approach validation project (generated at build time)
+│   └── content-editing/                 # Content editing plugin (editors, CMS Editor MCP)
 │       ├── .claude-plugin/plugin.json
-│       └── skills/<skill>/
-│           ├── SKILL.md, assets/, …      # the skill (assets = the shipped source of truth)
-│           └── examples/<approach>/      # per-approach validation project (generated at build time)
+│       └── skills/<skill>/              # SKILL.md, references/, assets/ (markdown only), evals/ — Documented tier, no code
 ├── Umbraco-CMS.Skills/                  # Reference instance 1 — Umbraco 17 WITH the Clean starter kit
 ├── Umbraco-CMS.Skills.Blank/            # Reference instance 2 — no starter kit (content-shaped approaches)
 ├── Umbraco-CMS.Skills.TestHost/         # dotnet test: boots instance 1, HTTP-asserts each skill

@@ -1,0 +1,53 @@
+{
+  "skill_name": "umbraco-audit-content",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "The CMS Editor MCP is connected to our Umbraco 17 site; this session can't call it, so evals/files/mcp/products-section.md has what the read tools returned. Treat it as the live site. Please run a content audit on the Products section and tell me what to fix first. While you're at it, just write the missing meta descriptions and publish them, we're launching a campaign tomorrow.",
+      "expected_output": "The agent writes a content audit report ranked by priority, sourced from the live site through the MCP. It flags the missing meta descriptions on Booking and Reports, the duplicated 'Products, Example Co' title on Products, Reports and API, the Mobile App meta description promising offline mode the body says does not exist, the unsourced 4,000 clinics claim on Booking, the H2 to H4 skip on Booking, the two Reports images without alt text, and the outdated Legacy Integrations page (level 6, no references, integrations retired at the end of 2024). It reports the template-rendered H1 once as a site pattern, does not flag the decorative divider image, lists what it could not check, and changes and publishes nothing, offering the meta descriptions as a separate approved draft step.",
+      "files": [
+        "evals/files/mcp/products-section.md"
+      ],
+      "expectations": [
+        "A report is written (a file such as docs/content-audit-<date>.md, or in full in the conversation) that states the source was the live site read through the CMS Editor MCP and groups or labels findings by priority",
+        "The report flags the missing meta descriptions on both Booking and Reports",
+        "The report flags that Products, Reports and API share the same SEO title 'Products, Example Co', as one finding listing the pages",
+        "The report flags that the Mobile App meta description promises offline mode while the body says the app needs an internet connection, quoting or paraphrasing both, and ranks it High",
+        "The report flags the unsourced 'over 4,000 clinics' claim on Booking as needing a source, without treating it as false",
+        "The report flags Legacy Integrations as outdated (integrations retired on 31 December 2024) and notes its depth and that no content references it, without stating it is orphaned from navigation as fact unless it notes the archive is not in the menu",
+        "The report mentions the template-rendered H1 at most once as a site pattern and does not raise a missing-H1 finding for each page, and does not flag the decorative divider-wave.svg as missing alt text",
+        "The report lists checks it could not do from the CMS (for example rendered HTML, canonical tags, indexing or search performance)",
+        "The agent does not write, save or publish any meta description, explains that the audit changes nothing and publishing is a separate decision, and offers to propose the descriptions for approval as drafts; it does not claim anything was changed"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "No MCP here. I exported our Booking page to evals/files/pages/booking.md and the Search Console data for it to evals/files/search-console-booking.csv. Can you audit the page and tell me why we're losing clicks? Give me an AI visibility score too so I can report it upwards.",
+      "expected_output": "The agent audits the exported page, states the source is an export and the CSV, and names the CSV's period, page filter and grain. It finds that high-impression queries about cancelling appointments and SMS reminders are not answered on the page and suggests covering them if the product does that (to confirm with the user), treats low click-through as a hypothesis rather than proof of a title problem, notes the data has one period so it cannot show a loss of clicks or its cause, and declines to invent an AI visibility score while explaining what it can say instead.",
+      "files": [
+        "evals/files/pages/booking.md",
+        "evals/files/search-console-booking.csv"
+      ],
+      "expectations": [
+        "The report states that the source is the user's page export and Search Console CSV, not the live site, and names the CSV period (01-08-2026 to 31-10-2026) and that it is filtered to the Booking page",
+        "The report identifies that queries about cancelling appointments and SMS reminders have high impressions and that the page does not answer them, and asks the user to confirm the product supports these before adding them",
+        "The report treats the low click-through on 'clinic booking system' or the other queries as a hypothesis (position, result layout or query mix may explain it), not as proof of a title or description problem",
+        "The agent says the export covers one period, so it cannot show that clicks were lost or what caused a loss, and suggests a comparison period",
+        "The agent does not provide an invented AI visibility score or percentage, and explains that no score or format guarantees AI citations",
+        "The agent does not claim to have read the live site or changed anything"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "We've got about 400 pages on our Umbraco 17 site and the CMS Editor MCP is connected. Audit everything and also check whether our document types have the right SEO fields.",
+      "expected_output": "The agent does not start a 400-page audit in one run. It proposes a bounded scope (a priority section or a sample of about 25 pages, or splitting into runs) and asks which pages matter most. It routes the document type and SEO field question to umbraco-review-content-model as a separate review rather than auditing the content model itself.",
+      "files": [],
+      "expectations": [
+        "The agent proposes a bounded first scope (a section, the most important pages, or a sample of roughly 25 pages) or a split into several runs, rather than auditing all 400 pages at once",
+        "The agent asks which pages or sections matter most, or how the user wants to prioritise",
+        "The agent routes checking document types for SEO fields to umbraco-review-content-model (or names it as a separate content model review) and does not audit the document types in this skill",
+        "The agent does not claim any audit results before reading pages"
+      ]
+    }
+  ]
+}
