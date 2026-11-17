@@ -51,6 +51,27 @@
         "dotnet"
       ],
       "skills": "./skills/"
+    },
+    {
+      "name": "umbraco-cms-content-editing-skills",
+      "source": "./plugins/content-editing",
+      "description": "Umbraco content editing skills for editors using the CMS Editor MCP - content audits and drafting pages from a brief",
+      "version": "1.0.0",
+      "category": "content",
+      "author": {
+        "name": "Niels Christian Laursen",
+        "email": "ncl@umbraco.dk",
+        "url": "https://github.com/nclaursen"
+      },
+      "keywords": [
+        "umbraco",
+        "content-editing",
+        "editor-mcp",
+        "content-audit",
+        "seo",
+        "pages"
+      ],
+      "skills": "./skills/"
     }
   ]
 }
