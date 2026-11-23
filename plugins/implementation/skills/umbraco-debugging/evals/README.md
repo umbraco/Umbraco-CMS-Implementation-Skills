@@ -37,13 +37,13 @@ To build `project/`:
 
 | Eval | Overlay | Starting state |
 |---|---|---|
-| 1 | `files/product-import/` | `Controllers/ProductImportController.cs`, an `[ApiController]` at `api/products/import` that creates products with `IContentService.Create` and calls `_contentService.Save(product)` per row: the F11 target the prompt names. No debugger settings live in the project; Visual Studio's are per machine, so this eval is graded from `answer.md` |
+| 1 | `files/product-import/` | `Controllers/ProductImportController.cs`, an `[ApiController]` at `api/products/import` that creates products with `IContentService.Create` and calls `_contentService.Save(product)` per row: the F11 target the prompt names |
 | 2 | `files/vscode-launch/` (its `vscode/` copied in as `.vscode/`) | `.vscode/launch.json` with four planted faults: no `justMyCode` (so the default `true` applies), `searchMicrosoftSymbolServer` at the top level of the configuration instead of inside `symbolOptions` and no NuGet.org server, `sourceLinkOptions` with `"*": { "enabled": false }`, and `program` pointing at `bin/Debug/net8.0/` although the csproj targets `net10.0`. No `suppressJITOptimizations`. The `preLaunchTask`, `serverReadyAction` and Development `env` are correct and must survive. `.vscode/tasks.json` holds the `build` task |
-| 3 | — | The project as copied. Rider's settings are per machine; graded from `answer.md`, plus the check that `Acme.Web.csproj` was not given `DebugType`/`EmbedAllSources` as the fix |
+| 3 | — | The project as copied |
 | 4 | `files/slow-page/` | `Controllers/ProductListingController.cs`, a `RenderController` hijacking `productListing` that does three expensive things with no timing: a `Root().DescendantsOrSelf()` product query, a per-product same-category `Count` over every product (quadratic), and a 1.2 s `Task.Delay` standing in for a stock API; `Models/ProductListingViewModel.cs`; `Views/productListing.cshtml`; and an `appsettings.json` that **wrongly** sets `Umbraco:CMS:Hosting:Debug: true` in the base file, which applies in production too |
 | 5 | `files/stale-news/` | `Components/LatestNewsViewComponent.cs`, which caches the five latest `newsArticle` items in a `private static List<LatestNewsItem>? _latest` built on the first request and never cleared (the real cause of the stale headline); `Views/Shared/Components/LatestNews/Default.cshtml`; and `Views/home.cshtml`, replaced by one that invokes the component |
-| 6 | `files/docs-sample/` | `Composers/MyComposer.cs`: the `IComponent` sample from Umbraco's *Debugging with SourceLink* docs page pasted in as is, apart from the namespace. It builds with a CS0618 warning and boots. Visual Studio's settings are per machine, so the advice is graded from `answer.md` and the rewritten composer from the files |
-| 7 | — | The project as copied. Visual Studio's settings are per machine, so this is graded from `answer.md`, plus the check that `Acme.Web.csproj` was not given `Optimize` or similar as the fix |
+| 6 | `files/docs-sample/` | `Composers/MyComposer.cs`: the `IComponent` sample from Umbraco's *Debugging with SourceLink* docs page pasted in as is, apart from the namespace. It builds with a CS0618 warning and boots |
+| 7 | — | The project as copied |
 | 8 | — | The project as copied: no `.vscode/` and no `Directory.Build.props`. The run decides what to commit and writes `DEBUGGING.md` |
 
 The fixture mirrors the pinned `Umbraco.Cms 17.5.3` and the repo's central package versions
@@ -134,12 +134,13 @@ alone.
 - **Eval 5**: expectations 1 and 2 are graded from `Components/LatestNewsViewComponent.cs`. A
   `static` field remaining is fine only if something clears it on publish. Expectation 4 may be met
   in `answer.md` or in a `.vscode/launch.json` the run wrote. For expectation 5 either branch passes.
-- **Eval 6**: grade expectation 1 from `Composers/MyComposer.cs`. Both a notification handler and an
+- **Eval 6**: grade the advice from `answer.md` and expectation 1 from `Composers/MyComposer.cs`. Both a notification handler and an
   `IAsyncComponent` pass; `IAsyncComponent` is registered with `builder.Components().Append`, as
   `IComponent` was. Expectation 9 is graded from `boot.txt`, written after the run with
   `node scripts/boot-check.mjs` on a copy of `outputs/project`. The docs sample also boots, so this
   only catches a rewrite that broke startup.
-- **Eval 7** is advice only, plus the negative file check in expectation 5. The `Umbraco.*.dll`
+- **Eval 7** is advice only, plus the negative file check in expectation 5 (`Acme.Web.csproj` must not gain `Optimize` or
+  similar as the fix). The `Umbraco.*.dll`
   wildcard, explicit DLL names, and loading all modules each pass expectation 2.
 - **Eval 8**: expectations 3 to 5 are graded from the files: `Properties/launchSettings.json`, any
   `Directory.Build.props`, `Acme.Web.csproj`, the `Directory.Packages.props` copy and the `.vscode/`
