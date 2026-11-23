@@ -24,12 +24,8 @@ redirect anything, front-end pages included. Front-end redirection needs `app.Us
 `app.UseUmbraco()`, or a host-level rule (IIS rewrite, proxy, CDN). Pick **one** place to
 redirect, because two layers that disagree produce redirect loops.
 
-## Production runtime mode enforces it
-
-A site that won't start after switching to Production usually has `Global:UseHttps` set to
-`false` (the default is `true`, but templates and upgraded sites often set it `false` for
-development) or no `WebRouting:UmbracoApplicationUrl`. The full list of boot requirements is in
-[hardening.md](hardening.md) item 1.
+If the site won't start after switching to Production mode, that is a configuration problem:
+see the [`umbraco-configuration`](../../umbraco-configuration/SKILL.md) skill.
 
 ## Behind TLS-terminating proxies (Azure Front Door, App Gateway, Cloudflare, nginx, Docker)
 
@@ -60,5 +56,5 @@ proxy already adds HSTS, don't add it twice with different values.
 - `curl -I https://<site>/` → `Strict-Transport-Security` present (non-development only).
 - The Health Check dashboard's HTTPS and application-URL checks pass.
 
-**Related:** the [`umbraco-security-headers`](../../umbraco-security-headers/SKILL.md) skill (HSTS sits alongside the other headers),
-[hardening.md](hardening.md) (runtime mode).
+**Related:** the [`umbraco-security-headers`](../../umbraco-security-headers/SKILL.md) skill (the other response
+headers), [hardening.md](hardening.md) item 4 (restricting `/umbraco` at the proxy).

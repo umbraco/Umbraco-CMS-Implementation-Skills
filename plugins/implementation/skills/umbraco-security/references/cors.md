@@ -22,7 +22,7 @@ origin credentialed cross-origin access to every path, the Management API includ
 registering it as a backoffice login host. Never use it as a front-end CORS setting. Copy the
 filter pattern for your own policy instead, scoped as below. A public site should use the Delivery
 API, and a server-side integration should use an API user (see
-[authentication-users.md](authentication-users.md)).
+[authorization.md](authorization.md)).
 
 ## Building the policy
 
@@ -68,5 +68,4 @@ The response should include `Access-Control-Allow-Origin: https://www.example.co
 requested headers. Repeat with a non-allowed origin: there should be no
 `Access-Control-Allow-Origin`. Repeat against a content page: it should have none either.
 
-**Related:** [authorization.md](authorization.md), [authentication-members.md](authentication-members.md)
-(token flows from a SPA).
+**Related:** [authorization.md](authorization.md) (Delivery API keys, preview and member tokens).

@@ -1,13 +1,14 @@
 # Running these evals
 
-Run all three evals in `evals.json` together, with and without the skill, using the
+Run all four evals in `evals.json` together, with and without the skill, using the
 `umbraco-skill-evaluator` skill. Run them once on Haiku and once on Sonnet. A stronger model's
 baseline already knows most Umbraco 17 security settings, so a single strong-model run shows
 little difference between the two sides.
 
 ## Inputs
 
-Evals 2 and 4 are prompt-only: there is no project to build. Eval 3 (`prelaunch-audit`) reviews
+Evals 2, 4 and 5 are prompt-only. This skill ships no code, so the evals grade advice and
+corrected files rather than a buildable project. Eval 3 (`prelaunch-audit`) reviews
 the three files in `files/prelaunch-audit/`:
 
 | File | Planted defects |
@@ -32,9 +33,11 @@ Each run is told:
   `transcript.md`.
 
 Give the with-skill run a **snapshot** of the skill that holds only `SKILL.md` and `references/`,
-not the skill folder itself, and beside it snapshots of the three skills it routes to
-(`umbraco-security-headers`, `umbraco-security-external-logins`, `umbraco-security-2fa`: each its `SKILL.md`, `references/` and `assets/`), so the routes resolve. `evals/` holds the expectations, and a run that can reach them will
-read them; an instruction not to read them is not enough. Tell the baseline run not to read the
+not the skill folder itself. Beside it, under the same parent folder so the `../<skill>/` links
+resolve, put snapshots of the four skills it routes to (`umbraco-security-headers`,
+`umbraco-security-external-logins`, `umbraco-security-2fa`, `umbraco-configuration`: each its
+`SKILL.md`, `references/` and `assets/`); without them the routes lead nowhere. `evals/` holds
+the expectations, and a run that can reach them will read them; an instruction not to read them is not enough. Tell the baseline run not to read the
 repository (`plugins/`, `.claude/`, `AGENTS.md`), or it will find the skill by browsing.
 
 ## Grading notes
@@ -45,6 +48,8 @@ repository (`plugins/`, `.claude/`, `AGENTS.md`), or it will find the skill by b
     origin lockdown such as the `AzureFrontDoor.Backend` service tag plus `X-Azure-FDID` (evals 3
     and 4);
   - `X-XSS-Protection` removed or set to `0` (eval 3).
+- Eval 5 grades the plan, not code: an expectation passes if the plan states the point clearly
+  enough for a team to build it, whether or not code is shown.
 - The build-honesty expectations can only check that a run doesn't claim a build or a live
   request, since none is possible here. They pass in both configurations, so they don't
   discriminate.

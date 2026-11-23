@@ -1,6 +1,7 @@
 # Hardening checklist
 
-Work through this list when auditing a site or preparing it for production. Report every item as
+Work through this list when auditing a site or preparing it for production. Several items belong
+to another skill: open it for that item rather than working from memory. Report every item as
 **done**, **not applicable** (with the reason), or **needs the user** (a decision or access you
 don't have, such as IP ranges, IdP registration or hosting configuration). End with that status
 list and the files changed.
@@ -16,28 +17,29 @@ list and the files changed.
 
 ## Checklist
 
-1. **Runtime mode `Production`** (`Umbraco:CMS:Runtime:Mode`). Umbraco then refuses to boot
-   unless the build is Release (JIT optimizer on), Models Builder mode is `Nothing`, `UseHttps` is
-   `true` and `UmbracoApplicationUrl` is set ([https.md](https.md)). The startup error names the
-   failing setting. Production mode also turns off Razor runtime compilation, so views must be
-   compiled at build/publish time (no `RazorCompileOnBuild`/`RazorCompileOnPublish` set to `false`
-   in the project), or templates return 404.
+1. **Production configuration:** runtime mode `Production` and everything it requires to boot
+   (`UseHttps`, `UmbracoApplicationUrl`, a Release build, Models Builder `Nothing`,
+   precompiled views): the [`umbraco-configuration`](../../umbraco-configuration/SKILL.md) skill.
 2. **HTTPS everywhere, HSTS on**: [https.md](https.md).
-3. **Security headers and CSP**: the [`umbraco-security-headers`](../../umbraco-security-headers/SKILL.md) skill. Remove `Server` and
-   `X-Powered-By`.
+3. **Security headers and CSP**, including removing `Server` and `X-Powered-By`: the
+   [`umbraco-security-headers`](../../umbraco-security-headers/SKILL.md) skill.
 4. **Restrict `/umbraco` by IP or VPN** where editors work from known networks. Exempt the public
    endpoints that live under `/umbraco` (see *Docs corrections*), or the front end breaks. For a
    non-IIS host (nginx, Front Door, App Gateway WAF), apply the same rule there.
 5. **Routing settings:** set `WebRouting:DisableAlternativeTemplates` and
    `WebRouting:DisableFindContentByIdPath` to `true` unless the site relies on them. Both default
    to `false`, and they let visitors render pages with other templates or enumerate nodes by ID.
-6. **Accounts:** user password and lockout rules set explicitly, 2FA or SSO for administrators,
-   no shared logins, and API users for integrations
-   ([authentication-users.md](authentication-users.md)). Remove or disable the install-time
-   admin account if it isn't a named person.
+6. **Accounts:** 2FA or SSO for administrators (the
+   [`umbraco-security-2fa`](../../umbraco-security-2fa/SKILL.md) and
+   [`umbraco-security-external-logins`](../../umbraco-security-external-logins/SKILL.md) skills), no
+   shared logins, API users for integrations ([authorization.md](authorization.md)), and the
+   install-time admin removed if it isn't a named person. Set
+   `Security:UserPassword` (length, `MaxFailedAccessAttemptsBeforeLockout`) and
+   `MemberPassword` explicitly
+   ([Security settings](https://docs.umbraco.com/umbraco-cms/develop-with-umbraco/configuration/securitysettings.md)).
 7. **Secrets out of source control:** connection strings, `DeliveryApi:ApiKey`, OAuth client
-   secrets and SMTP credentials go in environment variables, user secrets or a vault
-   ([Azure Key Vault](https://docs.umbraco.com/umbraco-cms/run-in-production/security/key-vault.md)).
+   secrets and SMTP credentials: the [`umbraco-configuration`](../../umbraco-configuration/SKILL.md)
+   skill (environment variables, user secrets, Key Vault). Rotate any secret already committed.
 8. **Rate limiting** for login, registration, password reset, form posts and public APIs:
    [API rate limiting](https://docs.umbraco.com/umbraco-cms/run-in-production/security/api-rate-limiting.md).
    It uses an `UmbracoPipelineFilter`'s `PostRouting` slot, so endpoint metadata is available.
