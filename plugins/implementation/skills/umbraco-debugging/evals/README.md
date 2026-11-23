@@ -1,6 +1,6 @@
 # Running these evals
 
-Run all five evals in `evals.json` together, with and without the skill, using the
+Run the evals in `evals.json` together, with and without the skill, using the
 `umbraco-skill-evaluator` skill. Run them once on Haiku and once on Sonnet. A stronger model's
 baseline already knows the generic .NET debugger settings (Just My Code, symbol servers), so a single
 strong-model run understates what the skill adds; the Haiku run shows the gap, the Sonnet run shows
@@ -42,6 +42,9 @@ To build `project/`:
 | 3 | — | The project as copied. Rider's settings are per machine; graded from `answer.md`, plus the check that `Acme.Web.csproj` was not given `DebugType`/`EmbedAllSources` as the fix |
 | 4 | `files/slow-page/` | `Controllers/ProductListingController.cs`, a `RenderController` hijacking `productListing` that does three expensive things with no timing: a `Root().DescendantsOrSelf()` product query, a per-product same-category `Count` over every product (quadratic), and a 1.2 s `Task.Delay` standing in for a stock API; `Models/ProductListingViewModel.cs`; `Views/productListing.cshtml`; and an `appsettings.json` that **wrongly** sets `Umbraco:CMS:Hosting:Debug: true` in the base file, which applies in production too |
 | 5 | `files/stale-news/` | `Components/LatestNewsViewComponent.cs`, which caches the five latest `newsArticle` items in a `private static List<LatestNewsItem>? _latest` built on the first request and never cleared (the real cause of the stale headline); `Views/Shared/Components/LatestNews/Default.cshtml`; and `Views/home.cshtml`, replaced by one that invokes the component |
+| 6 | `files/docs-sample/` | `Composers/MyComposer.cs`: the `IComponent` sample from Umbraco's *Debugging with SourceLink* docs page pasted in as is, apart from the namespace. It builds with a CS0618 warning and boots. Visual Studio's settings are per machine, so the advice is graded from `answer.md` and the rewritten composer from the files |
+| 7 | — | The project as copied. Visual Studio's settings are per machine, so this is graded from `answer.md`, plus the check that `Acme.Web.csproj` was not given `Optimize` or similar as the fix |
+| 8 | — | The project as copied: no `.vscode/` and no `Directory.Build.props`. The run decides what to commit and writes `DEBUGGING.md` |
 
 The fixture mirrors the pinned `Umbraco.Cms 17.5.3` and the repo's central package versions
 (`Directory.Packages.props`). The base project and all four overlays build with
@@ -131,6 +134,17 @@ alone.
 - **Eval 5**: expectations 1 and 2 are graded from `Components/LatestNewsViewComponent.cs`. A
   `static` field remaining is fine only if something clears it on publish. Expectation 4 may be met
   in `answer.md` or in a `.vscode/launch.json` the run wrote. For expectation 5 either branch passes.
+- **Eval 6**: grade expectation 1 from `Composers/MyComposer.cs`. Both a notification handler and an
+  `IAsyncComponent` pass; `IAsyncComponent` is registered with `builder.Components().Append`, as
+  `IComponent` was. Expectation 9 is graded from `boot.txt`, written after the run with
+  `node scripts/boot-check.mjs` on a copy of `outputs/project`. The docs sample also boots, so this
+  only catches a rewrite that broke startup.
+- **Eval 7** is advice only, plus the negative file check in expectation 5. The `Umbraco.*.dll`
+  wildcard, explicit DLL names, and loading all modules each pass expectation 2.
+- **Eval 8**: expectations 3 to 5 are graded from the files: `Properties/launchSettings.json`, any
+  `Directory.Build.props`, `Acme.Web.csproj`, the `Directory.Packages.props` copy and the `.vscode/`
+  folder. For expectation 5 a committed `launch.json` or a workspace `settings.json` passes, and both
+  are parsed after the run (`json-check.txt`). Expectations 6 and 7 are graded from `DEBUGGING.md`.
 - **Debug in production** ("does not advise ... in production"): any instruction to set
   `Umbraco:CMS:Hosting:Debug` true on the live site, or to leave it in the base `appsettings.json`,
   fails, whatever caveats come with it.
@@ -195,6 +209,35 @@ but it didn't reach the reply. The reply checklists in round 3 fixed that. The t
 round 3 were Sonnet writing single backslashes into the `launch.json` regex, which broke the file,
 and Haiku saying the profiler steps "won't show in production" instead of saying they can stay.
 Round 4 addressed both.
+
+### Source Link evals 6 to 8
+
+Added on 2026-11-23 for issue #68, which asked for a Source Link skill that this skill's approach A
+already is. The three evals probe Source Link traps evals 1 to 3 don't: following the stale docs
+sample, attaching to a running process with a module filter written as package ids, and a team
+trying to commit debugger settings through MSBuild properties and `launchSettings.json`. Run with the
+same method and the same skill wording as round 4, one run per cell, graded by Haiku 5.5. Every
+project built and every eval 6 edit booted. No run touched the `Directory.Packages.props` copy.
+
+| Eval | Haiku with | Haiku without | Sonnet with | Sonnet without |
+|---|---|---|---|---|
+| 6 Docs sample: `IComponent`, no symbols | 10/10 | 9/10 | 10/10 | 10/10 |
+| 7 Attach to `dotnet watch`, module filter by package id | 8/8 | 7/8 | 8/8 | 8/8 |
+| 8 Team-wide setup in the repo | 10/10 | 8/10 | 10/10 | 10/10 |
+| **Total** | **28/28** | **24/28** | **28/28** | **28/28** |
+| Mean time per run | 88 s | 126 s | 61 s | 74 s |
+| Mean tokens per run | 118k | 122k | 100k | 93k |
+
+What the Haiku baseline missed: it never said to launch under F5 instead of attaching (it suggested
+building Umbraco from source in Debug), it left out JIT suppression in eval 6, and in eval 8 it
+committed nothing for VS Code and gave no Rider symbol-server or remote-source steps. As with evals 1
+to 3, the Sonnet baseline passes every assertion. One error no assertion catches: its `DEBUGGING.md`
+tells Rider users to clear a "Just My Code" option, which Rider doesn't have.
+
+Two expectations were reworded after grading, and no verdict changed except the one noted.
+Eval 6 expectation 1 had ruled out `builder.Components().Append`, which `IAsyncComponent` needs; the
+Haiku baseline was regraded to a pass on it. Eval 8 expectation 5 now places
+`suppressJITOptimizations` at the top level of the launch configuration.
 
 Harness notes from these rounds:
 - The first round's eval 2 fixture had single backslashes in its `serverReadyAction` regex, which

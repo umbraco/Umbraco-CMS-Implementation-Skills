@@ -5,8 +5,9 @@ description: >
   VS Code with Source Link and the NuGet.org symbol server, or switch on Umbraco debug mode to
   profile requests with MiniProfiler and your own IProfiler steps. Use this whenever the user wants
   to "step into Umbraco source", set up SourceLink or Source Link, press F11 into Umbraco code, fix
-  "symbols not loaded" or "no source available" on Umbraco DLLs, see real source instead of
-  decompiled code, turn off Just My Code, find out why a page is slow with MiniProfiler, use
+  "symbols not loaded", "skipped loading symbols" or "no source available" on Umbraco DLLs, see
+  real source instead of decompiled code, turn off Just My Code, share that setup across a team,
+  find out why a page is slow with MiniProfiler, use
   ?umbDebug=true (umbDebug), add IProfiler steps around their own code, or set
   Umbraco:CMS:Hosting:Debug (Hosting Debug). SKIP: Serilog and log viewer configuration, unit or
   integration testing, debugging the backoffice or its JavaScript client, and non-Umbraco projects
