@@ -51,7 +51,7 @@ If everything looks solid, say so. Don't invent suggestions.
 
 ### 5. Write `grading.json`
 
-Save to `{outputs_dir}/../grading.json` (sibling to outputs_dir).
+Save to `{outputs_dir}/../grading.json` (sibling to outputs_dir). If the prompt gives an exact path, write exactly there, never into the eval folder above it.
 
 If `{outputs_dir}/../timing.json` exists, copy `total_duration_seconds` into the `timing` field.
 
