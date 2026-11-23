@@ -1,0 +1,22 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'blank' even though Approach B is C#: the segment provider rewrites URLs for one Document Type and the finder and virtual route need known products and a landing node, so the example owns those types outright rather than retargeting Clean's content (which other fixtures assert on). The three building blocks don't conflict, so one example covers them all. namespace = what <Namespace> becomes. placeholders = the aliases and route prefixes the assets carry, mapped to the example's own types. requires = the nodes this example seeds under the shared root.",
+  "host": "blank",
+  "namespace": "Umbraco.Skills.Examples.RoutingCustom",
+  "placeholders": {
+    "<ProductDocTypeAlias>": "routingProduct",
+    "<SkuPropertyAlias>": "sku",
+    "<ShortLinkPrefix>": "p",
+    "<VirtualRoutePrefix>": "stores",
+    "<LandingDocTypeAlias>": "storeFinder"
+  },
+  "assets": [
+    "SkuUrlSegmentProvider.cs",
+    "SkuShortLinkContentFinder.cs",
+    "RoutingComposer.cs",
+    "StoreFinderController.cs",
+    "storeFinderCity.cshtml"
+  ],
+  "requires": {
+    "documentTypeAliasAtRoot": ["routingProductList", "storeFinder"]
+  }
+}

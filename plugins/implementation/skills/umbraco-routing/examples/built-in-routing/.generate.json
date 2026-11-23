@@ -1,0 +1,11 @@
+{
+  "_comment": "How scripts/generate-examples.mjs builds this example from the skill's assets/. host = 'blank' because Approach A is a Document Type composition plus content, with no C# of its own; the example owns its page type and template there with no starter kit competing. namespace = what <Namespace> becomes (unused: this approach ships no .cs). assets = the routing-properties composition. requires = the page type this example seeds under the shared root.",
+  "host": "blank",
+  "namespace": "Umbraco.Skills.Examples.RoutingBuiltIn",
+  "assets": [
+    "routing-properties-package.xml"
+  ],
+  "requires": {
+    "documentTypeAliasAtRoot": ["routingDemoPage"]
+  }
+}

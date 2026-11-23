@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    VALIDATION-ONLY example project for umbraco-routing Approach A (built-in routing). Not shipped to
+    users.
+
+    Loaded by SITE 2 (Umbraco-CMS.Skills.Blank, no starter kit). The skill's routing-properties
+    composition is generated into obj/ and embedded at build time by plugins/Directory.Build.props;
+    this example's package migration installs it together with an example-only page type that
+    composes it, then seeds pages that use each reserved routing property.
+  -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Umbraco.Skills.Examples.RoutingBuiltIn</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Umbraco.Cms.Web.Website" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../../../../../ExampleFixtures.Shared/ExampleFixtures.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Example-only schema: the routingDemoPage type (composing the skill's routingProperties) and
+         its template. A real site adds the composition to its own page types. -->
+    <EmbeddedResource Include="ExampleFixtureContent.xml" LogicalName="ExampleFixtureContent.xml" />
+  </ItemGroup>
+
+</Project>

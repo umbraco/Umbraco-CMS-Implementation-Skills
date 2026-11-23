@@ -45,6 +45,7 @@ workflow; the others link into them.
 | `umbraco-custom-maintenance-page` | Customises the page visitors see while Umbraco runs upgrade migrations |
 | `umbraco-common-pitfalls` | Reference guide to anti-patterns, performance traps and common mistakes |
 | `umbraco-templating` | Templates, partial views, view components, route hijacking and surface-controller forms, with runtime-tested code |
+| `umbraco-routing` | Page URLs and routing: reserved routing properties, redirects and settings, or URL segment providers, content finders and virtual-page routes, with runtime-tested code |
 | `umbraco-configuration` | Tested `appsettings` profiles for production single server, load balanced and Azure App Service |
 | `umbraco-oembed-providers` | Embed (oEmbed) providers in C#: new oEmbed hosts, hosts without oEmbed, replacing a built-in (e.g. youtube-nocookie), registration order |
 | `umbraco-services` | Published cache vs management services, reading content with no request (jobs, notification handlers), custom services and their lifetimes |
