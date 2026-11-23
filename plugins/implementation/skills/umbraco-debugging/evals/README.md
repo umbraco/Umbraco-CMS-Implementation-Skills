@@ -240,6 +240,14 @@ Eval 6 expectation 1 had ruled out `builder.Components().Append`, which `IAsyncC
 Haiku baseline was regraded to a pass on it. Eval 8 expectation 5 now places
 `suppressJITOptimizations` at the top level of the launch configuration.
 
+### After tightening
+
+The skill was then tightened: SKILL.md went from 91 to 75 lines, with approach-specific best practices
+moved into the references and approach A's Troubleshooting list folded into the section it repeated.
+All eight evals were re-run on Haiku with the tightened skill (with-skill side only, same method):
+**74/74**, every project built, the eval 6 edit booted, and no run touched `Directory.Packages.props`.
+Mean 112 s and 120k tokens per run.
+
 Harness notes from these rounds:
 - The first round's eval 2 fixture had single backslashes in its `serverReadyAction` regex, which
   isn't valid JSON. It was fixed before round 2, and no round 1 run was marked down for it.
