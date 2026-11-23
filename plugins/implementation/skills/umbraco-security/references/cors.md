@@ -41,9 +41,8 @@ API, and a server-side integration should use an API user (see
    `Accept-Language`, `Accept-Segment` and `Start-Item`, plus `Authorization` for member access
    tokens and `Content-Type` for JSON bodies. A missing header shows up as a preflight failure and
    is commonly misread as an auth bug. Leave out `Api-Key` and `Preview`. They belong to
-   server-side callers, and allowing them from the browser invites someone to put the key there.
-   To show private or preview content, call the API from the front end's server side and keep
-   the key there (see [authorization.md](authorization.md)).
+   server-side callers, and allowing them from the browser invites someone to put the key there
+   (see [authorization.md](authorization.md)).
 6. **Credentials:** `AllowCredentials()` only if the browser must send cookies. ASP.NET Core
    rejects it combined with `AllowAnyOrigin()`. Bearer tokens in `Authorization` don't need it.
    Don't work around that rejection with `SetIsOriginAllowed(_ => true)` plus `AllowCredentials()`:
@@ -67,5 +66,3 @@ curl -i -X OPTIONS https://<site>/umbraco/delivery/api/v2/content \
 The response should include `Access-Control-Allow-Origin: https://www.example.com` and the
 requested headers. Repeat with a non-allowed origin: there should be no
 `Access-Control-Allow-Origin`. Repeat against a content page: it should have none either.
-
-**Related:** [authorization.md](authorization.md) (Delivery API keys, preview and member tokens).

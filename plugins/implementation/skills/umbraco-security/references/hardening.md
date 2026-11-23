@@ -17,9 +17,8 @@ list and the files changed.
 
 ## Checklist
 
-1. **Production configuration:** runtime mode `Production` and everything it requires to boot
-   (`UseHttps`, `UmbracoApplicationUrl`, a Release build, Models Builder `Nothing`,
-   precompiled views): the [`umbraco-configuration`](../../umbraco-configuration/SKILL.md) skill.
+1. **Production configuration:** runtime mode `Production` and everything it requires to boot:
+   the [`umbraco-configuration`](../../umbraco-configuration/SKILL.md) skill.
 2. **HTTPS everywhere, HSTS on**: [https.md](https.md).
 3. **Security headers and CSP**, including removing `Server` and `X-Powered-By`: the
    [`umbraco-security-headers`](../../umbraco-security-headers/SKILL.md) skill.
@@ -74,7 +73,7 @@ Where the docs pages and Umbraco 17 disagree, follow this list:
 - **[Cookies](https://docs.umbraco.com/umbraco-cms/run-in-production/security/cookies.md)** says to
   add the `AddSession` call "after `Build();`". `Program.cs` has two `Build()` calls: it means the
   Umbraco builder chain's `.Build()`. After `builder.Build()`, services can't be registered and
-  the call throws. Register it before `builder.Build()`.
+  the call throws.
 - **[Lock down access to the Umbraco folder](https://docs.umbraco.com/umbraco-cms/run-in-production/security/lock-access-to-umbraco-folder.md)**:
   the IIS rule exempts `umbraco/api`, `umbraco/surface` and `umbraco/delivery` only. It still
   blocks the basic-auth login pages (`/umbraco/basic-auth`) and the Management API

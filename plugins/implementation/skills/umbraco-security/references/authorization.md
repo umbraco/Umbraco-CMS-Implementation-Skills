@@ -1,11 +1,5 @@
 # Members, access and permissions
 
-Who can sign in to the website and reach what: member login, member-only pages, files and
-endpoints, Delivery API access, and what editors and machines may do in the backoffice. SSO and
-2FA for members or users belong to the
-[`umbraco-security-external-logins`](../../umbraco-security-external-logins/SKILL.md) and
-[`umbraco-security-2fa`](../../umbraco-security-2fa/SKILL.md) skills.
-
 ## Fetch first (pick the page for the task)
 
 | Task | Docs page |

@@ -24,9 +24,6 @@ redirect anything, front-end pages included. Front-end redirection needs `app.Us
 `app.UseUmbraco()`, or a host-level rule (IIS rewrite, proxy, CDN). Pick **one** place to
 redirect, because two layers that disagree produce redirect loops.
 
-If the site won't start after switching to Production mode, that is a configuration problem:
-see the [`umbraco-configuration`](../../umbraco-configuration/SKILL.md) skill.
-
 ## Behind TLS-terminating proxies (Azure Front Door, App Gateway, Cloudflare, nginx, Docker)
 
 The proxy talks plain HTTP to the app, so ASP.NET Core sees every request as `http`. As a
