@@ -100,6 +100,65 @@
         "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
         "The agent does not claim to have run the site, attached a debugger, stepped into Umbraco or reproduced the stale headline; it says or makes clear that the user must verify the fix"
       ]
+    },
+    {
+      "id": 6,
+      "prompt": "I'm following Umbraco's 'Debugging with SourceLink' docs page on our Umbraco 17.5 site (Acme.Web, Visual Studio 2022). I pasted its example composer into Composers/MyComposer.cs, changing only the namespace. The build now gives me a CS0618 warning that IComponent is obsolete. I did what the page says: unticked Enable Just My Code and ticked Enable Source Link support. I put a breakpoint on the `_contentService.GetRootContent()` line and pressed F5. The breakpoint hits, but F11 opens a 'Source Not Found' tab that says Umbraco.Core.pdb is not loaded, and there's never a prompt to download anything from GitHub. Bring the example up to date for Umbraco 17 so it builds clean, get me stepping into GetRootContent in Umbraco's real source with locals I can read, and tell me how I'll know it's working. It's only for an afternoon of poking around, so tell me what to do with it after.",
+      "expected_output": "The agent rewrites Composers/MyComposer.cs without the obsolete IComponent, using a notification handler for UmbracoApplicationStartedNotification (or IAsyncComponent), keeping a GetRootContent call to break on, and the project builds and boots. It explains that the docs page is written for Visual Studio 2017/2019 and leaves out symbols: Umbraco's PDBs are not in the NuGet package but on the NuGet.org symbol server, so 'Umbraco.Core.pdb not loaded' means that server is not enabled, and without the PDB Source Link has nothing to read, which is why there is no GitHub prompt. It adds Suppress JIT optimization on module load for readable locals, tells the user to confirm in the Modules window and by the Source Link download prompt, and says to delete the file afterwards because it queries the database on every boot. It does not claim to have run the debugger.",
+      "files": [
+        "evals/files/project/",
+        "evals/files/docs-sample/"
+      ],
+      "expectations": [
+        "Composers/MyComposer.cs (or the file that replaces it) no longer implements IComponent or calls builder.Components().Append; the F11 target runs from an UmbracoApplicationStartedNotification handler registered with AddNotificationHandler/AddNotificationAsyncHandler, or from an IAsyncComponent, and still calls IContentService.GetRootContent()",
+        "The agent explains that Umbraco's PDBs are not in the NuGet package (Umbraco.Core.dll ships without a .pdb) but are published to the NuGet.org symbol server, and tells the user to enable 'NuGet.org Symbol Server' under Debugging > Symbols, as the fix for 'Umbraco.Core.pdb not loaded'",
+        "The agent explains that the missing GitHub download prompt follows from the missing PDB: Source Link reads the source URL from the PDB, so it cannot fetch anything until the symbols load",
+        "The agent tells the user to turn on 'Suppress JIT optimization on module load (Managed only)', or explains that without it locals in Umbraco's release-built assemblies show as optimized away",
+        "The agent says the docs page is out of date for Umbraco 17 (written for Visual Studio 2017/2019 and older Umbraco/.NET, or its IComponent sample is obsolete), rather than presenting its steps as complete",
+        "The agent tells the user how to confirm it works: the Modules window (Debug > Windows > Modules) showing symbols loaded for Umbraco.Core.dll, and/or F11 bringing up the Source Link prompt and opening Umbraco's ContentService source",
+        "The agent tells the user to delete (or stop registering) the probe composer when finished, because it runs a content query on every startup",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "The edited project boots: boot.txt beside the run's outputs/ (written by `node scripts/boot-check.mjs` after the run) says RESULT: PASS",
+        "The agent does not claim to have launched Visual Studio, loaded symbols or stepped into Umbraco; it says or makes clear that the user must do these and check the result"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Umbraco 17.5 site (Acme.Web), Visual Studio 2022. I start the site with `dotnet watch` in a terminal so I get hot reload, then use Debug > Attach to Process on Acme.Web.exe. I've already got Enable Just My Code off, Enable Source Link support on, Suppress JIT optimization on module load ticked, and the NuGet.org Symbol Server ticked. To keep symbol loading fast I switched Symbols to 'Load only specified modules' and entered `Umbraco.Cms.Core;Umbraco.Cms.Infrastructure`. The Modules window still says 'Skipped loading symbols' for every Umbraco DLL. If I right-click Umbraco.Core.dll and Load Symbols by hand I can F11 into ContentService, but nearly every local says 'Cannot obtain value of the local variable or argument because it is not available at this instruction pointer, possibly because it has been optimized away'. A colleague says I should add <Optimize>false</Optimize> to Acme.Web.csproj. What's actually wrong, and what should my setup be? Change the project only if it genuinely needs changing.",
+      "expected_output": "The agent explains the two faults. The module list uses NuGet package ids, but the filter matches DLL file names: the assemblies are Umbraco.Core.dll and Umbraco.Infrastructure.dll, so the entries should be Umbraco.Core.dll / Umbraco.*.dll, or the filter switched back to load all modules. And Suppress JIT optimization only applies to modules loaded after the debugger is attached; attaching to a process that `dotnet watch` already started means Umbraco's assemblies were JIT-compiled optimized before Visual Studio was there, so the user should launch the site under the debugger (F5 on the Acme.Web profile) when stepping into Umbraco. It rejects <Optimize>false</Optimize> because it affects only Acme.Web's own assembly, and leaves the project unchanged. It tells the user how to confirm, and does not claim to have run the debugger.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "The agent explains that the 'Load only specified modules' list is matched against module (DLL) names, not NuGet package ids: Umbraco.Cms.Core and Umbraco.Cms.Infrastructure match nothing because the assemblies are Umbraco.Core.dll and Umbraco.Infrastructure.dll",
+        "The agent gives a working module setting: entries such as Umbraco.Core.dll / Umbraco.Infrastructure.dll or a wildcard like Umbraco.*.dll, or switching back to loading all modules (automatic or not excluded)",
+        "The agent explains that 'Suppress JIT optimization on module load' only affects modules loaded after the debugger is attached, so attaching to the already-running `dotnet watch` process leaves Umbraco's assemblies optimized, which is why the locals are 'optimized away'",
+        "The agent tells the user to start the site under the debugger (F5 / Start Debugging on the Acme.Web launch profile) instead of attaching to a running process when they want to step into Umbraco with readable locals",
+        "The agent rejects adding <Optimize>false</Optimize> to Acme.Web.csproj, explaining that it changes only how Acme.Web's own code is compiled, not Umbraco's NuGet assemblies; Acme.Web.csproj is left without an Optimize, DebugType or similar property added as the fix",
+        "The agent tells the user how to confirm: the Modules window showing 'Symbols loaded' for Umbraco.Core.dll, and/or locals in ContentService showing values after F11",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "The agent does not claim to have launched Visual Studio, attached the debugger, loaded symbols or stepped into Umbraco; it says or makes clear that the user must do these and check the result"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Tech lead here. Five of us work on Acme.Web (Umbraco 17.5): two on Visual Studio 2022, two on Rider, one on VS Code with C# Dev Kit who just presses F5 with no launch.json. Everyone wants to F11 into Umbraco's real source. I want this set up once in the repo so nobody has to fiddle with IDE settings. My plan: add a Directory.Build.props next to Acme.Web.csproj with a Microsoft.SourceLink.GitHub PackageReference (PrivateAssets=all), <CopyDebugSymbolFilesFromPackages>true</CopyDebugSymbolFilesFromPackages> and <DebugType>embedded</DebugType>, and add \"justMyCode\": false to the Acme.Web profile in Properties/launchSettings.json. Make whatever changes belong in the repo and push back on anything that won't work. Then write DEBUGGING.md in the project folder for the team, with a section per IDE.",
+      "expected_output": "The agent pushes back on the plan. Microsoft.SourceLink.GitHub and DebugType only change Acme.Web's own PDB, CopyDebugSymbolFilesFromPackages only copies PDBs that are inside a package and Umbraco's NuGet packages contain none (their symbols are on the NuGet.org symbol server), and launchSettings.json has no debugger settings such as justMyCode. It makes none of those changes. It commits what can be shared: for VS Code, a .vscode/launch.json (coreclr) or workspace settings with justMyCode false, the NuGet.org symbol server and JIT suppression. It writes DEBUGGING.md with per-machine steps for Visual Studio 2022 (Just My Code off, Source Link on, NuGet.org Symbol Server, Suppress JIT optimization) and Rider (external source debugging, External Symbols with the NuGet.org symbol server and sources from symbol files with remote download), and how to confirm. It does not claim to have run any IDE.",
+      "files": [
+        "evals/files/project/"
+      ],
+      "expectations": [
+        "The agent explains that CopyDebugSymbolFilesFromPackages cannot help: it copies PDBs that are inside a NuGet package, and Umbraco's packages contain none, because Umbraco publishes its symbols to the NuGet.org symbol server (.snupkg)",
+        "The agent explains that Microsoft.SourceLink.GitHub and DebugType affect only Acme.Web's own assembly and PDB, not Umbraco's",
+        "The agent explains that launchSettings.json has no Just My Code (or other debugger) setting, so \"justMyCode\": false there does nothing; Properties/launchSettings.json does not contain justMyCode after the run",
+        "No Directory.Build.props (or Acme.Web.csproj change) adds CopyDebugSymbolFilesFromPackages, a Microsoft.SourceLink.GitHub reference or DebugType as the fix, and the Directory.Packages.props copy in outputs/ is unchanged",
+        "For the VS Code developer, the run commits a shareable configuration in the project: a .vscode/launch.json coreclr configuration with \"justMyCode\": false, a \"symbolOptions\" object holding \"searchNuGetOrgSymbolServer\": true and \"suppressJITOptimizations\": true, or a .vscode/settings.json with csharp.debug.justMyCode false, csharp.debug.symbolOptions.searchNuGetOrgSymbolServer true and csharp.debug.suppressJITOptimizations true; any JSON file written parses once // comments are stripped",
+        "DEBUGGING.md exists in the project folder and its Visual Studio 2022 section names all four settings: Enable Just My Code off, Enable Source Link support on, NuGet.org Symbol Server enabled, and Suppress JIT optimization on module load",
+        "DEBUGGING.md's Rider section adds the NuGet.org symbol server (https://symbols.nuget.org/download/symbols) under External Symbols (or Rider's symbol server settings), enables using sources from symbol files / Source Link with downloading from remote locations, and keeps external source debugging on",
+        "The agent or DEBUGGING.md says Visual Studio's and Rider's debugger options are per-machine IDE settings that no project file can switch on, so each developer sets them once",
+        "The project compiles with its Razor views included: `dotnet build -p:RazorCompileOnBuild=true` on the edited project succeeds (graded from razor-build.txt beside the run's outputs/)",
+        "The agent does not claim to have run Visual Studio, Rider or VS Code, loaded symbols or stepped into Umbraco; it says or makes clear that each developer must check it in their IDE"
+      ]
     }
   ]
 }
