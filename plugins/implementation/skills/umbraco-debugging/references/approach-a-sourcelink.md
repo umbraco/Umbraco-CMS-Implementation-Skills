@@ -1,19 +1,17 @@
 # Approach A — Step into Umbraco source with Source Link
 
 Set a breakpoint in, or F11 into, Umbraco's own code from a local IDE, reading the real source of
-the exact Umbraco version the site runs. Choose this when the question is "what is Umbraco doing
-inside this call?". If the question is "where does the time go?", or the site is on a shared
-environment you can't attach to, use [Approach B](approach-b-debug-mode-profiler.md) instead.
+the exact Umbraco version the site runs.
 
 Everything here is **IDE configuration on the developer's machine**. Nothing in the project changes,
-apart from the optional VS Code `launch.json` and the optional probe class.
+apart from the optional VS Code `launch.json` and the optional probe class. These settings don't go in
+the `.csproj`, `Directory.Build.props` or `launchSettings.json`.
 
 ## Contents
 
 - [Fetch the docs first, then correct them](#fetch-the-docs-first-then-correct-them): read when you are about to follow Umbraco's SourceLink docs page and need to know where it is out of date for Umbraco 17.
-- [Why Source Link alone is not enough](#why-source-link-alone-is-not-enough): read when F11 steps over Umbraco code, symbols do not load, or locals show as optimized away, and you need the settings that must all be true.
+- [Why Source Link alone is not enough](#why-source-link-alone-is-not-enough): read when F11 steps over Umbraco code, breakpoints do not hit, symbols do not load, you see decompiled code, or locals show as optimized away, and you need the settings that must all be true.
 - [Steps](#steps): read when you are setting up the debugger for a specific IDE (Visual Studio, Rider or VS Code) and verifying that you can step into Umbraco source.
-- [Troubleshooting](#troubleshooting): read when the setup is done but breakpoints do not hit, symbols are missing, or you see decompiled code.
 - [Done](#done): read before replying, to check the answer covers every setting, the VS Code configuration, where to break and how to confirm.
 
 ## Fetch the docs first, then correct them
@@ -26,7 +24,8 @@ Read it for the idea, but it is **stale for Umbraco 17**:
   on `net10.0`, and current Visual Studio menus differ (see below).
 - Its sample uses `IComponent` with `Initialize()`/`Terminate()`. `IComponent` is **obsolete** in 17
   and compiles with a CS0618 warning. Use a notification handler, as
-  [`assets/SourceLinkProbe.cs`](../assets/SourceLinkProbe.cs) does.
+  [`assets/SourceLinkProbe.cs`](../assets/SourceLinkProbe.cs) does, or `IAsyncComponent` (registered
+  with `builder.Components().Append`); `IComponent` is scheduled for removal in 18.
 - It never mentions **symbols** or **JIT optimisation**, which are the two settings that make or
   break this in practice (next section).
 
@@ -53,6 +52,10 @@ variable `COMPlus_ReadyToRun=0` if you hit that.
 Module filters match **DLL names**, not package ids: the assemblies are `Umbraco.Core.dll`,
 `Umbraco.Infrastructure.dll`, `Umbraco.Web.Common.dll` and so on, so filter on `Umbraco.*.dll`, not
 `Umbraco.Cms.*`.
+
+Don't swap Umbraco's NuGet packages for project references, or clone the Umbraco repo, just to step
+in. Source Link fetches the exact commit the PDB was built from; a local clone is a different
+version and a different build.
 
 ## Steps
 
@@ -131,7 +134,7 @@ other:
 | `suppressJITOptimizations` | `true` | Readable locals in Release DLLs |
 | `symbolOptions.searchNuGetOrgSymbolServer` | `true` | Download Umbraco PDBs (**defaults to false**) |
 | `symbolOptions.searchMicrosoftSymbolServer` | `true` | Optional: .NET / ASP.NET Core PDBs (**defaults to false**) |
-| `sourceLinkOptions` | `{ "*": { "enabled": true } }` | A URL → `{ "enabled": bool }` map. Enabled for all URLs by default; only needed to restrict it. Can only be set in launch.json |
+| `sourceLinkOptions` | `{ "*": { "enabled": true } }` | A URL → `{ "enabled": bool }` map. Enabled for all URLs by default; only needed to restrict it |
 
 Option names that **don't exist** and silently do nothing: `"enableSourceLink"`,
 `"symbolOptions": { "nuget": true }`, `justMyCode` inside `symbolOptions`, `"sourceLinkOptions": true`.
@@ -151,8 +154,11 @@ launch:
 }
 ```
 
-`sourceLinkOptions` has no `settings.json` form, and none of these keys work in
-`launchSettings.json`.
+`sourceLinkOptions` has no `settings.json` form.
+
+If the source download fails in VS Code: its Source Link only fetches unauthenticated URLs.
+Umbraco's repo is public, so check the machine can reach `raw.githubusercontent.com` and that no
+`sourceLinkOptions` entry disables it.
 
 Reference:
 [Configuring C# debugging](https://code.visualstudio.com/docs/csharp/debugger-settings).
@@ -160,16 +166,14 @@ Reference:
 ### 3. Verify
 
 1. Launch the site **under the debugger** (F5), and set a breakpoint in your own code just before an
-   Umbraco call. The probe asset is a ready-made target (below); otherwise use any call such as
-   `IContentService.Save(...)`.
+   Umbraco call. Use their own call into Umbraco, or the probe (below) if they have none.
 2. When it breaks, open the **Modules** window (Visual Studio: **Debug** > **Windows** > **Modules**,
    Ctrl+Alt+U, available only while paused). `Umbraco.Core.dll` should show **Symbols loaded**, with
    the PDB path in the NuGet.org symbol cache. If it says *Skipped loading* or *Cannot find*,
    right-click > **Symbol Load Information** to see where it looked, then **Load Symbols**.
 3. Press **F11** on the Umbraco call. Visual Studio may prompt to download the source from GitHub
    (that prompt only appears once the PDB has loaded and Source Link support is on). Accept it, and
-   you land in `ContentService` in Umbraco's real source, with the file fetched for the exact commit
-   your package was built from.
+   you land in `ContentService` in Umbraco's real source.
 
 ### F11 target: `assets/SourceLinkProbe.cs`
 
@@ -177,7 +181,7 @@ Reference:
 gives a deterministic place to break. It registers a handler for
 `UmbracoApplicationStartedNotification` that calls `IContentService.GetRootContent()` once at
 startup, so you can set a breakpoint on that line, press F5, and F11 into Umbraco without clicking
-anything in the site. It records the outcome on a `SourceLinkProbeState` singleton.
+anything in the site.
 
 Add it only when the user asks for a ready-made target or has no Umbraco call of their own to step
 into. If their code already calls Umbraco (a controller calling `_contentService.Save`, a view
@@ -187,26 +191,6 @@ component querying content), tell them to break there and leave the project unto
 Replace `<Namespace>` with the web project's root namespace (from the `.csproj` `RootNamespace`, or
 any existing `.cs` file). Delete the file when you're done: it runs a database query on every boot
 and is only there to step into.
-
-## Troubleshooting
-
-- **"Symbols not loaded" / "No symbols have been loaded for this document"** on an Umbraco frame:
-  the NuGet.org symbol server is off, or the module-loading mode skipped `Umbraco.*`. Fix the symbol
-  settings, then **Load Symbols** in the Modules window.
-- **Breakpoints in Umbraco code never hit / F11 steps over the call**: Just My Code is still on
-  (Visual Studio, VS Code), or external source debugging is off (Rider).
-- **You see decompiled code instead of real source**: the PDB didn't load (symbol server off, or the
-  module was skipped), or Source Link support is off. Source Link needs the PDB first.
-- **Locals are "optimized away", stepping jumps lines**: JIT suppression is off, or you attached to
-  an already-running process. Launch under the debugger instead; for ReadyToRun images set
-  `COMPlus_ReadyToRun=0`.
-- **VS Code ignores your settings**: check the keys are top-level in the launch configuration, the
-  spellings match the table above, and both symbol-server flags are explicitly `true`.
-- **A module filter matches nothing**: it uses a package id (`Umbraco.Cms.Core`) instead of the DLL
-  name (`Umbraco.Core.dll`).
-- **Source download fails in VS Code**: its Source Link only fetches unauthenticated URLs. Umbraco's
-  repo is public, so check the machine can reach `raw.githubusercontent.com` and that no
-  `sourceLinkOptions` entry disables it.
 
 ## Done
 
@@ -220,6 +204,8 @@ Reply checklist. Every answer for this approach covers each point that applies:
   user's other keys, and keep regex backslashes doubled (`\\b`, `\\s`) so the file stays valid JSON.
   If you can run a command, parse the file to prove it (strip `//` comments, then `JSON.parse`);
   don't claim it is valid without checking.
+- **No clone:** don't suggest swapping the NuGet packages for project references to a cloned
+  Umbraco; Source Link already serves the exact commit.
 - **Where to break:** the user's own call into Umbraco, or the probe if they have none.
 - **How to confirm:** the Modules window (or Rider's equivalent) showing Umbraco symbols loaded, and
   F11 opening Umbraco's source fetched from GitHub.

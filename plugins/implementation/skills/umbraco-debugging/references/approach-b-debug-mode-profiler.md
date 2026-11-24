@@ -1,10 +1,7 @@
 # Approach B — Debug mode, MiniProfiler and IProfiler
 
 Switch Umbraco into debug mode so a request can be profiled with MiniProfiler: a timing tree of
-Umbraco's own steps, your steps and the SQL behind them, shown in the browser. Choose this when the
-question is "why is this page slow?", or when you need evidence from a dev, test or staging site
-nobody can attach a debugger to. To read inside an Umbraco method line by line, use
-[Approach A](approach-a-sourcelink.md) instead.
+Umbraco's own steps, your steps and the SQL behind them, shown in the browser.
 
 ## Contents
 
@@ -133,10 +130,8 @@ Type (`root` in the sample). Use it when the code you want to time lives in a hi
 
 ### 5. In production, use telemetry instead
 
-Leave debug mode off, and don't offer a "switch it on briefly, then off again" window on the live
-site either: profiling starts for any request carrying `?umbDebug=true`, with no login check, and
-the switch needs a restart each way. To find slow or failing requests on a live site, use what is
-designed to run there:
+Debug mode stays off on the live site (see SKILL.md Best practices). To find slow or failing requests
+there, use what is designed to run there:
 
 - **Logs**: Umbraco's structured Serilog logging and the backoffice Log Viewer. See
   [Logging](https://docs.umbraco.com/umbraco-cms/17.latest/develop-with-umbraco/testing-and-debugging/logging.md).

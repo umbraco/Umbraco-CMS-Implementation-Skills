@@ -5,8 +5,9 @@ description: >
   VS Code with Source Link and the NuGet.org symbol server, or switch on Umbraco debug mode to
   profile requests with MiniProfiler and your own IProfiler steps. Use this whenever the user wants
   to "step into Umbraco source", set up SourceLink or Source Link, press F11 into Umbraco code, fix
-  "symbols not loaded" or "no source available" on Umbraco DLLs, see real source instead of
-  decompiled code, turn off Just My Code, find out why a page is slow with MiniProfiler, use
+  "symbols not loaded", "skipped loading symbols" or "no source available" on Umbraco DLLs, see
+  real source instead of decompiled code, turn off Just My Code, share that setup across a team,
+  find out why a page is slow with MiniProfiler, use
   ?umbDebug=true (umbDebug), add IProfiler steps around their own code, or set
   Umbraco:CMS:Hosting:Debug (Hosting Debug). SKIP: Serilog and log viewer configuration, unit or
   integration testing, debugging the backoffice or its JavaScript client, and non-Umbraco projects
@@ -48,11 +49,7 @@ that Source Link depends on, and how profiling is gated.
 
 ## Version compatibility
 
-Targets **Umbraco 17** (`net10.0`). Umbraco's packages are built with Source Link, but the main
-`.nupkg` contains **no PDB**: the symbols ship as a separate `.snupkg` on NuGet.org. The debugger
-therefore needs the NuGet.org symbol server as well as Source Link support. `IComponent` is
-obsolete in 17 (scheduled for removal in 18); use a notification handler or `IAsyncComponent`
-instead, as the probe asset does.
+Targets **Umbraco 17** (`net10.0`).
 
 ## Best practices
 
@@ -61,18 +58,6 @@ instead, as the probe asset does.
   environment inherits. Starting a profile has no login check, so on a live site any visitor could
   add `?umbDebug=true`. Put it in `appsettings.Development.json` or the specific non-production
   environment's config, and reproduce production problems there.
-- **Restart after changing `Hosting:Debug`.** It is read once at startup to pick the profiler; a
-  live config change does not switch MiniProfiler on or off.
-- **Don't swap Umbraco's NuGet packages for project references, or clone the Umbraco repo, just to
-  step in.** Source Link fetches the exact commit the PDB was built from; a local clone is a
-  different version and a different build.
-- **Just My Code, Source Link and symbol servers are IDE settings on the developer's machine.**
-  They don't belong in the `.csproj`, `Directory.Build.props` or committed config.
-- **`IProfiler.Step` calls can stay in the code.** With debug mode off at startup, Umbraco registers
-  a `NoopProfiler` whose `Step` returns a shared do-nothing disposable, so a step is effectively free.
-- **Be honest about what you ran.** Configuring an IDE is the user's action. Don't say you stepped
-  into Umbraco, loaded symbols, saw a MiniProfiler result or built the project unless you actually
-  did; say what the user should do and what they should see.
 
 ## Validation
 
