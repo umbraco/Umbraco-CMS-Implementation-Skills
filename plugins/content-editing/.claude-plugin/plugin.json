@@ -1,0 +1,21 @@
+{
+  "name": "umbraco-cms-content-editing-skills",
+  "version": "1.0.0",
+  "description": "Skill set for editors working in Umbraco through the CMS Editor MCP - content audits and drafting pages from a brief",
+  "author": {
+    "name": "Niels Christian Laursen",
+    "email": "ncl@umbraco.dk",
+    "url": "https://github.com/nclaursen"
+  },
+  "homepage": "https://github.com/hifi-phil/Umbraco-CMS-Implementation-Skills",
+  "license": "MIT",
+  "keywords": [
+    "umbraco",
+    "content-editing",
+    "editor-mcp",
+    "content-audit",
+    "seo",
+    "pages"
+  ],
+  "skills": "./skills/"
+}

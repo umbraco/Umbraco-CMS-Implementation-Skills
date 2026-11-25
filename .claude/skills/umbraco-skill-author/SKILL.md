@@ -65,4 +65,5 @@ the other.
   enforced by a deterministic CI check on the PR, not just a self-audit.
 - **Build honesty.** Never claim a verified build you didn't run.
 - **Right place.** content-modelling → `plugins/content-modelling/skills/`; build-out/delivery →
-  `plugins/implementation/skills/`; authoring tooling → `.claude/skills/`.
+  `plugins/implementation/skills/`; editor work on content through the CMS Editor MCP →
+  `plugins/content-editing/skills/`; authoring tooling → `.claude/skills/`.

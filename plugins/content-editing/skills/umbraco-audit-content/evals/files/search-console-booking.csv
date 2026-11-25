@@ -1,0 +1,9 @@
+# Search Console export, Performance > Search results
+# Filter: Page exactly matches https://www.example.com/products/booking/
+# Period: 01-08-2026 to 31-10-2026. Country: all. Device: all. Search type: Web.
+Query,Clicks,Impressions,CTR,Position
+online booking for clinics,212,4100,5.2%,3.1
+clinic booking system,96,5300,1.8%,7.4
+patient self booking cancel appointment,4,2900,0.1%,9.8
+booking system with sms reminders,3,1800,0.2%,11.2
+example co booking,140,310,45.2%,1.0
